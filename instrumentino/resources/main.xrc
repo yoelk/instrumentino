@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <object class="wxFrame" name="mainFrame">
+    <object class="wxBoxSizer">
+      <orient>wxHORIZONTAL</orient>
+      <object class="sizeritem">
+        <object class="wxPanel" name="monitorPanel">
+          <object class="wxBoxSizer">
+            <orient>wxVERTICAL</orient>
+            <object class="sizeritem">
+              <object class="wxPanel" name="sysCompsPanel">
+                <object class="wxBoxSizer">
+                  <orient>wxVERTICAL</orient>
+                </object>
+              </object>
+              <flag>wxTOP|wxEXPAND|wxGROW</flag>
+              <ratio>1</ratio>
+            </object>
+          </object>
+        </object>
+        <flag>wxALL|wxEXPAND|wxGROW</flag>
+      </object>
+      <object class="sizeritem">
+        <object class="wxSplitterWindow" name="splitter">
+          <object class="wxPanel" name="operationPanel">
+            <object class="wxBoxSizer">
+              <orient>wxVERTICAL</orient>
+              <object class="sizeritem">
+                <object class="wxNotebook" name="methodsAndSequences">
+                  <object class="notebookpage">
+                    <object class="wxPanel" name="methodPage">
+                      <object class="wxBoxSizer">
+                        <orient>wxVERTICAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxPanel" name="actionsListPanel">
+                            <object class="wxBoxSizer">
+                              <orient>wxVERTICAL</orient>
+                            </object>
+                          </object>
+                          <option>1</option>
+                          <flag>wxALL|wxEXPAND|wxGROW</flag>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <orient>wxHORIZONTAL</orient>
+                            
+                            <object class="sizeritem">
+                              <object class="wxBitmapButton" name="addButton">
+                                <bitmap stock_id="wxART_ADD_BOOKMARK"/>
+                                <tooltip>add action to method</tooltip>
+                              </object>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxBitmapButton" name="removeButton">
+                                <bitmap stock_id="wxART_DEL_BOOKMARK"/>
+                                <tooltip>remove action from method</tooltip>
+                              </object>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxBitmapButton" name="runButton">
+                                <bitmap stock_id="wxART_EXECUTABLE_FILE"/>
+                                <tooltip>run method</tooltip>
+                              </object>
+                            </object>
+                          </object>
+                        </object>
+                      </object>
+                    </object>
+                    <label>Method</label>
+                  </object>
+                  
+                  <object class="notebookpage">
+                    <label>Sequence</label>
+                    <object class="wxPanel" name="sequencePage">
+                      <object class="wxBoxSizer">
+                        <orient>wxVERTICAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxPanel" name="methodsListPanel">
+                            <object class="wxBoxSizer">
+                              <orient>wxVERTICAL</orient>
+                            </object>
+                          </object>
+                          <option>1</option>
+                          <flag>wxALL|wxEXPAND|wxGROW</flag>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <orient>wxHORIZONTAL</orient>
+                            <object class="sizeritem">
+                              <object class="wxBitmapButton" name="addButton">
+                                <bitmap stock_id="wxART_ADD_BOOKMARK"/>
+                                <tooltip>add method to sequence</tooltip>
+                              </object>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxBitmapButton" name="removeButton">
+                                <bitmap stock_id="wxART_DEL_BOOKMARK"/>
+                                <tooltip>remove method from sequence</tooltip>
+                              </object>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxBitmapButton" name="runButton">
+                                <bitmap stock_id="wxART_EXECUTABLE_FILE"/>
+                                <tooltip>run sequence</tooltip>
+                              </object>
+                            </object>
+                          </object>
+                        </object>
+                      </object>
+                    </object>
+                  </object>
+                </object>
+                <option>1</option>
+                <flag>wxALL|wxEXPAND|wxGROW</flag>
+              </object>
+            </object>
+          </object>
+          <object class="wxPanel" name="logPanel">
+            <object class="wxBoxSizer">
+              <orient>wxVERTICAL</orient>
+              <object class="sizeritem">
+                <object class="wxNotebook" name="log">
+                  <object class="notebookpage">
+                    <object class="wxPanel" name="logTextPage">
+                      <object class="wxBoxSizer">
+                        <orient>wxVERTICAL</orient>
+                        <object class="sizeritem">
+                          <object class="wxTextCtrl" name="logTextCtrl">
+                            <style>wxTE_PROCESS_ENTER|wxTE_MULTILINE</style>
+                          </object>
+                          <option>1</option>
+                          <flag>wxALL|wxEXPAND|wxGROW</flag>
+                        </object>
+                      </object>
+                    </object>
+                    <label>Commands</label>
+                  </object>
+                  <object class="notebookpage">
+                    <object class="wxPanel" name="logGraphPage">
+                      <object class="wxBoxSizer">
+                        <orient>wxVERTICAL</orient>
+                      </object>
+                    </object>
+                    <label>Signals</label>
+                  </object>
+                </object>
+                <option>1</option>
+                <flag>wxALL|wxEXPAND|wxGROW</flag>
+              </object>
+            </object>
+          </object>
+          <orientation>vertical</orientation>
+          <sashpos>0</sashpos>
+          <minsize>1</minsize>
+          <style>wxSP_LIVE_UPDATE</style>
+        </object>
+        <option>1</option>
+        <flag>wxEXPAND|wxGROW</flag>
+      </object>
+    </object>
+    <object class="wxMenuBar" name="mainMenuBar">
+      <object class="wxMenu" name="fileMenu">
+        <object class="wxMenuItem" name="loadSequenceMenuItem">
+          <label>Load Sequence</label>
+          <help>Load a Sequence from file</help>
+        </object>
+        <object class="wxMenuItem" name="saveSequenceMenuItem">
+          <label>Save Sequence</label>
+          <help>Save current Sequence</help>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="loadMethodMenuItem">
+          <label>Load Method</label>
+          <help>Load a Method from file</help>
+        </object>
+        <object class="wxMenuItem" name="saveMethodMenuItem">
+          <label>Save Method</label>
+          <help>Save current Method</help>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="quitMenuItem">
+          <label>Quit</label>
+          <help>Quit program</help>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
+        <label>File</label>
+        <help>File operations</help>
+      </object>
+      <object class="wxMenu" name="commMenu">
+        <label>Comm</label>
+        <help>Connect to devices</help>
+      </object>
+      <object class="wxMenu" name="helpMenu">
+        <label>Help</label>
+        <object class="wxMenuItem" name="aboutMenuItem">
+          <label>About</label>
+          <help>About</help>
+        </object>
+        <help>Help</help>
+      </object>
+      <style/>
+    </object>
+    <object class="wxStatusBar" name="statusBar"/>
+    <title/>
+  </object>
+</resource>

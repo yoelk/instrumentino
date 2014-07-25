@@ -1,0 +1,13 @@
+Metadata-Version: 1.0
+Name: instrumentino
+Version: 1.0
+Summary: Instrumentino is a GUI framework for instruments based Arduino controllers. Extensions for other controllers exist a well.
+When using Instrumentino for a scientific publication, please cite the release article:
+http://www.sciencedirect.com/science/article/pii/S0010465514002112
+Home-page: http://www.chemie.unibas.ch/~hauser/index.html
+Author: Joel Koenka
+Author-email: yoelk@tx.technion.ac.il
+License: GPLv3
+Description: UNKNOWN
+Keywords: Instrumentino,Arduino
+Platform: UNKNOWN
