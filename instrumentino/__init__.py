@@ -309,16 +309,17 @@ class InstrumentinoApp(wx.App):
         info = wx.AboutDialogInfo()
         info.Name = self.system.name
         info.Version = self.system.version
-        info.Copyright = "(C) 2013 University of Basel"
-        info.Description = wx.lib.wordwrap.wordwrap(self.system.description + '\r\nIt is based on the instrumentino package.', 
+        info.Copyright = "2014 University of Basel"
+        info.Description = wx.lib.wordwrap.wordwrap(self.system.description + '\r\nThis software is based on the instrumentino package.', 
                                     350, wx.ClientDC(self.mainFrame))
-        info.WebSite = ("http://www.chemie.unibas.ch/~hauser/instrumentino.html")
+        info.WebSite = ('http://www.chemie.unibas.ch/~hauser/index.html')
         info.Developers = [ "Joel Koenka" ]
 
         info.License = wx.lib.wordwrap.wordwrap(
             'This software is released under GPLv3.'
-            "When using instrumentino for published scientific use, you're requested to cite the original release article"
-            'For more information, please contact: yoelk@tx.technion.ac.il',
+            'When using Instrumentino for a scientific publication, please cite the release article:\n'+
+            'http://www.sciencedirect.com/science/article/pii/S0010465514002112'+
+            'Get the code at: https://github.com/yoelk/instrumentino',
             500, wx.ClientDC(self.mainFrame))
 
         # Then we call wx.AboutBox giving it that info object

@@ -13,9 +13,15 @@ setup(install_requires = ['wxPython', 'pyserial', 'matplotlib'], #, 'pylab', 'mp
       version = '1.0',
       author = 'Joel Koenka',
       author_email = 'yoelk@tx.technion.ac.il',
-      description = 'Instrumentino is a GUI framework for instruments based Arduino controllers. Extensions for other controllers exist a well.\n'+
+      description = 'Instrumentino is an open-source modular graphical user interface framework for controlling Arduino based experimental instruments.\n'+
+                    'It expands the control capability of Arduino by allowing instruments builders to easily create a custom user interface program running on an attached personal computer.\n'+
+                    'It enables the definition of operation sequences and their automated running without user intervention.\n'+
+                    'Acquired experimental data and a usage log are automatically saved on the computer for further processing.\n'+
+                    'Complex devices, which are difficult to control using an Arduino, may be integrated as well by incorporating third party application programming interfaces (APIs) into the Instrumentino framework.'+
+                    '\n'
                     'When using Instrumentino for a scientific publication, please cite the release article:\n'+
-                    'http://www.sciencedirect.com/science/article/pii/S0010465514002112',
+                    'http://www.sciencedirect.com/science/article/pii/S0010465514002112'+
+                    'Get the code at: https://github.com/yoelk/instrumentino',
       license = 'GPLv3',
       keywords = 'Instrumentino, Arduino',
       url = 'http://www.chemie.unibas.ch/~hauser/index.html',
