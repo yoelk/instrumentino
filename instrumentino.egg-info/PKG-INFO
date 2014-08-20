@@ -1,9 +1,13 @@
 Metadata-Version: 1.0
 Name: instrumentino
 Version: 1.0
-Summary: Instrumentino is a GUI framework for instruments based Arduino controllers. Extensions for other controllers exist a well.
+Summary: Instrumentino is an open-source modular graphical user interface framework for controlling Arduino based experimental instruments.
+It expands the control capability of Arduino by allowing instruments builders to easily create a custom user interface program running on an attached personal computer.
+It enables the definition of operation sequences and their automated running without user intervention.
+Acquired experimental data and a usage log are automatically saved on the computer for further processing.
+Complex devices, which are difficult to control using an Arduino, may be integrated as well by incorporating third party application programming interfaces (APIs) into the Instrumentino framework.
 When using Instrumentino for a scientific publication, please cite the release article:
-http://www.sciencedirect.com/science/article/pii/S0010465514002112
+http://www.sciencedirect.com/science/article/pii/S0010465514002112Get the code at: https://github.com/yoelk/instrumentino
 Home-page: http://www.chemie.unibas.ch/~hauser/index.html
 Author: Joel Koenka
 Author-email: yoelk@tx.technion.ac.il
