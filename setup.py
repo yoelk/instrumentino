@@ -10,7 +10,7 @@ setup(install_requires = ['wxPython', 'pyserial', 'matplotlib'], #, 'pylab', 'mp
 
       # metadata for upload to PyPI
       name='instrumentino',
-      version = '1.01',
+      version = '1.03',
       author = 'Joel Koenka',
       author_email = 'yoelk@tx.technion.ac.il',
       description = 'Instrumentino is an open-source modular graphical user interface framework for controlling Arduino based experimental instruments.\n'+
@@ -24,6 +24,6 @@ setup(install_requires = ['wxPython', 'pyserial', 'matplotlib'], #, 'pylab', 'mp
                     'Get the code at: https://github.com/yoelk/instrumentino',
       license = 'GPLv3',
       keywords = 'Instrumentino, Arduino',
-      url = 'http://www.chemie.unibas.ch/~hauser/index.html',
+      url = 'http://www.chemie.unibas.ch/~hauser/open-source-lab/instrumentino/index.html',
       # could also include long_description, download_url, classifiers, etc.
       )
