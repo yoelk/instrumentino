@@ -75,3 +75,17 @@ class SpellmanUM20_4_MINUS(Spellman):
         rangeV = [-20, 0]
         rangeI = [0, 200]
         Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
+
+
+class SpellmanUM30_4_PLUS(Spellman):
+    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None):
+        rangeV = [0, 30]
+        rangeI = [0, 133]
+        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
+
+
+class SpellmanUM30_4_MINUS(Spellman):
+    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None):
+        rangeV = [-30, 0]
+        rangeI = [0, 133]
+        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
