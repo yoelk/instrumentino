@@ -218,6 +218,35 @@ class Arduino(InstrumentinoController):
         except KeyError:
             self.pinValuesCache['D' + str(pin)] = 0
     
+    def PidRelayCreate(self, pidVar, pinAnalIn, pinDigiOut, windowSizeMs, kp, ki, kd):
+        '''
+        Create a new PID controlled relay variable
+        pidVar - the variable number (see controlino sketch for max supported variables)
+        pinAnalIn - the analog input pin which provides input to the PID algorithm
+        pinDigiOut - the digital pin that controls the relay
+        windowSizeMs - the window size in ms
+        kp - the Kp parameter 
+        ki - the Ki parameter
+        kd - the Kd parameter
+        '''
+        self._sendData('PidRelayCreate %d %d %d %d %d %d %d'%(pidVar, pinAnalIn, pinDigiOut, windowSizeMs, kp, ki, kd), wait=True)
+            
+    def PidRelaySet(self, pidVar, setPoint):
+        '''
+        Set the setpoint of a PID controlled relay variable and start striving towards it
+        pidVar - the variable number (see controlino sketch for max supported variables)
+        setPoint - The value we're striving for
+        '''
+        self._sendData('PidRelaySet %d %d'%(pidVar, setPoint), wait=True)
+            
+    def PidRelayEnable(self, pidVar, enable):
+        '''
+        Enable/disable the contorl loop of a PID controlled relay variable
+        pidVar - the variable number (see controlino sketch for max supported variables)
+        enable - True/False for enable/disable
+        '''
+        self._sendData('PidRelayEnable %d %d'%(pidVar, 1 if enable else 0), wait=True)
+            
     def HardSerConnect(self, baudrate, port=1):
         '''
         Setup a hardware serial port for communication
@@ -349,17 +378,23 @@ class SysVarDigitalArduino(SysVarDigital):
         self.valueToState = {v: k for k, v in stateToValue.items()}
         SysVarDigital.__init__(self, name, self.stateToValue.keys(), Arduino, compName, helpLine, editable, PreSetFunc)
         self.pin = pin
+        self.lastSetState = None
 
     def FirstTimeOnline(self):
         if self.pin != None:
             self.GetController().PinMode(self.pin, self.editable)
         
     def GetFunc(self):
-        value = self.GetController().DigitalRead(self.pin)
-        return self.valueToState[value] if value != None else None
+        if self.pin != None:
+            value = self.GetController().DigitalRead(self.pin)
+            return self.valueToState[value] if value != None else None
+        else:
+            return self.lastSetState
     
     def SetFunc(self, state):
-        self.GetController().DigitalWrite(self.pin, self.stateToValue[state])
+        self.lastSetState = state
+        if self.pin != None:
+            self.GetController().DigitalWrite(self.pin, self.stateToValue[state])
 
 
 class SysVarAnalogArduino(SysVarAnalog):
@@ -367,7 +402,8 @@ class SysVarAnalogArduino(SysVarAnalog):
     An Arduino analog variable
     '''
     def __init__(self, name, range, pinAnalIn, pinPwmOut=None, SetPolarityPositiveFunc=None, GetPolarityPositiveFunc=None, compName='', helpLine='', units='', PreSetFunc=None, highFreqPWM=False, pinOutVoltsMax=5, pinInVoltsMax=5, pinOutVoltsMin=0, pinInVoltsMin=0, PostGetFunc=None):
-        SysVarAnalog.__init__(self, name, range, Arduino, compName, helpLine, pinPwmOut != None, units, PreSetFunc, PostGetFunc)
+        showEditBox = (pinPwmOut != None) or (PreSetFunc != None)
+        SysVarAnalog.__init__(self, name, range, Arduino, compName, helpLine, showEditBox , units, PreSetFunc, PostGetFunc)
         self.pinIn = pinAnalIn
         self.pinOut = pinPwmOut
         self.SetPolarityPositiveFunc = SetPolarityPositiveFunc
@@ -393,7 +429,9 @@ class SysVarAnalogArduino(SysVarAnalog):
         return sign * (self.GetUnipolarMin() + (self.GetUnipolarRange() * fraction)) if fraction != None else None
     
     def SetFunc(self, value):
-        self.GetController().AnalogWriteFraction(self.pinOut, (abs(value) - self.GetUnipolarMin()) / self.GetUnipolarRange(), self.pinOutVoltsMax, self.pinOutVoltsMin)    
+        if self.pinOut != None:
+            self.GetController().AnalogWriteFraction(self.pinOut, (abs(value) - self.GetUnipolarMin()) / self.GetUnipolarRange(), self.pinOutVoltsMax, self.pinOutVoltsMin)    
+
 
 class SysVarAnalogArduinoUnipolar(SysVarAnalogArduino):
     '''
@@ -440,3 +478,42 @@ class SysCompArduino(SysComp):
     def FirstTimeOnline(self):
         for var in self.vars.values():
             var.FirstTimeOnline()
+            
+
+class SysVarPidRelayArduino(SysVarAnalog):
+    '''
+    An Arduino variable that uses the PID Arduino library to turn a relay for the PID control.
+    Example: a heating element to be turned on/off to regulate the temperature
+    
+    It shows an analog variable to set and read the PID controlled quantity (e.g. the temperature) 
+    '''
+    def __init__(self, name, range, pidVar, windowSizeMs, kp, ki, kd, pinAnalIn, pinDigiOut, compName='', helpLine='', units='', PreSetFunc=None, pinInVoltsMax=5, pinInVoltsMin=0, PostGetFunc=None):
+        SysVarAnalog.__init__(self, name, range, Arduino, compName, helpLine, True, units, PreSetFunc, PostGetFunc)
+        self.pinAnalIn = pinAnalIn
+        self.pinDigiOut = pinDigiOut
+        self.pinInVoltsMax = pinInVoltsMax
+        self.pinInVoltsMin = pinInVoltsMin
+        self.range = range
+        self.pidVar = pidVar
+        self.windowSizeMs = windowSizeMs
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        
+    def FirstTimeOnline(self):
+        self.GetController().PidRelayCreate(self.pidVar, self.pinAnalIn, self.pinDigiOut, self.windowSizeMs, self.kp, self.ki, self.kd)
+    
+    def GetFunc(self):
+        fraction = self.GetController().AnalogReadFraction(self.pinAnalIn, self.pinInVoltsMax, self.pinInVoltsMin)
+        return (self.range[0] + (self.range[1] - self.range[0]) * fraction) if fraction != None else None
+    
+    def SetFunc(self, value):
+        # write the setpoint in the range of the analog input pin
+        fraction = (value - self.range[0]) / (self.range[1] - self.range[0])
+        voltage = self.pinInVoltsMin + fraction * (self.pinInVoltsMax - self.pinInVoltsMin)
+        analInCompatibleValue = voltage / Arduino.PIN_VOLT_MAX * Arduino.ANAL_IN_VAL_MAX
+        self.GetController().PidRelaySet(self.pidVar, analInCompatibleValue)
+        
+    def Enable(self, enable):
+        self.GetController().PidRelayEnable(self.pidVar, enable)
+            

@@ -22,9 +22,11 @@ instrumentino/controllers/arduino/hvm.py
 instrumentino/controllers/arduino/mks.py
 instrumentino/controllers/arduino/parker.py
 instrumentino/controllers/arduino/pewatron.py
+instrumentino/controllers/arduino/pid_thermostat.py
 instrumentino/controllers/arduino/pins.py
 instrumentino/controllers/arduino/spellman.py
 instrumentino/controllers/arduino/tecan.py
+instrumentino/controllers/arduino/thermometer.py
 instrumentino/controllers/labsmith_eib/__init__.py
 instrumentino/controllers/labsmith_eib/labsmith_comps.py
 instrumentino/resources/__init__.py
