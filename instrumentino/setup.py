@@ -26,4 +26,4 @@ setup(install_requires = ['wxPython', 'pyserial', 'matplotlib'], #, 'pylab', 'mp
       keywords = 'Instrumentino, Arduino',
       url = 'http://www.chemie.unibas.ch/~hauser/open-source-lab/instrumentino/index.html',
       # could also include long_description, download_url, classifiers, etc.
-      )
+      ) 
