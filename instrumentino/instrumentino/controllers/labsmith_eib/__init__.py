@@ -191,8 +191,8 @@ class SysVarDigitalLabSmith_CachedAnalog(SysVarAnalog):
     '''
     A LabSmith cached analog variable
     '''
-    def __init__(self, name, compName, comp, units='%', helpLine='', editable=True):
-        SysVarAnalog.__init__(self, name, [0,100], LabSmithEIB, compName, helpLine=helpLine, editable=editable, units=units)
+    def __init__(self, name, compName, comp, units='%', helpLine='', editable=True, showInSignalLog=True):
+        SysVarAnalog.__init__(self, name, [0,100], LabSmithEIB, compName, helpLine=helpLine, editable=editable, units=units, showInSignalLog=showInSignalLog)
         self.comp = comp
         self.cache = 0
 
@@ -208,7 +208,7 @@ class SysVarDigitalLabSmith_SyringeSpeed(SysVarDigitalLabSmith_CachedAnalog):
     A LabSmith SPS01 speed
     '''
     def __init__(self, compName, comp, editable=True):
-        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Speed', compName, comp, helpLine='set pump speed')
+        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Speed', compName, comp, helpLine='set pump speed', showInSignalLog=False)
 
     def SetFunc(self, percent):
         super(SysVarDigitalLabSmith_SyringeSpeed, self).SetFunc(percent)
@@ -220,7 +220,7 @@ class SysVarDigitalLabSmith_SyringePower(SysVarDigitalLabSmith_CachedAnalog):
     A LabSmith SPS01 power
     '''
     def __init__(self, compName, comp, editable=True):
-        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Power', compName, comp, helpLine='set pump power')
+        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Power', compName, comp, helpLine='set pump power', showInSignalLog=False)
 
     def SetFunc(self, percent):
         super(SysVarDigitalLabSmith_SyringePower, self).SetFunc(percent)
@@ -232,7 +232,7 @@ class SysVarDigitalLabSmith_SyringeMaxVolume(SysVarDigitalLabSmith_CachedAnalog)
     A LabSmith SPS01 maximal volume
     '''
     def __init__(self, compName, comp):
-        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Max volume', compName, comp, units='ul', editable=False, helpLine='syringe maximal volume')
+        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Max volume', compName, comp, units='ul', editable=False, helpLine='syringe maximal volume', showInSignalLog=False)
         
     def SetMaxVolume(self, maxVolume):
         self.cache = maxVolume
@@ -243,7 +243,7 @@ class SysVarDigitalLabSmith_SyringePlunger(SysVarDigitalLabSmith_CachedAnalog):
     A LabSmith SPS01 plunger location
     '''
     def __init__(self, compName, comp, editable=True):
-        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Plunger', compName, comp, helpLine='set plunger location')
+        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Plunger', compName, comp, helpLine='set plunger location', showInSignalLog=False)
         self.maxVolume = 0
 
     def SetFunc(self, percent):

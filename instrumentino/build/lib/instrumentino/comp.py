@@ -18,7 +18,7 @@ class SysVar(object):
     - SetFunc(value)   -    Set the value of the variable in the hardware
     - OnEdit(event)    -    called when the display panel of the variable is edited
     '''
-    def __init__(self, name, controllerClass, compName='', helpLine='', editable=True, PreSetFunc=None, PostGetFunc=None):
+    def __init__(self, name, controllerClass, compName='', helpLine='', editable=True, PreSetFunc=None, PostGetFunc=None, showInSignalLog=True):
         self.name = name
         self.compName = compName
         self.controllerClass = controllerClass
@@ -27,6 +27,7 @@ class SysVar(object):
         self.widget = None
         self.PreSetFunc = PreSetFunc
         self.PostGetFunc = PostGetFunc
+        self.showInSignalLog = showInSignalLog
 
     def Get(self):
         '''
@@ -70,8 +71,8 @@ class SysVarAnalog(SysVar):
     - GetFunc()        -    read the value of the variable from the hardware
     - SetFunc(value)   -    Set the value of the variable in the hardware
     '''
-    def __init__(self, name, range, controllerClass, compName='', helpLine='', editable=True, units='', PreSetFunc=None, PostGetFunc=None):
-        SysVar.__init__(self, name, controllerClass, compName, helpLine, editable, PreSetFunc, PostGetFunc)
+    def __init__(self, name, range, controllerClass, compName='', helpLine='', editable=True, units='', PreSetFunc=None, PostGetFunc=None, showInSignalLog=True):
+        SysVar.__init__(self, name, controllerClass, compName, helpLine, editable, PreSetFunc, PostGetFunc, showInSignalLog)
         self.units = units
         self.range = range
         self.monitorTextCtrl = None
@@ -105,7 +106,7 @@ class SysVarAnalog(SysVar):
         panel.SetSizer(sizer)
         sizer.Add(wx.StaticText(panel, label=self.name + ' (' + self.units + '):'))
         self.monitorTextCtrl = masked.NumCtrl(panel,
-                                              value=0,
+                                              value=self.range[0],
                                               integerWidth=cfg.numIntegerPartWidth,
                                               fractionWidth=cfg.numFractionPartWidth,
                                               min=self.range[0],
@@ -115,7 +116,7 @@ class SysVarAnalog(SysVar):
         if self.editable:
             sizer.Add(wx.StaticText(panel, label='Set to:'))
             editTextCtrl = masked.NumCtrl(panel,
-                                          value=0,
+                                          value=self.range[0],
                                           integerWidth=cfg.numIntegerPartWidth,
                                           fractionWidth=cfg.numFractionPartWidth,
                                           min=self.range[0],
@@ -136,7 +137,7 @@ class SysVarDigital(SysVar):
     - SetFunc(value)   -    Set the value of the variable in the hardware
     '''
     def __init__(self, name, states, controllerClass, compName='', helpLine='', editable=True, PreSetFunc=None, PostGetFunc=None):
-        SysVar.__init__(self, name, controllerClass, compName, helpLine, editable, PreSetFunc, PostGetFunc)
+        SysVar.__init__(self, name, controllerClass, compName, helpLine, editable, PreSetFunc, PostGetFunc, False)
         self.radioButtons = None
         self.states = states
         
