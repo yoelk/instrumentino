@@ -401,9 +401,9 @@ if __name__ == '__main__':
         return polarityVariable.Get() == 'on'
     
     analPins = AnalogPins('analog pins',
-                          (SysVarAnalogArduinoUnipolar('unipolar +',[0,5],0,None, units='V'),
-                           SysVarAnalogArduinoUnipolar('unipolar -',[-5,0],1,None, units='V'),
-                           SysVarAnalogArduinoBipolarWithExternalPolarity('bipolar',[-5,5],2,None, SetPolarityPositiveFunc, GetPolarityPositiveFunc, units='V'),))
+                          (SysVarAnalogArduinoUnipolar('unipolar +',[0,5],pinAnal_unipolarPositive,None, units='V'),
+                           SysVarAnalogArduinoUnipolar('unipolar -',[-5,0],pinAnal_unipolarNegative,None, units='V'),
+                           SysVarAnalogArduinoBipolarWithExternalPolarity('bipolar',[-5,5],pinAnal_bipolar,None, SetPolarityPositiveFunc, GetPolarityPositiveFunc, units='V'),))
                                                                 
     digiPins = DigitalPins('digital pins',
                            (polarityVariable,))

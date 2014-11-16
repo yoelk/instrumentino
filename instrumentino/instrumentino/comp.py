@@ -28,7 +28,6 @@ class SysVar(object):
         self.PreSetFunc = PreSetFunc
         self.PostGetFunc = PostGetFunc
         self.showInSignalLog = showInSignalLog
-        print name + ': ' + str(self.showInSignalLog)
 
     def Get(self):
         '''
