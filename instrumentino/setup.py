@@ -3,7 +3,7 @@ import ez_setup
 ez_setup.use_setuptools()
 from setuptools import setup, find_packages
 
-setup(install_requires = ['wxPython', 'pyserial', 'matplotlib'], #, 'pylab', 'mpl_toolkits'
+setup(install_requires = ['wxPython', 'pyserial', 'matplotlib', 'numpy'],
       packages=find_packages(),
       package_data={'': ['*.png', '*.xrc', '*.dll']},
       zip_safe=True,

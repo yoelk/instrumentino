@@ -1,22 +1,24 @@
 from __future__ import division
-from instrumentino.controllers.arduino.pins import AnalogPins
 __author__ = 'yoelk'
 
 import wx
 from wx import xrc, lib
 from wx.lib import wordwrap
+import time
+import sys
 import pickle
 import os
 from datetime import datetime
 from instrumentino import cfg
-from method import ActionsListCtrl
-from sequence import MethodsListCtrl
-from log_graph import LogGraphPanel
-from instrumentino.action import SysAction, SysActionParamTime
-from instrumentino.controllers.arduino import Arduino, SysVarAnalogArduinoUnipolar
-from util import SerialUtil
-import time
-import sys
+from instrumentino.method import ActionsListCtrl
+from instrumentino.sequence import MethodsListCtrl
+from instrumentino.log_graph import LogGraphPanel
+from instrumentino.action import SysAction, SysActionParamTime,\
+    SysActionParamInt
+from instrumentino.controllers.arduino import Arduino, SysVarAnalogArduinoUnipolar,\
+    SysVarAnalogArduinoBipolarWithExternalPolarity, SysVarDigitalArduino
+from instrumentino.util import SerialUtil
+from instrumentino.controllers.arduino.pins import AnalogPins, DigitalPins
 
 class InstrumentinoApp(wx.App):
     '''
@@ -372,5 +374,79 @@ class Instrument():
         app.MainLoop()
         
 #################################
+# make a simple example to demonstrate some of the GUI capabilities
+# Use an Arduino to track the values of two analog pins.
+# The first has a unipolar positive range (0 to 5 V).
+# The second has a unipolar negative range (-5 to 0 V).
+# The third has a bipolar range (-5 to 5 V) while a digital pin sets the polarity.
 if __name__ == '__main__':
-    Instrument((AnalogPins('pins', (SysVarAnalogArduinoUnipolar('A0',[0,5],0,None, units='V'),)),), (SysAction('an action', (SysActionParamTime(),)),), '1', 'test', 'testing')
+    '''
+    *** System constants
+    '''
+    # pin assignments
+    pinAnal_unipolarPositive = 0
+    pinAnal_unipolarNegative = 1
+    pinAnal_bipolar = 2
+    pinDigi_polarity = 2
+            
+    '''
+    *** System components
+    '''
+    polarityVariable = SysVarDigitalArduino('polarity', pinDigi_polarity)
+    
+    def SetPolarityPositiveFunc():
+        pass
+    
+    def GetPolarityPositiveFunc():
+        return polarityVariable.Get() == 'on'
+    
+    analPins = AnalogPins('analog pins',
+                          (SysVarAnalogArduinoUnipolar('unipolar +',[0,5],0,None, units='V'),
+                           SysVarAnalogArduinoUnipolar('unipolar -',[-5,0],1,None, units='V'),
+                           SysVarAnalogArduinoBipolarWithExternalPolarity('bipolar',[-5,5],2,None, SetPolarityPositiveFunc, GetPolarityPositiveFunc, units='V'),))
+                                                                
+    digiPins = DigitalPins('digital pins',
+                           (polarityVariable,))
+
+    '''
+    *** System actions
+    '''
+    class SysActionSetPolarity(SysAction):
+        def __init__(self):
+            self.polarity = SysActionParamInt('Polarity', [-1,1])
+            SysAction.__init__(self, 'Set polarity', (self.polarity,))
+    
+        def Command(self):
+            polarityVariable.Set('on' if self.polarity.Get()>0 else 'off')
+            
+            
+    class SysActionSleep(SysAction):
+        def __init__(self):
+            self.seconds = SysActionParamTime(name='Time')
+            SysAction.__init__(self, 'Sleep', (self.seconds,))
+    
+        def Command(self):
+            cfg.Sleep(self.seconds.Get())
+            
+    '''
+    *** System
+    '''
+    class System(Instrument):
+        def __init__(self):
+            comps = (analPins, digiPins)
+            actions = (SysActionSetPolarity(),
+                       SysActionSleep())
+            name = 'Basic Arduino example'
+            description = '''Basic Arduino example.\n 
+                             Use an Arduino to track the values of two analog pins.\n
+                             The first has a unipolar positive range (0 to 5 V).\n
+                             The second has a unipolar negative range (-5 to 0 V).\n
+                             The third has a bipolar range (-5 to 5 V) while a digital pin sets the polarity.'''
+            version = '1.0'
+            
+            Instrument.__init__(self, comps, actions, version, name, description)
+            
+    '''
+    *** Run program
+    '''
+    System()

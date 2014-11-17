@@ -202,6 +202,12 @@ def WaitForUser(text=''):
     wx.PostEvent(mainFrame, ResultEvent(EVT_POP_MESSAGE, (text, e)))
     time.sleep(3)
     e.wait()
+
+def HideVariableFromLog(varName):
+    '''
+    Hide a variable trace from the signal log graph
+    '''
+    logGraph.HideVariableFromLog(varName)
     
 class ResultEvent(wx.PyEvent):
     '''
