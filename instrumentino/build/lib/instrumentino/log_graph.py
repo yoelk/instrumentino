@@ -97,6 +97,8 @@ class LogGraphPanel(wx.Panel):
         variableNamesOnLegend = []
         colors = ['b', 'g', 'r', 'c', 'm', 'b', 'y']
         colorCycler = cycle(colors)
+        lineWidths = [1]*len(colors)+[2]*len(colors)+[4]*len(colors)
+        lineWidthCycler = cycle(lineWidths)
         for comp in self.sysComps:
             for var in comp.vars.values():
                 name = var.FullName()
@@ -105,8 +107,7 @@ class LogGraphPanel(wx.Panel):
                     variableNamesOnLegend += [name]
                     self.realAnalogData[name] = AnalogData(var.range)
                     color = next(colorCycler)
-                    print var.name
-                    print var.showInSignalLog
+                    lineWidth = next(lineWidthCycler)
                     if var.showInSignalLog:
                         nameOnLegend = name + ' [' + str(var.range[0]) + ',' + str(var.range[1]) + ']'
                     else:
@@ -114,16 +115,16 @@ class LogGraphPanel(wx.Panel):
                     if not self.hasBipolarRange(name):
                         self.plottedAnalogData[name] = AnalogData(var.range)
                         self.plottedLines[name] = self.axes.plot(self.time, self.plottedAnalogData[name].data,
-                                                                 '-', lw=2, color=color, linewidth=1, label=nameOnLegend)[0]
+                                                                 '-', lw=lineWidth, color=color, label=nameOnLegend)[0]
                     else:
                         # split this variable to two unipolar variables for the sake of plotting
                         self.plottedAnalogData[name+'_POS'] = AnalogData([0,var.range[1]])
                         self.plottedAnalogData[name+'_NEG'] = AnalogData([var.range[0],0])
                         
                         self.plottedLines[name+'_POS'] = self.axes.plot(self.time, self.plottedAnalogData[name+'_POS'].data,
-                                                                        '-', lw=2, color=color, linewidth=1, label=nameOnLegend)[0]
+                                                                        '-', lw=lineWidth, color=color, label=nameOnLegend)[0]
                         self.plottedLines[name+'_NEG'] = self.axes.plot(self.time, self.plottedAnalogData[name+'_NEG'].data,
-                                                                        '--', lw=2, color=color, linewidth=1)[0]
+                                                                        '--', lw=lineWidth, color=color)[0]
                     
                 # digital data isn't plotted
                 if isinstance(var, SysVarDigital):
@@ -133,6 +134,7 @@ class LogGraphPanel(wx.Panel):
         self.allRealData.update(self.digitalData)
         
         # finalize legend
+        self.axes.set_ybound(0,100)
         leg = self.axes.legend(loc='upper left', fancybox=True, shadow=True)
         leg.get_frame().set_alpha(0.4)
         self.lineLegendDict = {}

@@ -5,28 +5,38 @@ import wx
 from wx import xrc
 from instrumentino.comp import SysVarAnalog, SysVarDigital
 from instrumentino import cfg
-
+from itertools import cycle
+import numpy as np
 import matplotlib
-from matplotlib.dates import DateFormatter, MinuteLocator, SecondLocator,\
-    AutoDateFormatter, AutoDateLocator
 matplotlib.use('WXAgg')
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_wxagg import \
-    FigureCanvasWxAgg as FigCanvas, \
-    NavigationToolbar2WxAgg as NavigationToolbar
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib import pyplot as plt
-import pylab as pl
-from mpl_toolkits.axes_grid1 import host_subplot
-import mpl_toolkits.axisartist as AA
+from matplotlib.dates import DateFormatter, MinuteLocator, SecondLocator,\
+    AutoDateFormatter, AutoDateLocator
+
+class Data():
+    '''
+    A class to describe collected data
+    '''
+    def __init__(self):
+        self.data = []
+
+class AnalogData(Data):
+    '''
+    A class to describe collected analog data
+    '''
+    def __init__(self, yRange):
+        Data.__init__(self)
+        self.yRange = yRange
 
 class LogGraphPanel(wx.Panel):
     '''
     A panel with a log graph
     adapted from examples by Eli Bendersky (eliben@gmail.com)
     '''
-    
-    maxShownAxes = 4
-    
     def __init__(self, parent, sysComps):
         '''
         Creates the main panel with all the controls on it
@@ -43,90 +53,160 @@ class LogGraphPanel(wx.Panel):
         self.slider_zoom = wx.Slider(self, -1, value=1, minValue=1, maxValue=60, style=wx.SL_AUTOTICKS | wx.SL_LABELS)
         self.slider_zoom.SetTickFreq(10, 1)
         self.Bind(wx.EVT_COMMAND_SCROLL_THUMBTRACK, self.on_slider_width, self.slider_zoom)
-        
-        # set main plot
-        self.dpi = 100
-        self.mainAxes = host_subplot(111, axes_class=AA.Axes)
-        pl.gca().axes.get_yaxis().set_ticks([])
-        self.mainAxes.xaxis_date()
-        self.canvas = FigCanvas(self, -1, pl.gcf())
-        self.toolbar = NavigationToolbar(self.canvas)
 
-        # set individual data lines
-        self.lastTime = None
-        self.time = []
-        self.analogData = {}
-        self.analogPlotData = {}
-        self.yRange = {}
-        self.digitalData = {}
-        self.allData = {}
-        self.analogAxes = {}
-        plotNum = 0
+        # set figure
+        self.dpi = 100
+        self.figure, self.axes = plt.subplots()
+        self.canvas = FigureCanvas(self, -1, self.figure)
+        self.toolbar = NavigationToolbar(self.canvas)
         
-        # create two common Y axes for unipolar and bipolar variables
-        self.createRightAxis('unipolar', [0,100], 0)
-        self.createRightAxis('bipolar', [-100,100], 40)                
+        self.axes.set_xlabel('time', fontsize=12)
+        self.axes.set_ylabel('percent (%) - dashed line for negative values', fontsize=12)
+        self.axes.set_ybound(0,100)
+        self.axes.xaxis_date()
+        self.axes.get_xaxis().set_ticks([])
+        self.axes.set_axis_bgcolor('white')
         
-        for comp in self.sysComps:
-            for var in comp.vars.values():
-                name = var.FullName()
-                if isinstance(var, SysVarAnalog):
-                    self.analogData[name] = []
-                    self.yRange[name] = var.range
-                    self.analogAxes[name] = self.mainAxes.twinx()
-                    self.analogAxes[name].axis["right"] = self.analogAxes[name].get_grid_helper().new_fixed_axis(loc="right",
-                                                                                                                 axes=self.analogAxes[name])
-                    self.analogAxes[name].axis["right"].set_visible(False)
-                    plotNum += 1
-                    
-                if isinstance(var, SysVarDigital):
-                    self.digitalData[name] = []
-                
-        self.allData.update(self.analogData)
-        self.allData.update(self.digitalData)
-        
-        # modify the main plot
-        plt.subplots_adjust(right=1-(0.085*min(self.maxShownAxes, len(self.analogData))))
-        self.mainAxes.set_axis_bgcolor('white')
-        pl.setp(self.mainAxes.get_xticklabels(), fontsize=8)
-        pl.setp(self.mainAxes.get_yticklabels(), fontsize=8)
-        
+        self.figure.canvas.mpl_connect('pick_event', self.OnPick)
+
         # Show on screen
-        self.hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.hbox.Add(self.cb_freeze, 0)
-        self.hbox.AddSpacer(30)
-        self.hbox.Add(self.slider_label, 0)
-        self.hbox.Add(self.slider_zoom, 1)
-        self.hbox.Add(self.toolbar, 0, wx.EXPAND | wx.ALIGN_LEFT)
+        self.controllersHBox = wx.BoxSizer(wx.HORIZONTAL)
+        self.controllersHBox.Add(self.cb_freeze, 0)
+        self.controllersHBox.AddSpacer(30)
+        self.controllersHBox.Add(self.slider_label, 0)
+        self.controllersHBox.Add(self.slider_zoom, 1)
+        self.controllersHBox.Add(self.toolbar, 0, wx.EXPAND | wx.ALIGN_LEFT)
                 
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(self.canvas, 1, wx.EXPAND | wx.GROW | wx.ALL)
-        self.vbox.Add(self.hbox, 0, wx.EXPAND)
+        self.vbox.Add(self.controllersHBox, 0, wx.EXPAND)
                 
         # fit all to screen
         self.parent.GetSizer().Add(self, 1, wx.EXPAND | wx.GROW | wx.ALL)
         self.SetSizer(self.vbox)
         self.vbox.Fit(self)
+                
+        # order data sources
+        self.lastTime = None
+        self.time = []
+        self.realAnalogData = {}
+        self.plottedAnalogData = {}
+        self.digitalData = {}
+        self.allRealData = {}
+        self.plottedLines = {}
+        variableNamesOnLegend = []
+        colors = ['b', 'g', 'r', 'c', 'm', 'b', 'y']
+        colorCycler = cycle(colors)
+        lineWidths = [1]*len(colors)+[2]*len(colors)+[4]*len(colors)
+        lineWidthCycler = cycle(lineWidths)
+        for comp in self.sysComps:
+            for var in comp.vars.values():
+                name = var.FullName()
+                
+                if isinstance(var, SysVarAnalog):
+                    variableNamesOnLegend += [name]
+                    self.realAnalogData[name] = AnalogData(var.range)
+                    color = next(colorCycler)
+                    lineWidth = next(lineWidthCycler)
+                    if var.showInSignalLog:
+                        nameOnLegend = name + ' [' + str(var.range[0]) + ',' + str(var.range[1]) + ']'
+                    else:
+                        nameOnLegend = None
+                    if not self.hasBipolarRange(name):
+                        self.plottedAnalogData[name] = AnalogData(var.range)
+                        self.plottedLines[name] = self.axes.plot(self.time, self.plottedAnalogData[name].data,
+                                                                 '-', lw=lineWidth, color=color, label=nameOnLegend)[0]
+                    else:
+                        # split this variable to two unipolar variables for the sake of plotting
+                        self.plottedAnalogData[name+'_POS'] = AnalogData([0,var.range[1]])
+                        self.plottedAnalogData[name+'_NEG'] = AnalogData([var.range[0],0])
+                        
+                        self.plottedLines[name+'_POS'] = self.axes.plot(self.time, self.plottedAnalogData[name+'_POS'].data,
+                                                                        '-', lw=lineWidth, color=color, label=nameOnLegend)[0]
+                        self.plottedLines[name+'_NEG'] = self.axes.plot(self.time, self.plottedAnalogData[name+'_NEG'].data,
+                                                                        '--', lw=lineWidth, color=color)[0]
+                    
+                # digital data isn't plotted
+                if isinstance(var, SysVarDigital):
+                    self.digitalData[name] = Data()
+                
+        self.allRealData.update(self.realAnalogData)
+        self.allRealData.update(self.digitalData)
+        
+        # finalize legend
+        self.axes.set_ybound(0,100)
+        leg = self.axes.legend(loc='upper left', fancybox=True, shadow=True)
+        leg.get_frame().set_alpha(0.4)
+        self.lineLegendDict = {}
+        for legline, lineName in zip(leg.get_lines(), variableNamesOnLegend):
+            legline.set_picker(5)  # 5 pts tolerance
+            self.lineLegendDict[legline] = lineName
+        
+        self.lineLegendDictReverseDict = {v: k for k, v in self.lineLegendDict.items()}
+
+    def HideVariableFromLog(self, name):
+        if not self.hasBipolarRange(name):
+            plottedLines = [self.plottedLines[name]]
+        else:
+            plottedLines = [self.plottedLines[name+'_POS'],
+                            self.plottedLines[name+'_NEG']]
+            
+        vis = not plottedLines[0].get_visible()
+        for line in plottedLines:
+            line.set_visible(vis)
+        # Change the alpha on the line in the legend so we can see what lines
+        # have been toggled
+        legendLine = self.lineLegendDictReverseDict[name]
+        if vis:
+            legendLine.set_alpha(1.0)
+        else:
+            legendLine.set_alpha(0.2)
+        self.figure.canvas.draw()
+
+    def OnPick(self, event):
+        # on the pick event, find the orig line corresponding to the
+        # legend proxy line, and toggle the visibility
+        legendLine = event.artist
+        name = self.lineLegendDict[legendLine]
+        self.HideVariableFromLog(name)
+        
+
+    def hasBipolarRange(self, name):
+        return self.realAnalogData[name].yRange[0] * self.realAnalogData[name].yRange[1] < 0
+
+    def NormalizePositiveValue(self, value, yRange):
+        # unipolar range [X, Y] or [-X, -Y]
+        relevantEdge = yRange[0] if yRange[0] >= 0 else yRange[1]
+        return abs(value - relevantEdge) / abs(yRange[1] - yRange[0]) * 100
         
     def AddData(self, name, value):
         # keep all data arrays the same length. the time array should be updated last
-        if len(self.allData[name]) <= len(self.time):
+        if len(self.allRealData[name].data) <= len(self.time):
             if value == None:
-                value = self.allData[name][-1] if len(self.allData[name]) > 0 else 0
+                value = self.allRealData[name].data[-1] if len(self.allRealData[name].data) > 0 else 0
                 
-            self.allData[name] += [value]
+            self.allRealData[name].data += [value]
+            if name in self.realAnalogData.keys():
+                if not self.hasBipolarRange(name):
+                    normVal = self.NormalizePositiveValue(value, self.plottedAnalogData[name].yRange)
+                    self.plottedAnalogData[name].data += [normVal]
+                else:
+                    normPosVal = self.NormalizePositiveValue(value, self.plottedAnalogData[name+'_POS'].yRange)
+                    normNegVal = self.NormalizePositiveValue(value, self.plottedAnalogData[name+'_NEG'].yRange)
+                    self.plottedAnalogData[name+'_POS'].data += [normPosVal if value>=0 else None]
+                    self.plottedAnalogData[name+'_NEG'].data += [normNegVal if value<0 else None]
             
     def FinishUpdate(self):
         self.time += [datetime.now()]
 
         # write a header with variable names
         if len(self.time) == 1:
-            cfg.signalsLogFile.write('time,' + str(self.allData.keys())[1:-1] + '\r')
+            cfg.signalsLogFile.write('time,' + str(self.allRealData.keys())[1:-1] + '\r')
             
         # update the signals' file once in a while
         if len(self.time) % self.dataWriteBulk == 0:
             for idx in range(-1*self.dataWriteBulk,0):
-                cfg.signalsLogFile.write(str(self.time[idx].strftime('%H:%M:%S.%f')) + ',' + str([v[idx] for v in self.allData.values()])[1:-1] + '\r')
+                cfg.signalsLogFile.write(str(self.time[idx].strftime('%H:%M:%S.%f')) + ',' + str([v.data[idx] for v in self.allRealData.values()])[1:-1] + '\r')
                         
         # only show the graph when there's at least 2 data points
         if len(self.time) < 2:
@@ -135,33 +215,27 @@ class LogGraphPanel(wx.Panel):
 
     def StopUpdates(self):
         for idx in range(-1*(len(self.time) % self.dataWriteBulk),0):
-            cfg.signalsLogFile.write(str(self.time[idx].strftime('%H:%M:%S.%f')) + ',' + str([v[idx] for v in self.allData.values()])[1:-1] + '\r')
+            cfg.signalsLogFile.write(str(self.time[idx].strftime('%H:%M:%S.%f')) + ',' + str([v.data[idx] for v in self.allRealData.values()])[1:-1] + '\r')
             
-        # close extra plotting window
-        pl.close()
+        plt.close()
     
     def Redraw(self, firstTime=False):
         """ Redraws the figure
         """
-        if firstTime:
-            self.mainAxes.get_xaxis().set_major_formatter(DateFormatter('%H:%M'))
-            self.mainAxes.get_xaxis().set_major_locator(MinuteLocator())
-        
-        for name in self.analogData.keys():
-            if firstTime:
-                self.analogPlotData[name] = self.analogAxes[name].plot(self.time, self.analogData[name], linewidth=1)[0]
-                self.analogAxes[name].set_ybound(lower=self.yRange[name][0], upper=self.yRange[name][1])
-                self.analogAxes[name].axis["right"].toggle(all=True)
-                            
-            if not self.cb_freeze.IsChecked():
-                self.analogAxes[name].set_xbound(lower=self.time[max(0,len(self.time)-int(self.slider_zoom.GetValue() * 60 * cfg.app.updateFrequency))],
+            
+        if not self.cb_freeze.IsChecked():
+            self.axes.set_xbound(lower=self.time[max(0,len(self.time)-int(self.slider_zoom.GetValue() * 60 * cfg.app.updateFrequency))],
                                                  upper=self.time[-1])
-                
-            self.analogPlotData[name].set_xdata(self.time)
-            self.analogPlotData[name].set_ydata(self.analogData[name])
         
-        pl.setp(self.mainAxes.get_xticklabels(), visible=True)
-        
+        for name in self.plottedAnalogData.keys():
+            self.plottedLines[name].set_ydata(np.append(self.plottedLines[name].get_ydata(), self.plottedAnalogData[name].data[-1]))
+            self.plottedLines[name].set_xdata(np.append(self.plottedLines[name].get_xdata(), self.time[-1]))
+
+        if firstTime:
+            self.axes.get_xaxis().set_major_formatter(DateFormatter('%H:%M'))
+            self.axes.get_xaxis().set_major_locator(MinuteLocator())
+            self.axes.set_ybound(0,100)
+                        
         self.canvas.draw()
     
     def on_cb_freeze(self, event):
@@ -170,15 +244,6 @@ class LogGraphPanel(wx.Panel):
     def on_slider_width(self, event):
         self.Redraw()
 
-    def createRightAxis(self, name, range, offset):
-        self.analogAxes[name] = self.mainAxes.twinx() 
-        self.analogAxes[name].axis["right"] = self.analogAxes[name].get_grid_helper().new_fixed_axis(loc="right",
-                                                                                                           axes=self.analogAxes[name],
-                                                                                                           offset=(offset,0))
-        self.analogAxes[name].axis["right"].toggle(all=True)
-        self.analogAxes[name].set_ylabel(name + ': [' + str(range[0]) + ',' + str(range[1]) + ']%')
-        self.analogAxes[name].set_ybound(lower=range[0], upper=range[1])
-        
 ##############################
 class SimpleFrame(wx.Frame):
     def __init__(self):
