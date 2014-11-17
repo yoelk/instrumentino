@@ -62,8 +62,8 @@ void setup();
 // serial
 extern HardwareSerial Serial;
 #define SERIAL0_BAUD		115200
-#define RX_BUFF_SIZE		100
-#define ARGV_MAX			10
+#define RX_BUFF_SIZE		200
+#define ARGV_MAX			30
 #define SOFT_SER_MSG_SIZE	100
 #define SOFT_SER_MAX_PORTS	4
 

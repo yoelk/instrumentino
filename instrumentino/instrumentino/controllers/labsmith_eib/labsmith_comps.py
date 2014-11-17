@@ -13,6 +13,16 @@ from instrumentino.comp import SysVarDigital, SysComp
 """
 system components
 """
+class LabSmithSensors4AM01(SysCompLabSmith):
+    def __init__(self, name, analVars):
+        SysCompLabSmith.__init__(self, name, analVars, 'sensors')
+        
+        for var in analVars:
+            var.SetManifold(self)
+            
+    def getSensor(self, port):
+        return self.GetController().GetSensorValue(port)
+    
 
 class LabSmithValves4VM01(SysCompLabSmith):
     def __init__(self, name, digiVars):
@@ -21,8 +31,6 @@ class LabSmithValves4VM01(SysCompLabSmith):
         for var in digiVars:
             var.SetController(self)
             
-        self.valvesDriver = None
-        
     def setValve(self, port, state):
         if port == 1:
             self.GetController().SetValves(valve1=state)

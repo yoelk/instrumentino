@@ -46,7 +46,6 @@ class LogGraphPanel(wx.Panel):
         
         # set main plot
         self.dpi = 100
-        self.axisSeparation = 45
         self.mainAxes = host_subplot(111, axes_class=AA.Axes)
         pl.gca().axes.get_yaxis().set_ticks([])
         self.mainAxes.xaxis_date()
@@ -63,6 +62,11 @@ class LogGraphPanel(wx.Panel):
         self.allData = {}
         self.analogAxes = {}
         plotNum = 0
+        
+        # create two common Y axes for unipolar and bipolar variables
+        self.createRightAxis('unipolar', [0,100], 0)
+        self.createRightAxis('bipolar', [-100,100], 40)                
+        
         for comp in self.sysComps:
             for var in comp.vars.values():
                 name = var.FullName()
@@ -71,8 +75,8 @@ class LogGraphPanel(wx.Panel):
                     self.yRange[name] = var.range
                     self.analogAxes[name] = self.mainAxes.twinx()
                     self.analogAxes[name].axis["right"] = self.analogAxes[name].get_grid_helper().new_fixed_axis(loc="right",
-                                                                                                                 axes=self.analogAxes[name],
-                                                                                                                 offset=(plotNum*self.axisSeparation, 0))
+                                                                                                                 axes=self.analogAxes[name])
+                    self.analogAxes[name].axis["right"].set_visible(False)
                     plotNum += 1
                     
                 if isinstance(var, SysVarDigital):
@@ -146,16 +150,12 @@ class LogGraphPanel(wx.Panel):
         for name in self.analogData.keys():
             if firstTime:
                 self.analogPlotData[name] = self.analogAxes[name].plot(self.time, self.analogData[name], linewidth=1)[0]
-                
-                self.analogAxes[name].axis["right"].label.set_color(self.analogPlotData[name].get_color())
+                self.analogAxes[name].set_ybound(lower=self.yRange[name][0], upper=self.yRange[name][1])
                 self.analogAxes[name].axis["right"].toggle(all=True)
-                self.analogAxes[name].set_ylabel(name)
-            
+                            
             if not self.cb_freeze.IsChecked():
                 self.analogAxes[name].set_xbound(lower=self.time[max(0,len(self.time)-int(self.slider_zoom.GetValue() * 60 * cfg.app.updateFrequency))],
                                                  upper=self.time[-1])
-                self.analogAxes[name].set_ybound(lower=self.yRange[name][0],
-                                                 upper=self.yRange[name][1])
                 
             self.analogPlotData[name].set_xdata(self.time)
             self.analogPlotData[name].set_ydata(self.analogData[name])
@@ -170,6 +170,15 @@ class LogGraphPanel(wx.Panel):
     def on_slider_width(self, event):
         self.Redraw()
 
+    def createRightAxis(self, name, range, offset):
+        self.analogAxes[name] = self.mainAxes.twinx() 
+        self.analogAxes[name].axis["right"] = self.analogAxes[name].get_grid_helper().new_fixed_axis(loc="right",
+                                                                                                           axes=self.analogAxes[name],
+                                                                                                           offset=(offset,0))
+        self.analogAxes[name].axis["right"].toggle(all=True)
+        self.analogAxes[name].set_ylabel(name + ': [' + str(range[0]) + ',' + str(range[1]) + ']%')
+        self.analogAxes[name].set_ybound(lower=range[0], upper=range[1])
+        
 ##############################
 class SimpleFrame(wx.Frame):
     def __init__(self):

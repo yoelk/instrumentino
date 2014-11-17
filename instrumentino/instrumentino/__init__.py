@@ -373,4 +373,7 @@ class Instrument():
         
 #################################
 if __name__ == '__main__':
-    Instrument((AnalogPins('pins', (SysVarAnalogArduinoUnipolar('A0',[0,5],0,None, units='V'),)),), (SysAction('an action', (SysActionParamTime(),)),), '1', 'test', 'testing')
+    Instrument((AnalogPins('pins', (SysVarAnalogArduinoUnipolar('A0',[0,5],0,None, units='V'),
+                                    SysVarAnalogArduinoUnipolar('A1',[0,5],1,None, units='V'),
+                                    SysVarAnalogArduinoUnipolar('A2',[0,5],2,None, units='V'))),), 
+               (SysAction('an action', (SysActionParamTime(),)),), '1', 'test', 'testing')

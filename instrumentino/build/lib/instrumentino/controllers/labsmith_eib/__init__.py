@@ -22,6 +22,7 @@ class LabSmithEIB(InstrumentinoController):
     
     DEVICE_TYPE_SPS01 = 1
     DEVICE_TYPE_4VM01 = 2
+    DEVICE_TYPE_4AM01 = 3
     
     VALVE_STATE_UNKNOWN = 0
     VALVE_STATE_UNCHANGED = 0
@@ -52,8 +53,7 @@ class LabSmithEIB(InstrumentinoController):
         portNumber = int(port.replace('COM', ''))
         
         tempDirChange = Chdir(cfg.ResourcePath())
-#         self.DLL = CDLL('uProcessDriver_C_V1_2_1.dll')
-        self.DLL = CDLL('uProcessDriver_C.dll')
+        self.DLL = CDLL('uProcessDriver_C_V1_2_1.dll')
         del tempDirChange
         self.EIB = self.DLL.NewEIB()
         if self.EIB == 0:
@@ -63,6 +63,7 @@ class LabSmithEIB(InstrumentinoController):
             return False
         self.syringePump = None
         self.valves = None
+        self.sensors = None
         
         DeviceDataArray = c_ubyte * (self.MAX_DEVICE_ADDRESS+1)
         deviceAddresses = DeviceDataArray()
@@ -81,12 +82,22 @@ class LabSmithEIB(InstrumentinoController):
                 retCode = self.DLL.InitValves(self.valves)
                 if retCode == 0:
                     return False
+            if deviceTypes[idx] == self.DEVICE_TYPE_4AM01:
+                self.sensors = self.DLL.New4AM01(self.EIB, c_ubyte(deviceAddresses[idx]))
+                retCode = self.DLL.InitSensors(self.sensors)
+                if retCode == 0:
+                    return False
         
         return True
     
     def Close(self):
         if self.syringePump != None:
             self.StopSyringe()
+
+    def GetSensorValue(self, port):
+        getFunc = self.DLL.GetSensorValue
+        getFunc.restype = c_double
+        return getFunc(self.sensors, c_int(port))
             
     def SetValves(self, **kwargs):
         self.accessSemaphore.acquire(True)
@@ -185,6 +196,26 @@ class SysVarDigitalLabSmith_AV201Position(SysVarDigital):
     
     def SetFunc(self, state):
         self.valvesController.setValve(self.valvesControllerPort, state)
+
+
+class SysVarAnalogLabSmith_SensorValue(SysVarAnalog):
+    '''
+    A LabSmith analog variable for sensor readings (using a 4AM01 manifold)
+    '''
+    def __init__(self, name, manifoldPort, units, range, helpLine='', editable=False):
+        SysVarAnalog.__init__(self, name, range, LabSmithEIB, helpLine=helpLine, editable=editable, units=units)
+        self.sensorManifold = None
+        self.manifoldPort = manifoldPort
+
+    def SetManifold(self, sensorManifold):
+        self.sensorManifold = sensorManifold
+        self.compName = sensorManifold.name
+        
+    def GetFunc(self):
+        return self.sensorManifold.getSensor(self.manifoldPort) 
+    
+    def SetFunc(self, percent):
+        pass
 
 
 class SysVarDigitalLabSmith_CachedAnalog(SysVarAnalog):

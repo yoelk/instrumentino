@@ -33,4 +33,4 @@ instrumentino/resources/__init__.py
 instrumentino/resources/main.xrc
 instrumentino/resources/stopButton.png
 instrumentino/resources/uProcessDriver.dll
-instrumentino/resources/uProcessDriver_C.dll
+instrumentino/resources/uProcessDriver_C_V1_2_1.dll
