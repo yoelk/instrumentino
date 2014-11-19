@@ -106,7 +106,7 @@ class SysVarAnalog(SysVar):
         panel.SetSizer(sizer)
         sizer.Add(wx.StaticText(panel, label=self.name + ' (' + self.units + '):'))
         self.monitorTextCtrl = masked.NumCtrl(panel,
-                                              value=self.range[0],
+                                              value=0,
                                               integerWidth=cfg.numIntegerPartWidth,
                                               fractionWidth=cfg.numFractionPartWidth,
                                               min=self.range[0],
@@ -116,7 +116,7 @@ class SysVarAnalog(SysVar):
         if self.editable:
             sizer.Add(wx.StaticText(panel, label='Set to:'))
             editTextCtrl = masked.NumCtrl(panel,
-                                          value=self.range[0],
+                                          value=0,
                                           integerWidth=cfg.numIntegerPartWidth,
                                           fractionWidth=cfg.numFractionPartWidth,
                                           min=self.range[0],
