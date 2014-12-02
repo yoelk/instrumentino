@@ -1,26 +1,12 @@
 
-.DS_Store
+**/.DS_Store
 
-controlino/Release/arduino.ar
+**/Release
+**/build
 
-*.elf
+**/.cproject
+**/.pydevproject
+**/.project
+**/.settings
 
-*.hex
-
-*.ar
-
-controlino/Release/makefile
-
-instrumentino/dist/instrumentino-1.05-py2.7.egg
-
-instrumentino/ez_setup.pyc
-
-*.pyc
-
-*.pyc
-
-instrumentino/instrumentino/controllers/arduino/hvm.pyc
-
-instrumentino/instrumentino/controllers/arduino/pid_thermostat.pyc
-
-instrumentino/instrumentino/controllers/arduino/pewatron.pyc
+**/*.pyc
