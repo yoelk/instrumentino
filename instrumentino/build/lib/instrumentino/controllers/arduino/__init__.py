@@ -229,7 +229,7 @@ class Arduino(InstrumentinoController):
         ki - the Ki parameter
         kd - the Kd parameter
         '''
-        self._sendData('PidRelayCreate %d %d %d %d %d %d %d'%(pidVar, pinAnalIn, pinDigiOut, windowSizeMs, kp, ki, kd), wait=True)
+        self._sendData('PidRelayCreate %d %d %d %d %f %f %f'%(pidVar, pinAnalIn, pinDigiOut, windowSizeMs, kp, ki, kd), wait=True)
             
     def PidRelaySet(self, pidVar, setPoint):
         '''
@@ -239,6 +239,16 @@ class Arduino(InstrumentinoController):
         '''
         self._sendData('PidRelaySet %d %d'%(pidVar, setPoint), wait=True)
             
+    def PidRelayTune(self, pidVar, kp, ki, kd):
+        '''
+        Start an auto-tune session for the PID controller
+        pidVar - the variable number (see controlino sketch for max supported variables)
+        kp - Kp parameter
+        ki - Ki parameter 
+        kd - Kd parameter
+        '''
+        self._sendData('PidRelayTune %d %f %f %f'%(pidVar, kp, ki, kd), wait=True)
+            
     def PidRelayEnable(self, pidVar, enable):
         '''
         Enable/disable the contorl loop of a PID controlled relay variable
@@ -246,7 +256,7 @@ class Arduino(InstrumentinoController):
         enable - True/False for enable/disable
         '''
         self._sendData('PidRelayEnable %d %d'%(pidVar, 1 if enable else 0), wait=True)
-            
+    
     def HardSerConnect(self, baudrate, port=1):
         '''
         Setup a hardware serial port for communication
@@ -516,4 +526,7 @@ class SysVarPidRelayArduino(SysVarAnalog):
         
     def Enable(self, enable):
         self.GetController().PidRelayEnable(self.pidVar, enable)
+        
+    def Tune(self, kp, ki, kd):
+        self.GetController().PidRelayTune(self.pidVar, kp, ki, kd)
             

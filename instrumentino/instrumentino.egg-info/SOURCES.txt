@@ -18,6 +18,7 @@ instrumentino.egg-info/zip-safe
 instrumentino/controllers/__init__.py
 instrumentino/controllers/arduino/__init__.py
 instrumentino/controllers/arduino/edaq.py
+instrumentino/controllers/arduino/emco.py
 instrumentino/controllers/arduino/hvm.py
 instrumentino/controllers/arduino/mks.py
 instrumentino/controllers/arduino/parker.py

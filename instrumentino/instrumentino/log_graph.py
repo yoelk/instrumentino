@@ -110,21 +110,24 @@ class LogGraphPanel(wx.Panel):
                     lineWidth = next(lineWidthCycler)
                     if var.showInSignalLog:
                         nameOnLegend = name + ' [' + str(var.range[0]) + ',' + str(var.range[1]) + ']'
+                        graphVisible = True
                     else:
                         nameOnLegend = None
+                        graphVisible = False
                     if not self.hasBipolarRange(name):
                         self.plottedAnalogData[name] = AnalogData(var.range)
                         self.plottedLines[name] = self.axes.plot(self.time, self.plottedAnalogData[name].data,
-                                                                 '-', lw=lineWidth, color=color, label=nameOnLegend)[0]
+                                                                 '-', lw=lineWidth, color=color, label=nameOnLegend, visible=graphVisible)[0]
+                            
                     else:
                         # split this variable to two unipolar variables for the sake of plotting
                         self.plottedAnalogData[name+'_POS'] = AnalogData([0,var.range[1]])
                         self.plottedAnalogData[name+'_NEG'] = AnalogData([var.range[0],0])
                         
                         self.plottedLines[name+'_POS'] = self.axes.plot(self.time, self.plottedAnalogData[name+'_POS'].data,
-                                                                        '-', lw=lineWidth, color=color, label=nameOnLegend)[0]
+                                                                        '-', lw=lineWidth, color=color, label=nameOnLegend, visible=graphVisible)[0]
                         self.plottedLines[name+'_NEG'] = self.axes.plot(self.time, self.plottedAnalogData[name+'_NEG'].data,
-                                                                        '--', lw=lineWidth, color=color)[0]
+                                                                        '--', lw=lineWidth, color=color, visible=graphVisible)[0]
                     
                 # digital data isn't plotted
                 if isinstance(var, SysVarDigital):

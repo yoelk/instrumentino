@@ -33,4 +33,5 @@ SUBDIRS := \
 arduino/core \
 Libraries/SoftwareSerial \
 Libraries/PID_v1 \
+Libraries/PID_AutoTune_v0 \
 
