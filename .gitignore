@@ -2,7 +2,10 @@
 **/.DS_Store
 
 **/Release
+**/Release/*
+
 **/build
+**/build/*
 
 **/.cproject
 **/.pydevproject
