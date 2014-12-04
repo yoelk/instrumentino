@@ -411,10 +411,9 @@ void cmdSoftSerConnect(char **argV) {
 void cmdSerSend(char **argV) {
 	boolean isSoftSerial = (strcasecmp(argV[1], "soft") == 0);
 	int currPort = strtol(argV[2], NULL, 10);
-
 	Serial.println(doneString);
 
-	if (currPort < 1 || currPort > (isSoftSerial)? SOFT_SER_MAX_PORTS : HARD_SER_MAX_PORTS) {
+	if (currPort < 1 || currPort > ((isSoftSerial)? SOFT_SER_MAX_PORTS : HARD_SER_MAX_PORTS)) {
 		return;
 	}
 	if (isSoftSerial) {
@@ -435,17 +434,21 @@ void cmdSerSend(char **argV) {
 #endif
 			}
 
-			if (isSoftSerial && c == '\0') {
-				// acknowledge, send the message, and remember the answer
+			if (c == '\0') {
+				// acknowledge
 				Serial.println(doneString);
 				delay(10);
-				for (int i = 0; i < softSerDescs[currPort-1].txMsgLen; i++) {
-					softSerDescs[currPort-1].handler->write(softSerDescs[currPort-1].txMsg[i]);
-				}
-				softSerDescs[currPort-1].rxMsgLen = 0;
-				while (!Serial.available()) {
-					if (softSerDescs[currPort-1].handler->available() && softSerDescs[currPort-1].rxMsgLen < SOFT_SER_MSG_SIZE) {
-						softSerDescs[currPort-1].rxMsg[softSerDescs[currPort-1].rxMsgLen++] = softSerDescs[currPort-1].handler->read();
+
+				if (isSoftSerial) {
+					// send the message, and remember the answer
+					for (int i = 0; i < softSerDescs[currPort-1].txMsgLen; i++) {
+						softSerDescs[currPort-1].handler->write(softSerDescs[currPort-1].txMsg[i]);
+					}
+					softSerDescs[currPort-1].rxMsgLen = 0;
+					while (!Serial.available()) {
+						if (softSerDescs[currPort-1].handler->available() && softSerDescs[currPort-1].rxMsgLen < SOFT_SER_MSG_SIZE) {
+							softSerDescs[currPort-1].rxMsg[softSerDescs[currPort-1].rxMsgLen++] = softSerDescs[currPort-1].handler->read();
+						}
 					}
 				}
 				return;
