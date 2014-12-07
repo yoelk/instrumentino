@@ -9,3 +9,7 @@ It consists of two separate programs:
 
 See the documents library for further instructions and examples.
 The official Instrumentino website is: http://www.chemie.unibas.ch/~hauser/open-source-lab/instrumentino/index.html
+
+We are looking forward for contributors. There is lots of potential for Instrumentino to grow!
+Please contact me if you want to add features and make Instrumentino better.
+yoelk _at_ tx.technion.ac.il
