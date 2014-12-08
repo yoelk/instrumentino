@@ -9,10 +9,7 @@ controlino.cpp.d controlino.cpp.o: ../controlino.cpp \
   /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/Printable.h \
   /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/new.h \
   /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/variants/mega/pins_arduino.h \
-  /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/HardwareSerial.h \
-  /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/libraries/SoftwareSerial/SoftwareSerial.h \
-  /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/Stream.h \
-  /Users/joel/Documents/workspace/Arduino/libs/libraries/PID_v1/PID_v1.h
+  /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/HardwareSerial.h
 
 /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/Arduino.h:
 
@@ -35,9 +32,3 @@ controlino.cpp.d controlino.cpp.o: ../controlino.cpp \
 /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/variants/mega/pins_arduino.h:
 
 /Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/HardwareSerial.h:
-
-/Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/libraries/SoftwareSerial/SoftwareSerial.h:
-
-/Applications/Arduino\ 1.5.2.app/Contents/Resources/Java/hardware/arduino/avr/cores/arduino/Stream.h:
-
-/Users/joel/Documents/workspace/Arduino/libs/libraries/PID_v1/PID_v1.h:

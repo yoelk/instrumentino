@@ -3,21 +3,185 @@
 	Created by Joel Koenka, April 2014
 	Released under GPLv3
 
-	controlino let's a user control the Arduino pins by issuing simple serial commands such as "Read" "Write" etc.
+	Controlino let's a user control the Arduino pins by issuing simple serial commands such as "Read" "Write" etc.
 	It was originally written to be used with Instrumentino, the open-source GUI platform for experimental settings,
 	but can also be used for other purposes.
 	For Instrumentino, see:
 	http://www.sciencedirect.com/science/article/pii/S0010465514002112	- Release article
 	https://pypi.python.org/pypi/instrumentino/1.0						- Package in PyPi
 	https://github.com/yoelk/instrumentino								- Code in GitHub
+
+	Modifiers (THIS IS IMPORTANT !!! PLEASE READ !!!)
+	=================================================
+	- Library support:
+	  Controlino gradually grows to include support for more and more Arduino libraries (such as PID, SoftwareSerial, etc.)
+	  Since not everyone needs to use all of the libraries, a set of #define statements are used to include/exclude them.
+
+	- Arduino board:
+	  Controlino can run on any Arduino, but you need to tell it which one!
  */
 
-#include "Arduino.h"
-#include "HardwareSerial.h"
-#include "SoftwareSerial.h"
-#include "string.h"
-#include "PID_v1.h"
+/* ------------------------------------------------------------
+Dear user (1):
+Here you should specify which Arduino libraries you want to use.
+Please comment/uncomment the appropriate define statements
+------------------------------------------------------------ */
+//#define USE_SOFTWARE_SERIAL
+//#define USE_PID
 
+/* ------------------------------------------------------------
+Dear user (2):
+Here you should choose the Arduino Board for which you'll
+compile Controlino. Only one model should be used (uncommented)
+------------------------------------------------------------ */
+#define ARDUINO_BOARD_UNO
+//#define ARDUINO_BOARD_LEONARDO
+//#define ARDUINO_BOARD_DUE
+//#define ARDUINO_BOARD_YUN
+//#define ARDUINO_BOARD_TRE
+//#define ARDUINO_BOARD_ZERO
+//#define ARDUINO_BOARD_MICRO
+//#define ARDUINO_BOARD_ESPLORA
+//#define ARDUINO_BOARD_MEGA_ADK
+//#define ARDUINO_BOARD_MEGA_2560
+//#define ARDUINO_BOARD_ETHERNET
+//#define ARDUINO_BOARD_ROBOT
+//#define ARDUINO_BOARD_MINI
+//#define ARDUINO_BOARD_NANO
+//#define ARDUINO_BOARD_LILYPAD
+//#define ARDUINO_BOARD_LILYPAD_SIMPLE
+//#define ARDUINO_BOARD_LILYPAD_SIMPLE_SNAP
+//#define ARDUINO_BOARD_LILYPAD_USB
+//#define ARDUINO_BOARD_PRO
+//#define ARDUINO_BOARD_PRO_MINI
+//#define ARDUINO_BOARD_FIO
+
+
+
+
+
+
+
+/* ------------------------------------------------------------
+From here down, you shouldn't touch anything (unless you know
+what you're doing)
+------------------------------------------------------------ */
+
+// Default values, to be overridden later
+#define HARD_SER_MAX_PORTS	0
+#define SOFT_SER_MAX_PORTS	0
+
+// Arduino Uno
+#ifdef ARDUINO_BOARD_UNO
+	#define DIGI_PINS	14
+#endif
+
+// Arduino Leonardo
+#ifdef ARDUINO_BOARD_LEONARDO
+	#define DIGI_PINS	20
+
+	#define HARD_SER_MAX_PORTS	1
+	extern HardwareSerial Serial1;
+#endif
+
+// Arduino Due
+#ifdef ARDUINO_BOARD_DUE
+	#define DIGI_PINS	54
+
+	#define HARD_SER_MAX_PORTS	3
+	extern HardwareSerial Serial1;
+	extern HardwareSerial Serial2;
+	extern HardwareSerial Serial3;
+#endif
+
+// Arduino Yun
+#ifdef ARDUINO_BOARD_YUN
+	#define DIGI_PINS	20
+#endif
+
+// Arduino Tre
+#ifdef ARDUINO_BOARD_TRE
+	#define DIGI_PINS	14
+#endif
+
+// Arduino Zero
+#ifdef ARDUINO_BOARD_ZERO
+	#define DIGI_PINS	14
+#endif
+
+// Arduino Micro
+#ifdef ARDUINO_BOARD_MICRO
+	#define DIGI_PINS	20
+#endif
+
+// Arduino Mega ADK
+#ifdef ARDUINO_BOARD_MEGA_ADK
+	#define DIGI_PINS	54
+
+	#define HARD_SER_MAX_PORTS	3
+	extern HardwareSerial Serial1;
+	extern HardwareSerial Serial2;
+	extern HardwareSerial Serial3;
+#endif
+
+// Arduino Mega 2560
+#ifdef ARDUINO_BOARD_MEGA_2560
+	#define DIGI_PINS	54
+
+	#define HARD_SER_MAX_PORTS	3
+	extern HardwareSerial Serial1;
+	extern HardwareSerial Serial2;
+	extern HardwareSerial Serial3;
+#endif
+
+// Arduino Ethernet
+#ifdef ARDUINO_BOARD_ETHERNET
+	#define DIGI_PINS	14
+#endif
+
+// Arduino Nano
+#ifdef ARDUINO_BOARD_NANO
+	#define DIGI_PINS	14
+#endif
+
+// Arduino Lilypad
+#ifdef ARDUINO_BOARD_LILIPAD
+	#define DIGI_PINS	14
+#endif
+
+// Arduino Lilypad Simple
+#ifdef ARDUINO_BOARD_LILYPAD_SIMPLE
+	#define DIGI_PINS	9
+#endif
+
+// Arduino Lilypad Simple Snap
+#ifdef ARDUINO_BOARD_LILYPAD_SIMPLE_SNAP
+	#define DIGI_PINS	9
+#endif
+
+// Arduino Lilypad USB
+#ifdef ARDUINO_BOARD_LILYPAD_USB
+	#define DIGI_PINS	9
+#endif
+
+// Arduino Pro
+#ifdef ARDUINO_BOARD_PRO
+	#define DIGI_PINS	14
+#endif
+
+// Arduino Pro Mini
+#ifdef ARDUINO_BOARD_PRO_MINI
+	#define DIGI_PINS	13
+#endif
+
+// Arduino Fio
+#ifdef ARDUINO_BOARD_FIO
+	#define DIGI_PINS	14
+#endif
+
+// ------------------------------------------------------------
+// Arduino libraries support
+// ------------------------------------------------------------
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,29 +191,59 @@ void setup();
 } // extern "C"
 #endif
 
-// ------------------------------------------------------------
-// Board specific part
-// ------------------------------------------------------------
-// arduino board. Only one should be defined
-//#define ARDUINO_BOARD_NANO
-#define ARDUINO_BOARD_MEGA
+#include "Arduino.h"
+#include "string.h"
+#include "HardwareSerial.h"
 
-// Arduino MEGA definitions
-#ifdef ARDUINO_BOARD_MEGA
-	extern HardwareSerial Serial1;
-	extern HardwareSerial Serial2;
-	extern HardwareSerial Serial3;
-	#define SERIAL1
-	#define SERIAL2
-	#define SERIAL3
-	#define HARD_SER_MAX_PORTS	3
-	#define DIGI_PINS			54
+// Extra Hardware Serial support
+#if HARD_SER_MAX_PORTS > 0
+	// Descriptors for hardware serial
+	HardwareSerial* hardSerHandler[HARD_SER_MAX_PORTS];
 #endif
 
-// Arduino Nano definitions
-#ifdef ARDUINO_BOARD_NANO
-	#define HARD_SER_MAX_PORTS	0
-	#define DIGI_PINS			13
+// SoftwareSerial library
+#ifdef USE_SOFTWARE_SERIAL
+	#include "SoftwareSerial.h"
+
+	#define SOFT_SER_MSG_SIZE	100
+	#define SOFT_SER_MAX_PORTS	4
+
+	// software serial descriptor
+	typedef struct {
+		SoftwareSerial* handler;
+		char txMsg[SOFT_SER_MSG_SIZE];
+		char rxMsg[SOFT_SER_MSG_SIZE];
+		int txMsgLen;
+		int rxMsgLen;
+	} SoftSerialDesc;
+
+	// Descriptors for software serial
+	SoftSerialDesc softSerDescs[SOFT_SER_MAX_PORTS];
+#endif
+
+// PID library
+#ifdef USE_PID
+	#include "PID_v1.h"
+
+	// PID
+	#define PID_RELAY_MAX_VARS	4
+
+	// PID-relay variable descriptor
+	typedef struct {
+		PID* handler;
+		int pinAnalIn;
+		int pinDigiOut;
+		double inputVar;
+		double outputVar;
+		unsigned long windowSize;
+		unsigned long windowStartTime;
+		double setPoint;
+		boolean isOn;
+	} PidRelayDesc;
+
+	// Descriptors for PID controlled variables
+	PidRelayDesc pidRelayDescs[PID_RELAY_MAX_VARS];
+
 #endif
 
 // ------------------------------------------------------------
@@ -57,40 +251,13 @@ void setup();
 // ------------------------------------------------------------
 
 // arduino definitions
-#define ANAL_OUT_VAL_MAX		255
+#define ANAL_OUT_VAL_MAX	255
 
-// serial
+// serial communication with user (usually with Instrumentino)
 extern HardwareSerial Serial;
 #define SERIAL0_BAUD		115200
 #define RX_BUFF_SIZE		200
 #define ARGV_MAX			30
-#define SOFT_SER_MSG_SIZE	100
-#define SOFT_SER_MAX_PORTS	4
-
-// PID
-#define PID_RELAY_MAX_VARS	4
-
-// software serial descriptor
-typedef struct {
-	SoftwareSerial* handler;
-	char txMsg[SOFT_SER_MSG_SIZE];
-	char rxMsg[SOFT_SER_MSG_SIZE];
-	int txMsgLen;
-	int rxMsgLen;
-} SoftSerialDesc;
-
-// PID-relay variable descriptor
-typedef struct {
-	PID* handler;
-	int pinAnalIn;
-	int pinDigiOut;
-	double inputVar;
-	double outputVar;
-	unsigned long windowSize;
-	unsigned long windowStartTime;
-	double setPoint;
-	boolean isOn;
-} PidRelayDesc;
 
 // ------------------------------------------------------------
 // Globals
@@ -102,13 +269,6 @@ char doneString[5] = "done";
 char msg[RX_BUFF_SIZE];
 char *pMsg;
 
-// Descriptors for hardware and software serial
-SoftSerialDesc softSerDescs[SOFT_SER_MAX_PORTS];
-HardwareSerial* hardSerHandler[HARD_SER_MAX_PORTS];
-
-// Descriptors for PID controlled variables
-PidRelayDesc pidRelayDescs[PID_RELAY_MAX_VARS];
-
 // Pin blinking
 boolean startBlinking = false;
 int blinkingPin;
@@ -116,7 +276,8 @@ unsigned long blinkLastChangeMs;
 unsigned long blinkingDelayMs;
 
 // ------------------------------------------------------------
-// Utility functions
+// Command functions - These functions are called when their
+// respective command was issued by the user
 // ------------------------------------------------------------
 
 /***
@@ -269,6 +430,7 @@ void cmdSetPwmFreq(char **argV) {
 	}
 }
 
+#ifdef USE_PID
 /***
  * PidRelayCreate [pidVar] [pinAnalIn] [pinDigiOut] [windowSize] [Kp] [Ki] [Kd]
  *
@@ -360,6 +522,7 @@ void cmdPidRelayEnable(char **argV) {
 		digitalWrite(pidDesc->pinDigiOut, LOW);
 	}
 }
+#endif
 
 /***
  * HardSerConnect [baudrate] [port]
@@ -386,6 +549,7 @@ void cmdHardSerConnect(char **argV) {
  * Initiate a software serial connection. The rx-pin should have external interrupts
  */
 void cmdSoftSerConnect(char **argV) {
+#ifdef USE_SOFTWARE_SERIAL
 	int pinIn = strtol(argV[1], NULL, 10);
 	int pinOut = strtol(argV[2], NULL, 10);
 	int baudrate = strtol(argV[3], NULL, 10);
@@ -400,6 +564,7 @@ void cmdSoftSerConnect(char **argV) {
 	softSerDescs[currPort-1].txMsgLen = 0;
 	softSerDescs[currPort-1].handler = new SoftwareSerial(pinIn, pinOut, false);
 	softSerDescs[currPort-1].handler->begin(baudrate);
+#endif
 }
 
 /***
@@ -417,7 +582,9 @@ void cmdSerSend(char **argV) {
 		return;
 	}
 	if (isSoftSerial) {
+#ifdef USE_SOFTWARE_SERIAL
 		softSerDescs[currPort-1].txMsgLen = 0;
+#endif
 	}
 
 	// mirror the hardware serial and the software serial
@@ -425,7 +592,9 @@ void cmdSerSend(char **argV) {
 		if (Serial.available()) {
 			char c = Serial.read();
 			if (isSoftSerial) {
+#ifdef USE_SOFTWARE_SERIAL
 				softSerDescs[currPort-1].txMsg[softSerDescs[currPort-1].txMsgLen++] = c;
+#endif
 			} else {
 #if HARD_SER_MAX_PORTS > 0
 				hardSerHandler[currPort-1]->write(c);
@@ -438,7 +607,7 @@ void cmdSerSend(char **argV) {
 				// acknowledge
 				Serial.println(doneString);
 				delay(10);
-
+#ifdef USE_SOFTWARE_SERIAL
 				if (isSoftSerial) {
 					// send the message, and remember the answer
 					for (int i = 0; i < softSerDescs[currPort-1].txMsgLen; i++) {
@@ -451,6 +620,7 @@ void cmdSerSend(char **argV) {
 						}
 					}
 				}
+#endif
 				return;
 			}
 		}
@@ -471,17 +641,17 @@ void cmdSerReceive(char **argV) {
 	}
 
 	if (isSoftSerial) {
+#ifdef USE_SOFTWARE_SERIAL
 		for (int i = 0; i < softSerDescs[currPort-1].rxMsgLen && i < SOFT_SER_MSG_SIZE; i++) {
 			Serial.write(softSerDescs[currPort-1].rxMsg[i]);
 		}
+#endif
 	} else {
-	#if HARD_SER_MAX_PORTS > 0
+#if HARD_SER_MAX_PORTS > 0
 		while (hardSerHandler[currPort-1]->available()) {
 			Serial.write(hardSerHandler[currPort-1]->read());
 		}
-	#else
-		return;
-	#endif
+#endif
 	}
 }
 
@@ -500,17 +670,17 @@ void setup() {
 	for (int i = 0; i < HARD_SER_MAX_PORTS; i++)
 	{
 		switch (i + 1) {
-		#ifdef SERIAL1
+		#if HARD_SER_MAX_PORTS >= 1
 			case 1:
 				hardSerHandler[i] = &Serial1;
 				break;
 		#endif
-		#ifdef SERIAL2
+		#if HARD_SER_MAX_PORTS >= 2
 			case 2:
 				hardSerHandler[i] = &Serial2;
 				break;
 		#endif
-		#ifdef SERIAL3
+		#if HARD_SER_MAX_PORTS >= 3
 			case 3:
 				hardSerHandler[i] = &Serial3;
 				break;
@@ -541,6 +711,7 @@ void loop() {
 		}
 	}
 
+#ifdef USE_PID
 	// Take care PID-relay variables
 	for (i = 0; i < PID_RELAY_MAX_VARS; i++) {
 		if (pidRelayDescs[i].isOn) {
@@ -561,6 +732,7 @@ void loop() {
 			}
 		}
 	}
+#endif
 
 	// Read characters from the control serial port and act upon them
 	if (Serial.available()) {
@@ -598,6 +770,7 @@ void loop() {
 				cmdWrite(argV);
 			} else if (strcasecmp(argV[0], "SetPwmFreq") == 0) {
 				cmdSetPwmFreq(argV);
+#ifdef USE_PID
 			} else if (strcasecmp(argV[0], "PidRelayCreate") == 0) {
 				cmdPidRelayCreate(argV);
 			} else if (strcasecmp(argV[0], "PidRelaySet") == 0) {
@@ -606,6 +779,7 @@ void loop() {
 				cmdPidRelayTune(argV);
 			} else if (strcasecmp(argV[0], "PidRelayEnable") == 0) {
 				cmdPidRelayEnable(argV);
+#endif
 			} else if (strcasecmp(argV[0], "HardSerConnect") == 0) {
 				cmdHardSerConnect(argV);
 			} else if (strcasecmp(argV[0], "SoftSerConnect") == 0) {
