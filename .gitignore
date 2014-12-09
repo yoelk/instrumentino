@@ -1,15 +1,22 @@
 
 **/.DS_Store
 
+/Release
 **/Release
 **/Release/*
 
+/build
 **/build
 **/build/*
 
+.cproject
+.pydevproject
+.project
+.settings
 **/.cproject
 **/.pydevproject
 **/.project
 **/.settings
 
+*.pyc
 **/*.pyc

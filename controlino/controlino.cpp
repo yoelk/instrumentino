@@ -34,7 +34,7 @@ Dear user (2):
 Here you should choose the Arduino Board for which you'll
 compile Controlino. Only one model should be used (uncommented)
 ------------------------------------------------------------ */
-#define ARDUINO_BOARD_UNO
+//#define ARDUINO_BOARD_UNO
 //#define ARDUINO_BOARD_LEONARDO
 //#define ARDUINO_BOARD_DUE
 //#define ARDUINO_BOARD_YUN
@@ -47,7 +47,7 @@ compile Controlino. Only one model should be used (uncommented)
 //#define ARDUINO_BOARD_ETHERNET
 //#define ARDUINO_BOARD_ROBOT
 //#define ARDUINO_BOARD_MINI
-//#define ARDUINO_BOARD_NANO
+#define ARDUINO_BOARD_NANO
 //#define ARDUINO_BOARD_LILYPAD
 //#define ARDUINO_BOARD_LILYPAD_SIMPLE
 //#define ARDUINO_BOARD_LILYPAD_SIMPLE_SNAP
