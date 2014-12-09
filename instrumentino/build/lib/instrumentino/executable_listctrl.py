@@ -94,7 +94,7 @@ class ExecutableListCtrl(object):
         panel = wx.Panel(self.list)
         panel.SetSizer(sizer)
         panel.SetName(str(index + 1))
-        sizer.Add(self.getFirstColumnWidget(panel, listDataItem), flag=wx.EXPAND)
+        sizer.Add(self.getFirstColumnWidget(panel, listDataItem), flag=wx.EXPAND|wx.GROW, proportion=1)
         item.SetWindow(panel, expand=True)
         self.list.SetItem(item)
         self.list.SetItemData(index, [listDataItem,])

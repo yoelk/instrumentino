@@ -16,9 +16,9 @@ Description:
         
         It consists of two separate programs:
         
-          * instrumentino: which is run on a PC and provides the graphical user interface.
+          * *instrumentino*: which is run on a PC and provides the graphical user interface.
         
-          * controlino:    which is the program running on the Arduino controller itself, and is used to communicate with instrumentino.
+          * *controlino*:    which is the program running on the Arduino controller itself, and is used to communicate with instrumentino.
             
             Get it at: https://github.com/yoelk/Instrumentino/blob/master/controlino/controlino.cpp
             
