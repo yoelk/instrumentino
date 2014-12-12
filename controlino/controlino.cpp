@@ -27,7 +27,7 @@ Here you should specify which Arduino libraries you want to use.
 Please comment/uncomment the appropriate define statements
 ------------------------------------------------------------ */
 //#define USE_SOFTWARE_SERIAL
-//#define USE_PID
+#define USE_PID
 
 /* ------------------------------------------------------------
 Dear user (2):
@@ -43,11 +43,11 @@ compile Controlino. Only one model should be used (uncommented)
 //#define ARDUINO_BOARD_MICRO
 //#define ARDUINO_BOARD_ESPLORA
 //#define ARDUINO_BOARD_MEGA_ADK
-//#define ARDUINO_BOARD_MEGA_2560
+#define ARDUINO_BOARD_MEGA_2560
 //#define ARDUINO_BOARD_ETHERNET
 //#define ARDUINO_BOARD_ROBOT
 //#define ARDUINO_BOARD_MINI
-#define ARDUINO_BOARD_NANO
+//#define ARDUINO_BOARD_NANO
 //#define ARDUINO_BOARD_LILYPAD
 //#define ARDUINO_BOARD_LILYPAD_SIMPLE
 //#define ARDUINO_BOARD_LILYPAD_SIMPLE_SNAP
@@ -66,6 +66,9 @@ compile Controlino. Only one model should be used (uncommented)
 From here down, you shouldn't touch anything (unless you know
 what you're doing)
 ------------------------------------------------------------ */
+#include "Arduino.h"
+#include "string.h"
+#include "HardwareSerial.h"
 
 // Default values, to be overridden later
 #define HARD_SER_MAX_PORTS	0
@@ -190,10 +193,6 @@ void setup();
 #ifdef __cplusplus
 } // extern "C"
 #endif
-
-#include "Arduino.h"
-#include "string.h"
-#include "HardwareSerial.h"
 
 // Extra Hardware Serial support
 #if HARD_SER_MAX_PORTS > 0
