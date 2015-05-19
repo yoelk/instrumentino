@@ -184,22 +184,29 @@ def UpdateControlsFromOtherThread(runningOperation=False):
     global mainFrame
     wx.PostEvent(mainFrame, ResultEvent(EVT_UPDATE_CONTROLS, runningOperation))
 
-def Sleep(seconds):
+def Sleep(seconds, userStopEnabled=True):
     '''
     Sleep, and wake up when user pressed the stop button
     '''
     time.sleep(seconds%1)
     end = time.time() + int(seconds)
     while time.time() <= end: 
-        if userStopped:
+        if userStopped and userStopEnabled:
             return
-        
+
+def PopMessage(text=''):
+    '''
+    Pop a message
+    '''
+    e = threading.Event()
+    wx.PostEvent(mainFrame, ResultEvent(EVT_POP_MESSAGE, (text, e, False)))
+            
 def WaitForUser(text=''):
     '''
     Wait for the user to press a button
     '''
     e = threading.Event()
-    wx.PostEvent(mainFrame, ResultEvent(EVT_POP_MESSAGE, (text, e)))
+    wx.PostEvent(mainFrame, ResultEvent(EVT_POP_MESSAGE, (text, e, True)))
     time.sleep(3)
     e.wait()
 

@@ -42,6 +42,11 @@
 			<locationURI>ArduinoHardwareLibPath/SoftwareSerial</locationURI>
 		</link>
 		<link>
+			<name>Libraries/Wire</name>
+			<type>2</type>
+			<locationURI>ArduinoHardwareLibPath/Wire</locationURI>
+		</link>
+		<link>
 			<name>arduino/core</name>
 			<type>2</type>
 			<locationURI>ArduinoPlatformPath/cores/arduino</locationURI>
@@ -49,7 +54,7 @@
 		<link>
 			<name>arduino/variant</name>
 			<type>2</type>
-			<locationURI>ArduinoPinPath/mega</locationURI>
+			<locationURI>ArduinoPinPath/eightanaloginputs</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>

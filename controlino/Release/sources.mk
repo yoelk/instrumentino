@@ -31,6 +31,8 @@ SIZEDUMMY :=
 SUBDIRS := \
 . \
 arduino/core \
+Libraries/Wire/utility \
+Libraries/Wire \
 Libraries/SoftwareSerial \
 Libraries/PID_v1 \
 Libraries/PID_AutoTune_v0 \

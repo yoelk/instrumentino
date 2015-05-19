@@ -28,6 +28,7 @@ Please comment/uncomment the appropriate define statements
 ------------------------------------------------------------ */
 //#define USE_SOFTWARE_SERIAL
 #define USE_PID
+#define USE_WIRE
 
 /* ------------------------------------------------------------
 Dear user (2):
@@ -43,11 +44,11 @@ compile Controlino. Only one model should be used (uncommented)
 //#define ARDUINO_BOARD_MICRO
 //#define ARDUINO_BOARD_ESPLORA
 //#define ARDUINO_BOARD_MEGA_ADK
-#define ARDUINO_BOARD_MEGA_2560
+//#define ARDUINO_BOARD_MEGA_2560
 //#define ARDUINO_BOARD_ETHERNET
 //#define ARDUINO_BOARD_ROBOT
 //#define ARDUINO_BOARD_MINI
-//#define ARDUINO_BOARD_NANO
+#define ARDUINO_BOARD_NANO
 //#define ARDUINO_BOARD_LILYPAD
 //#define ARDUINO_BOARD_LILYPAD_SIMPLE
 //#define ARDUINO_BOARD_LILYPAD_SIMPLE_SNAP
@@ -69,6 +70,7 @@ what you're doing)
 #include "Arduino.h"
 #include "string.h"
 #include "HardwareSerial.h"
+#include "Wire.h"
 
 // Default values, to be overridden later
 #define HARD_SER_MAX_PORTS	0
@@ -323,7 +325,7 @@ void cmdBlinkPin(char **argV) {
 }
 
 /***
- * Read [pin1] [pin2] ....
+ * Read [pin1] [pin2] ...
  *
  * Read pin values
  * Pins are given in the following way: A0 A1 ... for analog pins
@@ -654,6 +656,23 @@ void cmdSerReceive(char **argV) {
 	}
 }
 
+/***
+ * I2cWrite [address] [val1] [val2] ...
+ *
+ * Write a series of values to the I2C bus
+ */
+void cmdI2cWrite(int argC, char **argV) {
+#ifdef USE_WIRE
+	int address = strtol(argV[1], NULL, 10);
+
+	Wire.beginTransmission(address);
+	for (int i = 2; i <= argC-1; i++) {
+		Wire.write(strtol(argV[i], NULL, 10));
+	}
+	Wire.endTransmission();
+}
+#endif
+
 // ------------------------------------------------------------
 // Main functions
 // ------------------------------------------------------------
@@ -664,6 +683,11 @@ void cmdSerReceive(char **argV) {
 void setup() {
 	Serial.begin(SERIAL0_BAUD);
 	pMsg = msg;
+
+#ifdef USE_WIRE
+	// Connect to the I2C bus
+	Wire.begin();
+#endif
 
 	// Init hardware serial ports if they exist
 	for (int i = 0; i < HARD_SER_MAX_PORTS; i++)
@@ -787,6 +811,10 @@ void loop() {
 				cmdSerSend(argV);
 			} else if (strcasecmp(argV[0], "SerReceive") == 0) {
 				cmdSerReceive(argV);
+#ifdef USE_WIRE
+			} else if (strcasecmp(argV[0], "I2cWrite") == 0) {
+				cmdI2cWrite(argC, argV);
+#endif
 			} else {
 				// Wrong command
 				return;

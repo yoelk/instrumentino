@@ -315,6 +315,12 @@ class Arduino(InstrumentinoController):
         ms - how many milliseconds between each blink
         '''
         self._sendData('BlinkPin %d %d'%(pin, ms), wait=True)
+        
+    def I2cWrite(self, address, values):
+        '''
+        Send a list of values over the I2C bus
+        '''
+        self._sendData('I2cWrite %d %s'%(address, ' '.join(str(n) for n in values)), wait=True)
     
     def _sendData(self, txData, addLineBreak=True, lock=True, wait=False, log=False):
         '''
@@ -406,13 +412,20 @@ class SysVarDigitalArduino(SysVarDigital):
         if self.pin != None:
             self.GetController().DigitalWrite(self.pin, self.stateToValue[state])
 
+class ArduinoI2cDac():
+    def __init__(self, dacBits, address):
+        self.maxVal = 2**dacBits-1
+        self.address = address
+
+    def WriteFraction(self, fraction, controller):
+        controller.I2cWrite(self.address, (0, self.maxVal * fraction,))
 
 class SysVarAnalogArduino(SysVarAnalog):
     '''
     An Arduino analog variable
     '''
-    def __init__(self, name, range, pinAnalIn, pinPwmOut=None, SetPolarityPositiveFunc=None, GetPolarityPositiveFunc=None, compName='', helpLine='', units='', PreSetFunc=None, highFreqPWM=False, pinOutVoltsMax=5, pinInVoltsMax=5, pinOutVoltsMin=0, pinInVoltsMin=0, PostGetFunc=None):
-        showEditBox = (pinPwmOut != None) or (PreSetFunc != None)
+    def __init__(self, name, range, pinAnalIn, pinPwmOut=None, SetPolarityPositiveFunc=None, GetPolarityPositiveFunc=None, compName='', helpLine='', units='', PreSetFunc=None, highFreqPWM=False, pinOutVoltsMax=5, pinInVoltsMax=5, pinOutVoltsMin=0, pinInVoltsMin=0, PostGetFunc=None, I2cDac=None):
+        showEditBox = (pinPwmOut != None) or (PreSetFunc != None) or (I2cDac != None)
         SysVarAnalog.__init__(self, name, range, Arduino, compName, helpLine, showEditBox , units, PreSetFunc, PostGetFunc)
         self.pinIn = pinAnalIn
         self.pinOut = pinPwmOut
@@ -423,6 +436,7 @@ class SysVarAnalogArduino(SysVarAnalog):
         self.pinInVoltsMax = pinInVoltsMax
         self.pinOutVoltsMin = pinOutVoltsMin
         self.pinInVoltsMin = pinInVoltsMin
+        self.I2cDac = I2cDac
         
     def FirstTimeOnline(self):
         if self.pinOut != None:
@@ -439,8 +453,11 @@ class SysVarAnalogArduino(SysVarAnalog):
         return sign * (self.GetUnipolarMin() + (self.GetUnipolarRange() * fraction)) if fraction != None else None
     
     def SetFunc(self, value):
+        fraction = (abs(value) - self.GetUnipolarMin()) / self.GetUnipolarRange()
         if self.pinOut != None:
-            self.GetController().AnalogWriteFraction(self.pinOut, (abs(value) - self.GetUnipolarMin()) / self.GetUnipolarRange(), self.pinOutVoltsMax, self.pinOutVoltsMin)    
+            self.GetController().AnalogWriteFraction(self.pinOut, fraction, self.pinOutVoltsMax, self.pinOutVoltsMin)
+        elif self.I2cDac != None:
+            self.I2cDac.WriteFraction(fraction, self.GetController())
 
 
 class SysVarAnalogArduinoUnipolar(SysVarAnalogArduino):
@@ -448,8 +465,8 @@ class SysVarAnalogArduinoUnipolar(SysVarAnalogArduino):
     A unipolar analog variable, for which the range has to be [X1,X2] or [-X1,-X2].
     The voltage on the pin (normally 0-5 V) corresponds percentage-wise to the variable's value between X1 and X2 (or -X1 and -X2).
     '''
-    def __init__(self, name, range, pinAnalIn, pinPwmOut, compName='', helpLine='', units='', PreSetFunc=None, highFreqPWM=False, pinOutVoltsMax=5, pinInVoltsMax=5, pinOutVoltsMin=0, pinInVoltsMin=0, PostGetFunc=None):
-        SysVarAnalogArduino.__init__(self, name, range, pinAnalIn, pinPwmOut, self.SetPolarityPositiveFunc, self.GetPolarityPositiveFunc, compName, helpLine, units, PreSetFunc, highFreqPWM, pinOutVoltsMax, pinInVoltsMax, pinOutVoltsMin, pinInVoltsMin, PostGetFunc)
+    def __init__(self, name, range, pinAnalIn, pinPwmOut, compName='', helpLine='', units='', PreSetFunc=None, highFreqPWM=False, pinOutVoltsMax=5, pinInVoltsMax=5, pinOutVoltsMin=0, pinInVoltsMin=0, PostGetFunc=None, I2cDac=None):
+        SysVarAnalogArduino.__init__(self, name, range, pinAnalIn, pinPwmOut, self.SetPolarityPositiveFunc, self.GetPolarityPositiveFunc, compName, helpLine, units, PreSetFunc, highFreqPWM, pinOutVoltsMax, pinInVoltsMax, pinOutVoltsMin, pinInVoltsMin, PostGetFunc, I2cDac)
         self.sign = 1 if range[0] >=0 and range[1] >= 0 else -1
 
     def SetPolarityPositiveFunc(self):
@@ -470,8 +487,8 @@ class SysVarAnalogArduinoBipolarWithExternalPolarity(SysVarAnalogArduino):
     The voltage on the pin (normally 0-5 V) corresponds percentage-wise to the variable's absolute value between 0 and X (or -X).
     Polarity is set and read by user specific functions
     '''
-    def __init__(self, name, range, pinAnalIn, pinPwmOut, SetPolarityPositiveFunc, GetPolarityPositiveFunc, compName='', helpLine='', units='', PreSetFunc=None, highFreqPWM=False, pinOutVoltsMax=5, pinInVoltsMax=5, pinOutVoltsMin=0, pinInVoltsMin=0, PostGetFunc=None):
-        SysVarAnalogArduino.__init__(self, name, range, pinAnalIn, pinPwmOut, SetPolarityPositiveFunc, GetPolarityPositiveFunc, compName, helpLine, units, PreSetFunc, highFreqPWM, pinOutVoltsMax, pinInVoltsMax, pinOutVoltsMin, pinInVoltsMin, PostGetFunc)
+    def __init__(self, name, range, pinAnalIn, pinPwmOut, SetPolarityPositiveFunc, GetPolarityPositiveFunc, compName='', helpLine='', units='', PreSetFunc=None, highFreqPWM=False, pinOutVoltsMax=5, pinInVoltsMax=5, pinOutVoltsMin=0, pinInVoltsMin=0, PostGetFunc=None, I2cDac=None):
+        SysVarAnalogArduino.__init__(self, name, range, pinAnalIn, pinPwmOut, SetPolarityPositiveFunc, GetPolarityPositiveFunc, compName, helpLine, units, PreSetFunc, highFreqPWM, pinOutVoltsMax, pinInVoltsMax, pinOutVoltsMin, pinInVoltsMin, PostGetFunc, I2cDac)
 
     def GetUnipolarMin(self):
         return 0

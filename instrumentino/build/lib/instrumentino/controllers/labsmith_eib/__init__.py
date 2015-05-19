@@ -30,6 +30,12 @@ class LabSmithEIB(InstrumentinoController):
     VALVE_STATE_CLOSED = 2
     VALVE_STATE_B = 3
     
+    REG_CHANNEL_A = 0
+    REG_CHANNEL_B = 1
+    REG_CHANNEL_C = 2
+    REG_CHANNEL_D = 3
+
+    
     SYRINGE_PUMP_MAX_POWER = 0xA0
 
     valveStateToValue = {'A': VALVE_STATE_A,
@@ -94,6 +100,18 @@ class LabSmithEIB(InstrumentinoController):
         if self.syringePump != None:
             self.StopSyringe()
 
+    def SetPressure(self, sensorPort, PressureRangeKiloPascals, regChannel=REG_CHANNEL_A):
+        self.accessSemaphore.acquire(True)
+        self.DLL.AssignSensorToChannelRegulation(self.sensors, c_int(sensorPort), c_int(regChannel), c_double(PressureRangeKiloPascals[0]), c_double(PressureRangeKiloPascals[1]))
+        self.DLL.MoveSyringeAccordingToChannel(self.syringePump, c_int(regChannel))
+        self.accessSemaphore.release()
+    
+    def StopPressure(self, sensorPort):
+        self.accessSemaphore.acquire(True)
+        self.DLL.StopSyringe(self.syringePump)
+        self.DLL.CancelSensorChannelRegulation(self.sensors, c_int(sensorPort))
+        self.accessSemaphore.release()
+
     def GetSensorValue(self, port):
         getFunc = self.DLL.GetSensorValue
         getFunc.restype = c_double
@@ -151,13 +169,11 @@ class LabSmithEIB(InstrumentinoController):
     def MoveSyringeToPosition(self, pos):
         self.accessSemaphore.acquire(True) 
         self.DLL.MoveSyringeToPosition(self.syringePump, c_int(pos))
-        time.sleep(6)
         self.accessSemaphore.release()
         
     def MoveSyringeToVolumePercent(self, percent, maxVolume):
         self.accessSemaphore.acquire(True)
         self.DLL.MoveSyringeToVolume(self.syringePump, c_double(percent / 100 * maxVolume))
-        time.sleep(6)
         self.accessSemaphore.release()
         
     def StopSyringe(self):

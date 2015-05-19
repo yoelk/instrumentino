@@ -2,3 +2,4 @@ wxPython
 pyserial
 matplotlib
 numpy
+ez_setup

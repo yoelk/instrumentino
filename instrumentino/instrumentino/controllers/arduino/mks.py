@@ -6,9 +6,14 @@ __author__ = 'yoelk'
 from instrumentino import cfg
 
 class MKSMassFlowController(SysCompArduino):
-    def __init__(self, name, pinInPercent, pinOutPercent, pinOutClose=None):
+    def __init__(self, name, pinInPercent, pinOutPercent, pinOutClose=None, I2cDac=None):
+        if I2cDac:
+            controlVar = SysVarAnalogArduinoUnipolar('Flow', [0,100], pinInPercent, None, name, 'Flow percentage', '%', self.PreEditPercent, I2cDac=I2cDac)
+        else:
+            controlVar = SysVarAnalogArduinoUnipolar('Flow', [0,100], pinInPercent, pinOutPercent, name, 'Flow percentage', '%', self.PreEditPercent, highFreqPWM=True)
+        
         SysCompArduino.__init__(self, name, 
-                                (SysVarAnalogArduinoUnipolar('Flow', [0,100], pinInPercent, pinOutPercent, name, 'Flow percentage', '%', self.PreEditPercent, highFreqPWM=True),),
+                                (controlVar,),
                                 'monitor/change gas flow')
         
         self.pinOutClose = pinOutClose

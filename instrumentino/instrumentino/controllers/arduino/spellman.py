@@ -7,7 +7,7 @@ from instrumentino import cfg
 
 class Spellman(SysCompArduino):
     ''' Supports either a unipolar voltage controller or a bipolar voltage controller with a symmetric range [-X,X] '''
-    def __init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, pinsVoltsMax=5, safetyMaxAbsVoltage=None):
+    def __init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, pinsVoltsMax=5, safetyMaxAbsVoltage=None, ctlV_I2cDac=None, ctlI_I2cDac=None):
         varEnable = SysVarDigitalArduino('enable', pinEnable, name)
         
         # Reduce maximal pin output according to security voltage
@@ -21,11 +21,20 @@ class Spellman(SysCompArduino):
         
         # set voltage variable according to the voltage range. Use methods defined in the instantiated sub-class 
         if rangeV[0] * rangeV[1] >= 0:
-            voltageVar = SysVarAnalogArduinoUnipolar('V', rangeV, pinInV, pinOutV, name, 'Voltage', 'kV', self.PreEditV, highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMaxAdjusted, pinInVoltsMax=pinsVoltsMaxAdjusted)
+            if ctlV_I2cDac:
+                voltageVar = SysVarAnalogArduinoUnipolar('V', rangeV, pinInV, None, name, 'Voltage', 'kV', self.PreEditV, highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMaxAdjusted, pinInVoltsMax=pinsVoltsMaxAdjusted, I2cDac=ctlV_I2cDac)
+            else:
+                voltageVar = SysVarAnalogArduinoUnipolar('V', rangeV, pinInV, pinOutV, name, 'Voltage', 'kV', self.PreEditV, highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMaxAdjusted, pinInVoltsMax=pinsVoltsMaxAdjusted)
         else:
-            voltageVar = SysVarAnalogArduinoBipolarWithExternalPolarity('V', rangeV, pinInV, pinOutV, self.SetPolarityPositive, self.GetPolarityPositive, name, 'Voltage', 'kV', self.PreEditV, highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMaxAdjusted, pinInVoltsMax=pinsVoltsMaxAdjusted)            
+            if ctlV_I2cDac:
+                voltageVar = SysVarAnalogArduinoBipolarWithExternalPolarity('V', rangeV, pinInV, None, self.SetPolarityPositive, self.GetPolarityPositive, name, 'Voltage', 'kV', self.PreEditV, highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMaxAdjusted, pinInVoltsMax=pinsVoltsMaxAdjusted, I2cDac=ctlV_I2cDac)
+            else:
+                voltageVar = SysVarAnalogArduinoBipolarWithExternalPolarity('V', rangeV, pinInV, pinOutV, self.SetPolarityPositive, self.GetPolarityPositive, name, 'Voltage', 'kV', self.PreEditV, highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMaxAdjusted, pinInVoltsMax=pinsVoltsMaxAdjusted)            
         
-        currentVar = SysVarAnalogArduinoUnipolar('I', rangeI, pinInI, pinOutI, name, 'Current', 'uA', highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMax, pinInVoltsMax=pinsVoltsMax)
+        if ctlI_I2cDac:
+            currentVar = SysVarAnalogArduinoUnipolar('I', rangeI, pinInI, None, name, 'Current', 'uA', highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMax, pinInVoltsMax=pinsVoltsMax, I2cDac=ctlI_I2cDac)
+        else:
+            currentVar = SysVarAnalogArduinoUnipolar('I', rangeI, pinInI, pinOutI, name, 'Current', 'uA', highFreqPWM=highFreqPWM, pinOutVoltsMax=pinsVoltsMax, pinInVoltsMax=pinsVoltsMax)
         
         SysCompArduino.__init__(self, name,
                                 (voltageVar, currentVar, varEnable),
@@ -40,12 +49,12 @@ class Spellman(SysCompArduino):
         
 
 class SpellmanCZE30PN2000(Spellman):
-    def __init__(self, name, pinEnable, pinPolaritySet, pinPolarityPositive, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None):
+    def __init__(self, name, pinEnable, pinPolaritySet, pinPolarityPositive, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None, ctlV_I2cDac=None, ctlI_I2cDac=None):
         self.varPolaritySet = SysVarDigitalArduino('polaritySet', pinPolaritySet, name)
         self.varPolarityPositive = SysVarDigitalArduino('polarityPositive', pinPolarityPositive, name, editable=False)
         rangeV = [-30, 30]
         rangeI = [0, 300]
-        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=5, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
+        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=5, safetyMaxAbsVoltage=safetyMaxAbsVoltage, ctlV_I2cDac=ctlI_I2cDac, ctlI_I2cDac=ctlI_I2cDac)
         
     def SetPolarityPositive(self, positive=True):
         self.varPolaritySet.Set('on' if positive else 'off');
@@ -64,28 +73,28 @@ class SpellmanCZE30PN2000(Spellman):
 
 
 class SpellmanUM20_4_PLUS(Spellman):
-    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None):
+    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None, ctlV_I2cDac=None, ctlI_I2cDac=None):
         rangeV = [0, 20]
         rangeI = [0, 200]
-        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
+        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage, ctlV_I2cDac=ctlI_I2cDac, ctlI_I2cDac=ctlI_I2cDac)
 
 
 class SpellmanUM20_4_MINUS(Spellman):
-    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None):
+    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None, ctlV_I2cDac=None, ctlI_I2cDac=None):
         rangeV = [-20, 0]
         rangeI = [0, 200]
-        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
+        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage, ctlV_I2cDac=ctlI_I2cDac, ctlI_I2cDac=ctlI_I2cDac)
 
 
 class SpellmanUM30_4_PLUS(Spellman):
-    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None):
+    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None, ctlV_I2cDac=None, ctlI_I2cDac=None):
         rangeV = [0, 30]
         rangeI = [0, 133]
-        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
+        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage, ctlV_I2cDac=ctlI_I2cDac, ctlI_I2cDac=ctlI_I2cDac)
 
 
 class SpellmanUM30_4_MINUS(Spellman):
-    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None):
+    def __init__(self, name, pinEnable, pinInV, pinInI, pinOutV, pinOutI=None, highFreqPWM=False, safetyMaxAbsVoltage=None, ctlV_I2cDac=None, ctlI_I2cDac=None):
         rangeV = [-30, 0]
         rangeI = [0, 133]
-        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage)
+        Spellman.__init__(self, name, rangeV, rangeI, pinEnable, pinInV, pinInI, pinOutV, pinOutI, highFreqPWM=highFreqPWM, pinsVoltsMax=4.64, safetyMaxAbsVoltage=safetyMaxAbsVoltage, ctlV_I2cDac=ctlI_I2cDac, ctlI_I2cDac=ctlI_I2cDac)

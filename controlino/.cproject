@@ -26,6 +26,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/PID_v1}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/SoftwareSerial}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/PID_AutoTune_v0}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/Wire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/Wire/utility}&quot;"/>
 								</option>
 								<inputType id="it.baeyens.arduino.compiler.cpp.sketch.input.1857294710" name="CPP source files" superClass="it.baeyens.arduino.compiler.cpp.sketch.input"/>
 							</tool>
@@ -36,6 +38,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/PID_v1}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/SoftwareSerial}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/PID_AutoTune_v0}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/Wire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/controlino/Libraries/Wire/utility}&quot;"/>
 								</option>
 								<inputType id="it.baeyens.arduino.compiler.c.sketch.input.1146755083" name="C Source Files" superClass="it.baeyens.arduino.compiler.c.sketch.input"/>
 							</tool>
@@ -62,4 +66,5 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

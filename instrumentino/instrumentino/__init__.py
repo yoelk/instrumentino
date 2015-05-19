@@ -147,11 +147,16 @@ class InstrumentinoApp(wx.App):
         '''
         Pop a message window to the user
         '''
-        (text, e) = event.data
+        (text, e, waitForUser) = event.data
         wx.Bell()
-        dlg = wx.MessageDialog(self.mainFrame,
-                               text + '\nResume operation?',
-                               'Waiting for user', wx.OK|wx.ICON_QUESTION)
+        if waitForUser:
+            dlg = wx.MessageDialog(self.mainFrame,
+                                   text + '\nResume operation?',
+                                   'Waiting for user', wx.OK|wx.ICON_QUESTION)
+        else:
+            dlg = wx.MessageDialog(self.mainFrame,
+                                   text,
+                                   'Notification', wx.OK|wx.ICON_QUESTION)
         dlg.ShowModal()
         dlg.Destroy()
         e.set()

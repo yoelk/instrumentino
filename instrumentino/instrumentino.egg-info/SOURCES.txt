@@ -1,4 +1,5 @@
 README.txt
+ez_setup.py
 setup.py
 instrumentino/__init__.py
 instrumentino/action.py
