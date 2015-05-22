@@ -20,3 +20,6 @@
 
 *.pyc
 **/*.pyc
+*.mk
+
+controlino/Release/subdir.mk
