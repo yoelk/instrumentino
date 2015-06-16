@@ -1,5 +1,4 @@
 README.txt
-ez_setup.py
 setup.py
 instrumentino/__init__.py
 instrumentino/action.py
@@ -36,3 +35,9 @@ instrumentino/resources/main.xrc
 instrumentino/resources/stopButton.png
 instrumentino/resources/uProcessDriver.dll
 instrumentino/resources/uProcessDriver_C_V1_2_1.dll
+instrumentino/resources/new/__init__.py
+instrumentino/resources/new/uProcessDriver.dll
+instrumentino/resources/new/uProcessDriver_C_V1_2_2.dll
+instrumentino/resources/old/__init__.py
+instrumentino/resources/old/uProcessDriver.dll
+instrumentino/resources/old/uProcessDriver_C_V1_2_1.dll

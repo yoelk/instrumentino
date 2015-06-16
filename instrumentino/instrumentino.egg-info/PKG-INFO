@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: instrumentino
-Version: 1.10.1
+Version: 1.31
 Summary: Open-source modular GUI framework for controlling Arduino based instruments
 Home-page: http://www.chemie.unibas.ch/~hauser/open-source-lab/instrumentino/index.html
 Author: Joel Koenka

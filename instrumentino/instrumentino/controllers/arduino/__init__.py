@@ -1,6 +1,7 @@
 from __future__ import division
 from instrumentino.comp import SysVarDigital, SysVarAnalog, SysComp
 from instrumentino.controllers import InstrumentinoController
+from exceptions import ValueError
 __author__ = 'yoelk'
 
 from instrumentino import cfg
@@ -105,8 +106,12 @@ class Arduino(InstrumentinoController):
         values = valuesStr.split(' ')
         
         # values are received in the same order we asker for them
-        for key, val in zip(keys, values):
-            self.pinValuesCache[key] = int(val)
+        try:
+            for key, val in zip(keys, values):
+                self.pinValuesCache[key] = int(val)
+        except ValueError:
+            print 'Read %s'%(pins.strip())
+            print 'received: ' + valuesStr
             
     def PinModeOut(self, pin):
         '''
@@ -357,7 +362,10 @@ class Arduino(InstrumentinoController):
             rxData = self._getData()
         except:
             rxData = ''
-        
+
+        if lock == True:
+            self.accessSemaphore.release()
+                    
         if log:
             print 'Arduino says: ' + rxData
         
@@ -367,9 +375,6 @@ class Arduino(InstrumentinoController):
             if wait == True or self.nonResponsiveCounter > self.maxNonResponseAllowed:
                 cfg.LogFromOtherThread('Arduino did not respond %d times'%(self.nonResponsiveCounter), True)
             return None
-
-        if lock == True:
-            self.accessSemaphore.release()
 
         self.nonResponsiveCounter = 0            
         return rxData[0:answerEnd].strip();
@@ -457,7 +462,9 @@ class SysVarAnalogArduino(SysVarAnalog):
         if self.pinOut != None:
             self.GetController().AnalogWriteFraction(self.pinOut, fraction, self.pinOutVoltsMax, self.pinOutVoltsMin)
         elif self.I2cDac != None:
-            self.I2cDac.WriteFraction(fraction, self.GetController())
+            minV = self.pinOutVoltsMin
+            maxV = self.pinOutVoltsMax
+            self.I2cDac.WriteFraction((minV + (maxV - minV) * fraction) / 5, self.GetController())
 
 
 class SysVarAnalogArduinoUnipolar(SysVarAnalogArduino):

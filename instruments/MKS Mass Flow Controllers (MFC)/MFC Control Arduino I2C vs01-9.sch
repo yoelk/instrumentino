@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.2.0">
+<eagle version="6.4">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -12545,6 +12545,9 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 <text x="83.82" y="20.32" size="1.778" layer="91">I2C bus</text>
 <text x="119.38" y="12.7" size="1.778" layer="91">Flow Signal Output</text>
 <text x="48.26" y="152.4" size="1.778" layer="91">12 V for Arduino</text>
+<text x="68.58" y="167.64" size="1.778" layer="91">Remarks:
+Capacitors that don't have values on them are used for signal filtering.
+Proposed value is 100nF.</text>
 </plain>
 <instances>
 <instance part="P+8" gate="1" x="43.18" y="147.32"/>
@@ -13418,4 +13421,10 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 </sheets>
 </schematic>
 </drawing>
+<compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
+</compatibility>
 </eagle>

@@ -49,7 +49,7 @@ class LabSmithEIB(InstrumentinoController):
     def __init__(self):
         InstrumentinoController.__init__(self, self.name)
         self.accessSemaphore = Semaphore()
-        self.syringePump = None
+        self.syringePumps = {}
 
     def Connect(self, port):
         '''
@@ -67,7 +67,7 @@ class LabSmithEIB(InstrumentinoController):
         retCode = self.DLL.ConnectEIB(self.EIB, portNumber)
         if retCode != 0:
             return False
-        self.syringePump = None
+        self.syringePumps = {}
         self.valves = None
         self.sensors = None
         
@@ -75,20 +75,24 @@ class LabSmithEIB(InstrumentinoController):
         deviceAddresses = DeviceDataArray()
         deviceTypes = DeviceDataArray()
         devicesNum = self.DLL.ScanDevices(self.EIB, byref(deviceAddresses), byref(deviceTypes))
+        print str(devicesNum) + ' devices found:'
         if not devicesNum > 0:
             return False
         for idx in range(devicesNum):
             if deviceTypes[idx] == self.DEVICE_TYPE_SPS01:
-                self.syringePump = self.DLL.NewSPS01(self.EIB, c_ubyte(deviceAddresses[idx]))
-                retCode = self.DLL.InitSyringe(self.syringePump)
+                print 'SPS01 @' + str(deviceAddresses[idx])
+                self.syringePumps[deviceAddresses[idx]] = self.DLL.NewSPS01(self.EIB, c_ubyte(deviceAddresses[idx]))
+                retCode = self.DLL.InitSyringe(self.syringePumps[deviceAddresses[idx]])
                 if retCode == 0:
                     return False
             if deviceTypes[idx] == self.DEVICE_TYPE_4VM01:
+                print '4VM01 @' + str(deviceAddresses[idx])
                 self.valves = self.DLL.New4VM01(self.EIB, c_ubyte(deviceAddresses[idx]))
                 retCode = self.DLL.InitValves(self.valves)
                 if retCode == 0:
                     return False
             if deviceTypes[idx] == self.DEVICE_TYPE_4AM01:
+                print '4AM01 @' + str(deviceAddresses[idx])
                 self.sensors = self.DLL.New4AM01(self.EIB, c_ubyte(deviceAddresses[idx]))
                 retCode = self.DLL.InitSensors(self.sensors)
                 if retCode == 0:
@@ -97,21 +101,11 @@ class LabSmithEIB(InstrumentinoController):
         return True
     
     def Close(self):
-        if self.syringePump != None:
-            self.StopSyringe()
-
-    def SetPressure(self, sensorPort, PressureRangeKiloPascals, regChannel=REG_CHANNEL_A):
         self.accessSemaphore.acquire(True)
-        self.DLL.AssignSensorToChannelRegulation(self.sensors, c_int(sensorPort), c_int(regChannel), c_double(PressureRangeKiloPascals[0]), c_double(PressureRangeKiloPascals[1]))
-        self.DLL.MoveSyringeAccordingToChannel(self.syringePump, c_int(regChannel))
+        for pump in self.syringePumps.values():
+            self.DLL.StopSyringe(pump)
         self.accessSemaphore.release()
-    
-    def StopPressure(self, sensorPort):
-        self.accessSemaphore.acquire(True)
-        self.DLL.StopSyringe(self.syringePump)
-        self.DLL.CancelSensorChannelRegulation(self.sensors, c_int(sensorPort))
-        self.accessSemaphore.release()
-
+        
     def GetSensorValue(self, port):
         getFunc = self.DLL.GetSensorValue
         getFunc.restype = c_double
@@ -147,40 +141,7 @@ class LabSmithEIB(InstrumentinoController):
                 valves[idx] = 0
         
         self.accessSemaphore.release()
-        return valves
-    
-    def SetSyringePower(self, percent):
-        self.accessSemaphore.acquire(True)
-        self.DLL.SetSyringePower(self.syringePump, c_int(int(percent / 100 * self.SYRINGE_PUMP_MAX_POWER)))
-        self.accessSemaphore.release()
-        
-    def SetSyringeSpeed(self, percent):
-        self.accessSemaphore.acquire(True)
-        self.DLL.SetSyringeSpeedPercent(self.syringePump, c_double(percent))
-        self.accessSemaphore.release()
-        
-    def SetSyringeDiameterAndGetMaxVolume(self, diameterMiliMeter):
-        self.accessSemaphore.acquire(True)
-        self.DLL.SetSyringeDiameter(self.syringePump, c_double(diameterMiliMeter))
-        maxVolume = self.DLL.GetSyringeMaxVolume(self.syringePump)
-        self.accessSemaphore.release()
-        return maxVolume
-
-    def MoveSyringeToPosition(self, pos):
-        self.accessSemaphore.acquire(True) 
-        self.DLL.MoveSyringeToPosition(self.syringePump, c_int(pos))
-        self.accessSemaphore.release()
-        
-    def MoveSyringeToVolumePercent(self, percent, maxVolume):
-        self.accessSemaphore.acquire(True)
-        self.DLL.MoveSyringeToVolume(self.syringePump, c_double(percent / 100 * maxVolume))
-        self.accessSemaphore.release()
-        
-    def StopSyringe(self):
-        self.accessSemaphore.acquire(True)
-        self.DLL.StopSyringe(self.syringePump)
-        self.accessSemaphore.release()
-
+        return valves   
 
 # base class and variables        
 class SysCompLabSmith(SysComp):
@@ -238,8 +199,8 @@ class SysVarDigitalLabSmith_CachedAnalog(SysVarAnalog):
     '''
     A LabSmith cached analog variable
     '''
-    def __init__(self, name, compName, comp, units='%', helpLine='', editable=True, showInSignalLog=True):
-        SysVarAnalog.__init__(self, name, [0,100], LabSmithEIB, compName, helpLine=helpLine, editable=editable, units=units, showInSignalLog=showInSignalLog)
+    def __init__(self, name, compName, comp, units='%', range=[0,100], helpLine='', editable=True, showInSignalLog=True):
+        SysVarAnalog.__init__(self, name, range, LabSmithEIB, compName, helpLine=helpLine, editable=editable, units=units, showInSignalLog=showInSignalLog)
         self.comp = comp
         self.cache = 0
 
@@ -259,7 +220,19 @@ class SysVarDigitalLabSmith_SyringeSpeed(SysVarDigitalLabSmith_CachedAnalog):
 
     def SetFunc(self, percent):
         super(SysVarDigitalLabSmith_SyringeSpeed, self).SetFunc(percent)
-        self.comp.GetController().SetSyringeSpeed(percent)
+        self.comp.SetSyringeSpeed(percent)
+        
+        
+class SysVarDigitalLabSmith_SyringeFlowrate(SysVarDigitalLabSmith_CachedAnalog):
+    '''
+    A LabSmith SPS01 flow-rate (in uL/min)
+    '''
+    def __init__(self, compName, comp, range, editable=True):
+        SysVarDigitalLabSmith_CachedAnalog.__init__(self, 'Flowrate', compName, comp, range=range, helpLine='set pump flow rate', showInSignalLog=False, units='uL/min')
+
+    def SetFunc(self, flowrate):
+        super(SysVarDigitalLabSmith_SyringeFlowrate, self).SetFunc(flowrate)
+        self.comp.SetSyringeFlowrate(flowrate)
         
         
 class SysVarDigitalLabSmith_SyringePower(SysVarDigitalLabSmith_CachedAnalog):
@@ -271,7 +244,7 @@ class SysVarDigitalLabSmith_SyringePower(SysVarDigitalLabSmith_CachedAnalog):
 
     def SetFunc(self, percent):
         super(SysVarDigitalLabSmith_SyringePower, self).SetFunc(percent)
-        self.comp.GetController().SetSyringePower(percent)
+        self.comp.SetSyringePower(percent)
         
         
 class SysVarDigitalLabSmith_SyringeMaxVolume(SysVarDigitalLabSmith_CachedAnalog):
@@ -295,7 +268,7 @@ class SysVarDigitalLabSmith_SyringePlunger(SysVarDigitalLabSmith_CachedAnalog):
 
     def SetFunc(self, percent):
         super(SysVarDigitalLabSmith_SyringePlunger, self).SetFunc(percent)
-        self.comp.GetController().MoveSyringeToVolumePercent(percent, self.maxVolume)
+        self.comp.MoveSyringeToVolumePercent(percent, self.maxVolume)
         
     def SetMaxVolume(self, maxVolume):
         self.maxVolume = maxVolume

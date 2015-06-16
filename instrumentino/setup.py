@@ -10,7 +10,7 @@ setup(install_requires = ['wxPython', 'pyserial', 'matplotlib', 'numpy', 'ez_set
 
       # metadata for upload to PyPI
       name='instrumentino',
-      version = '1.10.1',
+      version = '1.31',
       author = 'Joel Koenka',
       author_email = 'yoelk@tx.technion.ac.il',
       description = 'Open-source modular GUI framework for controlling Arduino based instruments',

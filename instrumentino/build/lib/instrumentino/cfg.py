@@ -12,7 +12,7 @@ __author__ = 'yoelk'
 Instrumentino configuration variables
 '''
 # The way we show numbers
-numIntegerPartWidth = 4
+numIntegerPartWidth = 6
 numFractionPartWidth = 3
 numStringFormat = '{:' + str(numIntegerPartWidth) + '.' + str(numFractionPartWidth) + 'f}' 
 
