@@ -1,0 +1,23 @@
+[
+    {
+        "type": "string",
+        "title": "Current user",
+        "section": "DEFAULT",
+        "key": "user_current",
+        "disabled": 1
+    },
+    {
+        "type": "string",
+        "title": "Last instrument used",
+        "section": "USER_PROFILE",
+        "key": "last_instrument_used",
+        "disabled": 1
+    },
+    {
+        "type": "string",
+        "title": "Instruments directory",
+	    "desc": "If DEFAULT, then this is the system default directory",
+        "section": "USER_PROFILE",
+        "key": "instruments_dir"
+    }
+]

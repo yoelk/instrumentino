@@ -1,0 +1,3 @@
+Master format: Gimp, v2.8
+
+Note: ****Temporary graphic****, needs complete re-do with proper standard sizes and colors/font

@@ -1,0 +1,174 @@
+##########
+# Screens
+##########
+<MySingleViewScreen@MyScreen>:
+    name: 'SingleView'
+    part_containers: [self]
+    
+<MyDoubleViewScreen@MyScreen>:             
+    name: 'DoubleView'
+    part_containers: [part1_container, part2_container]
+    BoxLayout:
+	    id: all
+	    min_view_size: sp(30)
+	    strip_size: sp(13)
+	    orientation: 'vertical' if self.width < self.height else 'horizontal'
+	    vertical: self.orientation == 'vertical'
+	    bigger_size: self.height if self.vertical else self.width
+	    default_part_size: (self.bigger_size - self.strip_size)/2
+	
+	    # Reset part sizes when orientation changes
+	    on_vertical:
+	        if args[1]: splitter1.height = self.default_part_size
+	        if not args[1]: splitter1.width = self.default_part_size
+	
+		Splitter:
+		    id: splitter1
+		    strip_size: all.strip_size
+		    max_size: all.bigger_size - (all.min_view_size + all.strip_size)*2
+		    min_size: all.min_view_size + all.strip_size
+		    sizable_from: 'bottom' if all.vertical else 'right'
+		    size_hint: (1, None) if all.vertical else (None, 1)
+		    size: (all.width, all.default_part_size) if all.vertical else (all.default_part_size, all.height)
+		
+		    BoxLayout:
+		    	id: part1_container
+
+		BoxLayout:
+			id: part2_container
+
+<MyTripleViewScreen@MyScreen>:             
+    name: 'TripleView'
+	part_containers: [part1_container, part2_container, part3_container]
+    BoxLayout:
+	    id: all
+	    min_view_size: sp(30)
+	    strip_size: sp(13)
+	    orientation: 'vertical' if self.width < self.height else 'horizontal'
+	    vertical: self.orientation == 'vertical'
+	    bigger_size: self.height if self.vertical else self.width
+	    default_part_size: (self.bigger_size - self.strip_size*2)/3
+	
+	    # Reset part sizes when orientation changes
+	    on_vertical:
+	        if args[1]: (splitter1.height, splitter2.height) = (self.default_part_size, self.default_part_size)
+	        if not args[1]: (splitter1.width, splitter2.width) = (self.default_part_size, self.default_part_size)
+	
+		Splitter:
+		    id: splitter1
+		    strip_size: all.strip_size
+		    max_size: all.bigger_size - (all.min_view_size + all.strip_size)*2
+		    min_size: all.min_view_size + all.strip_size
+		    sizable_from: 'bottom' if all.vertical else 'right'
+		    size_hint: (1, None) if all.vertical else (None, 1)
+		    size: (all.width, all.default_part_size) if all.vertical else (all.default_part_size, all.height)
+		
+		    BoxLayout:
+		    	id: part1_container
+		
+		Splitter:
+		    id: splitter2
+		    strip_size: all.strip_size
+		    splitter1_bigger_size: splitter1.height if all.vertical else splitter1.width
+		    max_size: (all.bigger_size - self.splitter1_bigger_size) - (all.min_view_size + self.strip_size)
+		    min_size: all.min_view_size + self.strip_size
+		    sizable_from: 'bottom' if all.vertical else 'right'
+		    size_hint: (1, None) if all.vertical else (None, 1)
+		    size: (all.width, all.default_part_size) if all.vertical else (all.default_part_size, all.height)
+		
+		    BoxLayout: 
+		    	id: part2_container   
+		
+		BoxLayout:
+			id: part3_container
+
+##########
+# Views
+##########
+<MyControlView>:
+	min_component_width: sp(100)
+	cols: 1
+        
+<MyAutomationView>:
+    do_default_tab: False
+    TabbedPanelItem:
+        text: 'Method'
+        BoxLayout:
+            orientation: 'vertical'
+            BoxLayout:
+                size_hint_y: 1
+                orientation: 'vertical'
+                Button:
+                    text: '#1: Flush Capillary'
+                Button:
+                    text: '#2: Thermostat'
+                Button:
+                    text: '#3: HV Separation'
+            Label:
+                # Let this expand to fill all remaining space
+                text: '(empty separator)' 
+            BoxLayout:
+                size_hint_y: .2
+                Button:
+                    text: 'Load'
+                    on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
+                Button:
+                    text: 'Save'
+                    on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
+                    
+    TabbedPanelItem:
+        text: 'Sequence'
+        BoxLayout:
+            orientation: 'vertical'
+            BoxLayout:
+                size_hint_y: 1
+                orientation: 'vertical'
+                Button:
+                    text: 'Method #1'
+            Label:
+                # Let this expand to fill all remaining space
+                text: '(empty separator)' 
+            BoxLayout:
+                size_hint_y: .2
+                Button:
+                    text: 'Load'
+                    on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'sequence_files_dir'),['*.seq'])
+                Button:
+                    text: 'Save'
+                    on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'sequence_files_dir'),['*.seq'])
+
+<MyGraph@Graph>:
+    x_grid: True
+    x_grid_label: True
+    xlabel: 'time (seconds)'
+    xmin: 0
+    xmax: 50
+    x_ticks_major: 1
+    x_ticks_minor: 0
+    y_grid: True
+    y_grid_label: True
+    ylabel: 'percent (%) - dashed line for negative values'
+    ymin: 0
+    ymax: 100
+    y_ticks_minor: 5
+    y_ticks_major: 10
+    # padding: 5
+    # tick_color: 1, 1, .25, 1
+    # background_color: .25,1,1,1
+    # border_color: 1,0,1,0
+    
+<MySignalView>:
+    graph: graph
+    orientation: 'vertical'
+    MyGraph:
+    	id: graph
+
+##########
+# View chooser
+##########
+<ViewChooser@ToggleButtonMulti>:
+	name: ''
+	group: 'view choosers'
+	allow_no_selection: False
+    text: root.view_name
+    on_state: app.top.screen_manager.update_screens(root.name, self.state)    	

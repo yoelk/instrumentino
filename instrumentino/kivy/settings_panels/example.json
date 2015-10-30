@@ -1,0 +1,42 @@
+[
+    {
+        "type": "title",
+		  "title": "Example title"
+    },
+    {
+        "type": "bool",
+        "title": "Boolean Example title",
+        "desc": "some desc.",
+        "section": "example",
+        "key": "bool_example"
+    }, 
+    {
+        "type": "numeric",
+        "title": "Numeric Example title",
+        "desc": "some desc.",
+        "section": "example",
+        "key": "numeric_example"
+    },
+    {
+        "type": "options",
+        "title": "options example title",
+        "desc": "some desc.",
+        "section": "example",
+        "key": "options_example",
+        "options": ["option1","option2","option3"]
+    },
+    {
+        "type": "string",
+        "title": "string Example title",
+        "desc": "some desc.",
+        "section": "example",
+        "key": "string_example"
+    },   
+    {
+        "type": "path",
+        "title": "path Example title",
+        "desc": "some desc.",
+        "section": "example",
+        "key": "path_example"
+    }
+]

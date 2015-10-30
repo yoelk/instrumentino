@@ -1,0 +1,34 @@
+Created in Gimp, v2.8
+
+Master Layer: 
+    Width: 512px
+    Height: 256px
+    Note: Subsequent sizes scale from master by dividing height by 2.
+
+Background: 
+    Color: "Instrumentino White": f8f8f8
+
+Sine wave: 
+    Height: 236px
+    Width: 236px
+    Color: "Instrumentino Blue compliment (Orange)": ff9c30
+
+Square wave: same as sine wave except
+    Color: "Instrumentino Blue": 33b5e5
+
+Note:
+    Left sine/square tools: Position: 10x,10y
+    Right sine/square tools: Position: 246x, 10y
+
+Note: To fill circle/square: 
+    Set pencil tool to appropriate color and 12 px wide brush
+    Select -> to path
+    Edit -> stroke selection -> pencil tool
+    Note: Stroke selection draws in center of line
+
+Note: Once layers are all built, flatten then into a new layer then center the graphics using the "centering/center line" layer.  Didn't want to go through all the motions to place them pixel perfectly just yet.
+
+Text:
+    Font: Droid Serif Bold, 128px
+    Color: "Instrumentino Black": 492727
+        

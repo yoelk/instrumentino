@@ -1,0 +1,9 @@
+[DEFAULT]
+name = Demo1 - The Test 9000
+version = 0.1.0
+author = Test T. Person
+description = This is a long winded description of the demo1 instrument.
+
+[instrument]
+sampling_rate1 = 10
+sampling_rate2 = 1

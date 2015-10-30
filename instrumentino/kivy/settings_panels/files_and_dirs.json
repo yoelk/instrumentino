@@ -1,0 +1,48 @@
+[
+    {
+        "type": "string",
+        "title": "Project directory",
+        "section": "DEFAULT",
+        "key": "project_dir",
+        "disabled": 1
+    },
+    {
+        "type": "string",
+        "title": "Home directory",
+        "section": "DEFAULT",
+        "key": "home_dir",
+        "disabled": 1
+    },
+    {
+        "type": "string",
+        "title": "User files directory",
+	    "desc": "Where all user information is located",
+        "section": "files_and_dirs",
+        "key": "user_dir",
+        "disabled": 1
+    },
+    {
+        "type": "string",
+        "title": "Default instruments directory",
+	    "desc": "Where all instruments are located, if user profile does not override",
+        "section": "USER_PROFILE_DEFAULTS",
+        "key": "instruments_dir",
+        "disabled": 1
+    },
+    {
+        "type": "string",
+        "title": "Sequences directory",
+        "desc": "Where sequence files (*.seq) are located",
+        "section": "files_and_dirs",
+        "key": "sequence_files_dir",
+        "disabled": 1
+    },
+    {
+        "type": "string",
+        "title": "Methods directory",
+        "desc": "Where method files (*.mtd) are located",
+        "section": "files_and_dirs",
+        "key": "method_files_dir",
+        "disabled": 1
+    }
+]

@@ -1,0 +1,6 @@
+# User specific configs
+[DEFAULT]
+last_instrument_name = Demo1 - The Test 9000
+autoload_last_instrument = 0
+data_storage_dir = DEFAULT
+instruments_dir = DEFAULT

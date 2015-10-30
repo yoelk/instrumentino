@@ -1,0 +1,66 @@
+# Tested on kivy 1.8,1.9
+#:kivy 1.9
+<Instrumentino>:
+	side_panel_height: dp(200)
+	anim_type: 'fade_in'
+	screen_manager: screen_manager
+    view_choosers_container: view_choosers_container
+    # This is the NavigationDrawer content
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+        	size_hint_y: .3
+        	id: view_choosers_container
+        	orientation: 'vertical'
+        BoxLayout:
+        	orientation: 'vertical'
+        	size_hint_y: .2
+	        Button:
+	            text: 'Settings'
+	            background_color: (1.0, 1.0, 0.0, 1.0)
+	            on_press: app.open_settings()
+	        Button:
+	            text: 'Load Profile'
+	            background_color: (1.0, 1.0, 0.0, 1.0)
+	            on_press: app.ShowProfileLoader()
+	        Button:
+	            text: 'Help'
+	            background_color: (1.0, 1.0, 0.0, 1.0)
+	            on_press: app.ShowHelp()
+            
+    # This is the Main layout window for all other controls (other 1/2 of NavigationDrawer)
+    # MAIN window/view seen normally
+    BoxLayout:
+        orientation: 'vertical'
+        # MAIN screens that can be chosen
+        MultipleViewManager:
+            id: screen_manager
+            MySingleViewScreen:
+            MyDoubleViewScreen:
+            MyTripleViewScreen:
+
+        # Buttons at bottom of MAIN
+        BoxLayout:
+            size_hint_y: .1
+            orientation: 'horizontal'
+            Button:
+                text: 'Menu'
+                size_hint_x: .1
+                on_press: root.toggle_state()
+            Button:
+                text: 'Currently running: Sequence 1, Method 1, action1. Time: 01:23'
+                on_press: app.ShowUserLog() 
+            Button:
+                text: 'STOP!'
+                background_color: (1.0, 0.0, 0.0, 1.0)
+                size_hint_x: .2
+                Image:
+                    source: 'instrumentino/kivy/resources/icon32/stop.png'
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    allow_stretch: True
+                    #keep_ratio: False
+                    #size_y: self.parent.width
+                    #size_hint_y: None
+                    #size_hint_x: None
+

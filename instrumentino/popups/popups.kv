@@ -1,0 +1,177 @@
+##########
+# BEGIN: FileChooser
+##########
+<FileChooserLoadDialog>:     # FileChooser file Load
+    title: 'Load file'
+    filechooser_widget: filechooser
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
+
+<FileChooserSaveDialog>:     # FileChooser file Save
+    title: 'Save file'
+    filechooser_widget: filechooser
+    text_input: text_input
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+            on_selection: text_input.text = self.selection and self.selection[0] or ''
+        TextInput:
+            id: text_input
+            size_hint_y: None
+            height: 30
+            multiline: False
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Save"
+                on_release: root.save(filechooser.path, text_input.text)
+##########
+# END: FileChooser
+##########
+
+<ActivityLog>:
+    title: 'Activity log'
+    size_hint: .8, .9
+	BoxLayout:
+	    # TO DO: Look into other options? lots of wasted space
+	    # Maybe: single line: datetime -> Data?
+	    orientation: 'vertical'
+	    BoxLayout:
+	        orientation: 'vertical'
+	        size: 0,60
+	        size_hint_y: None
+	        Label:
+	            text: "(some datetime)"
+	            size: 0,30
+	            size_hint_y: None
+	            halign: "justify"
+	            text_size: self.size
+	        TextInput:
+	            text: "Method: xxx Saved"
+	            size: 0,30
+	            size_hint_y: None
+	    BoxLayout:
+	        orientation: 'vertical'
+	        size: 0,60
+	        size_hint_y: None
+	        Label:
+	            text: "(some datetime)"
+	            size: 0,30
+	            size_hint_y: None
+	            halign: "justify"
+	            text_size: self.size
+	        TextInput:
+	            text: "Method: yyy Run #1"
+	            size: 0,30
+	            size_hint_y: None
+	            background_color: 0,1,0,1
+	            border: 4,4,4,4
+	            #font_size: 14
+	            # font_name: 
+	            multiline: False
+	            padding: 6,6,6,6
+	            readonly: True
+	            #color: 1, 0.6549, 0.8313, 1
+	    BoxLayout:
+	        orientation: 'vertical'
+	        size: 0,60
+	        size_hint_y: None
+	        Label:
+	            text: "(some datetime)"
+	            size: 0,30
+	            size_hint_y: None
+	            halign: "justify"
+	            text_size: self.size
+	        TextInput:
+	            text: "Method: yyy Run #2"
+	            size: 0,30
+	            size_hint_y: None
+	    Label:
+	        # Let this expand to fil all space at bottom
+
+<Help>:
+    title: 'About Instrumentino'
+    size_hint: .5, .5
+    id: HelpPopup
+    BoxLayout:
+        orientation: 'vertical'
+        Image:
+            source: 'instrumentino2/kivy/resources/icon64/logo.png'
+            center_x: self.parent.center_x
+            center_y: self.parent.center_y
+            allow_stretch: True
+        Label:
+            text: 'Version: 2.0.0'
+        Label:
+            text: 'Credits, etc.'
+        Label:
+            # TO DO: handle click on link ref
+            text: 'MIT License: [ref=clickLicenseURL][color=33b5e5]https://github.com/yoelk/instrumentino2[/color][/ref]'
+            markup: True
+        Label:
+            # TO DO: handle click on link ref
+            text: 'Documentation: [ref=clickDocsURL][color=33b5e5]http://yoelk.github.io/instrumentino2[/color][/ref]'
+            markup: True
+
+<ProfileLoader>:
+    title: 'Load a profile'
+    size_hint: .7, .7
+    BoxLayout:
+        orientation: 'vertical'
+        id: layout
+        BoxLayout:
+            size_hint_y: .3
+            Label:
+                text: 'User'
+	        Spinner:
+		        id: users
+		        text: ''
+		        values: ()
+                on_text: root.GetUserInstrumentNames()
+        BoxLayout:
+            size_hint_y: .3
+            Label:
+                text: 'Instrument'
+	        Spinner:
+		        id: instruments
+		        text: ''
+		        values: ()
+                on_text: root.GetInstrumentManifest(self.text)
+        BoxLayout: # Spacer and status         
+            id: editor
+            TextInput:
+                id: status
+                readonly: True
+                text:''
+        BoxLayout:
+            size_hint_y: .3
+            Button:
+                id: actionbutton
+                text: "Load"
+                on_release: root.LoadProfile()
+            Button:
+                text: "Close"
+                on_release: root.Close()                
