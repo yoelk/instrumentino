@@ -1,7 +1,7 @@
 from __future__ import division
 from kivy.properties import ObjectProperty, ListProperty
 from kivy.event import EventDispatcher
-from construct.core import Struct, Sequence
+from construct.core import Struct, Sequence, Anchor
 from construct.macros import ULInt8, ULInt16, ULInt32, ULInt64, PrefixedArray, \
     CString, Enum, GreedyRange, Array, OptionalGreedyRange
 from construct import Embed, macros
@@ -100,7 +100,8 @@ class ControlinoProtocol(EventDispatcher):
     data_packet_format = Struct('data_packet',
                                 Embed(packet_header_format),
                                 Embed(data_packet_header_format),
-                                PrefixedArray(data_packet_block_format, length_field=data_packet_blocks_num_format)
+                                PrefixedArray(data_packet_block_format, length_field=data_packet_blocks_num_format),
+                                Anchor('_end')
                                 )
     '''A data packet (Controller->Instrumentino) has the following form (with sizes in bytes):
     [const_header, 4][type, 1][packet_length, 2]    <- general packet header
@@ -112,14 +113,10 @@ class ControlinoProtocol(EventDispatcher):
     Timestamps are measured in milliseconds since the last time zeroing.
     '''
     
-    packet_header_format2 = Struct('packet_header',
-                                  Array(len(CONST_HEADER), ULInt8('const_header')), 
-                                  Enum(ULInt8('type'), **incoming_packet_types),
-                                  ULInt16('packet_length')
-                                  )
     string_packet_format = Struct('string_packet',
-                                  Embed(packet_header_format2),
-                                  GreedyRange(macros.String('string', 1))
+                                  Embed(packet_header_format),
+                                  GreedyRange(macros.String('string', 1)),
+                                  Anchor('_end')
                                   )
     '''A string packet (Controller->Instrumentino) has the following form (with sizes in bytes):
     [const_header, 4][type, 1][packet_length, 2]    <- general packet header
