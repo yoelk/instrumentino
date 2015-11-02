@@ -45,9 +45,8 @@ class ControlinoProtocol(EventDispatcher):
     '''Set the direction of a channel (IN/OUT). 
     '''
     
-    CMD_CHANNEL_REGISTER = 'CH:READ'
+    CMD_CHANNEL_REGISTER = 'CH:REGISTER'
     '''Tell the controller that we want to start receiving data from a certain pin in a certain frequency.
-    If a frequency isn't given, the value will be read only once. 
     '''
 
     CMD_CHANNEL_WRITE = 'CH:WRITE'

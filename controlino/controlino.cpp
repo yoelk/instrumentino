@@ -610,11 +610,13 @@ void setup() {
 	Serial.begin(SERIAL0_BAUD);
 
 	// Setup callbacks for SerialCommand commands
-	serial_command.addCommand("PING",		cmd_ping);
-	serial_command.addCommand("CH:DIR",		cmd_ch_dir);
-	serial_command.addCommand("CH:WRITE",	cmd_ch_write);
-	serial_command.addCommand("CH:READ",	cmd_ch_read);
-	serial_command.addCommand("RTC:ZERO",	cmd_rtc_zero);
+	serial_command.addCommand("PING",			cmd_ping);
+	serial_command.addCommand("CH:DIR",			cmd_ch_dir);
+	serial_command.addCommand("CH:WRITE",		cmd_ch_write);
+	serial_command.addCommand("CH:REGISTER",	cmd_ch_register);
+	serial_command.addCommand("CH:BLOCK:START",	cmd_ch_block_start);
+	serial_command.addCommand("CH:BLOCKSTOP",	cmd_ch_block_stop);
+	serial_command.addCommand("RTC:ZERO",		cmd_rtc_zero);
 #ifdef USE_ARDUINO_PID
 	serial_command.addCommand("PID:RELAY:INIT",	cmd_pid_relay_init);
 	serial_command.addCommand("PID:RELAY:SET",	cmd_pid_relay_set);
