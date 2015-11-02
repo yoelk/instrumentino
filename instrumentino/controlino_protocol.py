@@ -31,12 +31,16 @@ class ControlinoProtocol(EventDispatcher):
     
     '''---Outgoing packets---'''
     
-    CMD_SET_CONTROLLER_TIME = 'RTC:ZERO'
-    '''A command for synchronizing times between Instrumentino and a controller.
+    CMD_ACQUIRE_START = 'ACQUIRE:START'
+    '''A command for synchronizing times between Instrumentino and a controller, in order to start an acquisition block.
     Instrumentino sends this packet once to each controller and the time it was sent is considered t_zero from then on,
     and all of the timestamps sent by the controller are relative to this t_zero.  
     '''
     
+    CMD_ACQUIRE_STOP = 'ACQUIRE:STOP'
+    '''Stop the current acquisition block.  
+    '''
+
     CMD_PING = 'PING'
     '''A command to check if the controller is responsive.
     '''
@@ -209,10 +213,11 @@ class ControlinoProtocol(EventDispatcher):
         packet = self.build_command_packet(self.CMD_CHANNEL_REGISTER, [channel.get_identifier(), str(channel.sampling_rate)])
         self.transmit(packet)
 
-    def set_controller_t_zero(self):
+    def start_acquiring_data(self):
         '''Set t=0 to now, so we have a reference point for the rest of the timestamps exchanged between Instrumentino and the controller.
+        This signals the controller to start sending us data packets.
         '''
-        packet = self.build_command_packet(self.CMD_SET_CONTROLLER_TIME)
+        packet = self.build_command_packet(self.CMD_ACQUIRE_START)
         self.transmit(packet)
         
     def transmit(self, packet):

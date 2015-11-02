@@ -205,7 +205,7 @@ class Controller(EventDispatcher):
         # Set t=0 in the controller so we have a mutual time base, and open a new timestamp block for this session
         # If a time block already exists but hasn't had its t_zero set, update it and use this one.
         self.t_zero = time.time()
-        self.controlino_protocol.set_controller_t_zero()
+        self.controlino_protocol.start_acquiring_data()
         if not self.time_blocks[-1].t_zero:
             self.time_blocks[-1].t_zero = self.t_zero
         else:

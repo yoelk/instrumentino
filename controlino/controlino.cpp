@@ -163,8 +163,8 @@ void tend_to_registered_channels() {
 	DataBlockHeader* data_block_header;
 	uint8_t* data_block;
 
-	// Check if we have registered channels
-	if (registered_channels_num == 0) {
+	// Check if we are ready to start sending
+	if (registered_channels_num == 0 || t_zero_set != true) {
 		return;
 	}
 
@@ -269,23 +269,6 @@ void tend_to_registered_channels() {
  ******************************************************************************/
 
 /***
- * RTC:ZERO
- *
- * Adjust the real-time clock to 0 so we can time our measurements that are sent back.
- * This should be executed every 10 days or so, to avoid problems because of millis() overflow (32 bit counter).
- */
-void cmd_rtc_zero(SerialCommand this_scmd) {
-	// Set t_zero to be now.
-	millis_at_t_zero = millis();
-	t_zero_set = true;
-
-	// Initialize data packets related timers
-	t_next_sent_packet = 0 + DATA_PACKETS_SAMPLING_PERIOD_MS;
-
-	init_data_packets();
-}
-
-/***
  * PING
  *
  * Used for communications check. Answer with a simple 'pong' string
@@ -307,27 +290,30 @@ void cmd_ping(SerialCommand this_scmd) {
 }
 
 /***
- * CH:BLOCK:START
+ * ACQUIRE:START
  *
  * Start an acquisition block, so start sending data from registered channels.
+ * Adjust the real-time clock to 0 so we can time our measurements that are sent.
+ * A block can't be longer than 10 days because millis() will overflow (32 bit counter).
  */
-void cmd_ch_block_start(SerialCommand this_scmd) {
+void cmd_acquire_start(SerialCommand this_scmd) {
 	// Set t_zero to be now.
-	block.t_zero = millis();
-	block.t_zero_set = true;
+	millis_at_t_zero = millis();
+	t_zero_set = true;
 
 	// Initialize data packets related timers
-	block.t_next_packet = 0 + DATA_PACKETS_SAMPLING_PERIOD_MS;
+	t_next_sent_packet = 0 + DATA_PACKETS_SAMPLING_PERIOD_MS;
 
 	init_data_packets();
 }
 
 /***
- * CH:BLOCK:STOP
+ * ACQUIRE:STOP
  *
  * Stop an acquisition block, so stop sending data from registered channels.
  */
-void cmd_ch_block_stop(SerialCommand this_scmd) {
+void cmd_acquire_stop(SerialCommand this_scmd) {
+	t_zero_set = false;
 }
 
 /***
@@ -636,9 +622,8 @@ void setup() {
 	serial_command.addCommand("CH:DIR",			cmd_ch_dir);
 	serial_command.addCommand("CH:WRITE",		cmd_ch_write);
 	serial_command.addCommand("CH:REGISTER",	cmd_ch_register);
-	serial_command.addCommand("CH:BLOCK:START",	cmd_ch_block_start);
-	serial_command.addCommand("CH:BLOCKSTOP",	cmd_ch_block_stop);
-	serial_command.addCommand("RTC:ZERO",		cmd_rtc_zero);
+	serial_command.addCommand("ACQUIRE:START",	cmd_acquire_start);
+	serial_command.addCommand("ACQUIRE:STOP",	cmd_acquire_stop);
 #ifdef USE_ARDUINO_PID
 	serial_command.addCommand("PID:RELAY:INIT",	cmd_pid_relay_init);
 	serial_command.addCommand("PID:RELAY:SET",	cmd_pid_relay_set);

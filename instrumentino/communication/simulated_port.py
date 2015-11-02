@@ -133,7 +133,7 @@ class CommunicationPortSimulation(CommunicationPort):
         command = command_parts[0]
         params = command_parts[1:]
         
-        if command == ControlinoProtocol.CMD_SET_CONTROLLER_TIME:
+        if command == ControlinoProtocol.CMD_ACQUIRE_START:
             # Set the t0 time to be now.
             self.t_zero = time.time()
         elif command == ControlinoProtocol.CMD_PING:
