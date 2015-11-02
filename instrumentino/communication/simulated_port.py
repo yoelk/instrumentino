@@ -1,6 +1,6 @@
 from __future__ import division
 from kivy.properties import BoundedNumericProperty, ListProperty, NumericProperty, BooleanProperty
-from numpy import sin, pi, linspace
+from numpy import sin, cos, pi, linspace
 from construct.macros import Array
 import time
 from construct.lib.container import Container
@@ -20,14 +20,17 @@ class CommunicationPortSimulation(CommunicationPort):
     '''Keep a record of how many data packets were rendered
     '''
 
-    sim_data_pattern = ListProperty([sin(x)*49+50 for x in linspace(0, 2*pi, 100, endpoint=False)])
-#     sim_data_pattern = [30,70]*10
-    '''A pattern for the simulated data.
+    max_input_value = NumericProperty(100)
+    '''The maximal value that can be read for the simulated channels.
     '''
-
+    
     t_zero = NumericProperty(0)
     '''The t=0 time for timestamp calculations
     This is initialized when Instrumentino sends an "RTC:SET" command to the controller.
+    '''
+
+    t_zero_set = BooleanProperty(False)
+    '''Indicate if t_zero was set.
     '''
 
     reply_to_ping = BooleanProperty(False)
@@ -36,6 +39,11 @@ class CommunicationPortSimulation(CommunicationPort):
 
     def __init__(self, **kwargs):
         super(CommunicationPortSimulation, self).__init__(**kwargs)
+
+        # Init patterns for simulated data        
+        self.sim_data_patterns = [[self.max_input_value/2 + sin(x)*(self.max_input_value/3) for x in linspace(0, 2*pi, 100, endpoint=False)],
+                                  [self.max_input_value/2 + cos(x)*(self.max_input_value/3) for x in linspace(0, 2*pi, 100, endpoint=False)],
+                                  ]
 
     def _connect(self):
         '''Set up communication. Nothing to do here.
@@ -67,8 +75,9 @@ class CommunicationPortSimulation(CommunicationPort):
             
             # Return the string packet
             self.reply_to_ping = False
-        else:
-            
+        
+        elif self.t_zero_set:
+            # Simulate data packets
             sim_data_packet_blocks = []
             for idx, channel in enumerate(self.controller.input_channels):
                 # Determine how many data points (if at all) should be sent this time for this channel.
@@ -81,8 +90,8 @@ class CommunicationPortSimulation(CommunicationPort):
                     continue
     
                 # Get the relevant data and serialize it
-                start_index = int(self.sim_data_packets_num*rates_ratio)%len(self.sim_data_pattern)
-                data_points = self.sim_data_pattern[start_index:start_index+data_points_num]
+                start_index = int(self.sim_data_packets_num*rates_ratio)%len(self.sim_data_patterns[idx])
+                data_points = self.sim_data_patterns[idx][start_index:start_index+data_points_num]
                 data_points_serialized_format = Array(data_points_num, self.controller.get_fitting_data_point_variable(channel.data_bytes))
                 data_points_serialized = data_points_serialized_format.build(data_points)
                 
@@ -136,6 +145,9 @@ class CommunicationPortSimulation(CommunicationPort):
         if command == ControlinoProtocol.CMD_ACQUIRE_START:
             # Set the t0 time to be now.
             self.t_zero = time.time()
+            self.t_zero_set = True
+        elif command == ControlinoProtocol.CMD_ACQUIRE_STOP:
+            self.t_zero_set = False
         elif command == ControlinoProtocol.CMD_PING:
             # Flag the packet rendering method to reply to the ping command
             self.reply_to_ping = True
