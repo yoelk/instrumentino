@@ -21,8 +21,9 @@
 *.pyc
 **/*.pyc
 *.mk
+**/*.mk
 
-controlino/Release/subdir.mk
+/controlino/Release
 
 controlino/.project
 
