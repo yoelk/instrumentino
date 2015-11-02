@@ -24,6 +24,9 @@ void setup();
 // For bus channels (I2C, SPI, etc.) where the number of bytes per datapoint depends on the connected device
 #define CH_BYTES_PER_DATAPOINT_UNKNOWN	0
 
+// The list of pins to be read when sending periodic data packets
+#define MAX_REGISTERED_CHANNELS	(NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS)
+
 // A channel descriptor
 typedef struct {
 	char name; // The channel type's name
@@ -86,9 +89,6 @@ typedef struct {
 #define DATA_PACKETS_SAMPLING_RATE		10
 #define DATA_PACKETS_SAMPLING_PERIOD_MS	(1000 / DATA_PACKETS_SAMPLING_RATE)
 
-// Sample channel only once
-#define CH_SAMPLING_RATE_ONCE 0
-
 // A registered channel descriptor
 // Some redundancy exists to avoid on-the-fly calculations
 typedef struct {
@@ -109,7 +109,5 @@ typedef struct {
 	long t_next_sample;			// The next time in which we need to sample the channel.
 } RegisteredChannelDesc;
 
-// The list of pins to be read when sending periodic data packets
-#define MAX_REGISTERED_PINS	(NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS)
 
 #endif // _controlino_H_

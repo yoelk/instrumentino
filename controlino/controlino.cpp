@@ -79,7 +79,7 @@ SerialCommand serial_command(Serial);
 uint8_t packet_const_header[4] = {0xA5,0xA5,0xA5,0xA5};
 
 // Channels registered for data acquisition
-RegisteredChannelDesc registered_channels[MAX_REGISTERED_PINS];
+RegisteredChannelDesc registered_channels[MAX_REGISTERED_CHANNELS];
 int registered_channels_num = 0;
 
 // Variables for correctly timing sent packets
