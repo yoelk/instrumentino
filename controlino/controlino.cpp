@@ -135,7 +135,7 @@ ChannelTypeDesc* get_ch_type_desc(char ch_type_name) {
 void init_data_packets() {
 	int i;
 
-	// Update the registered channels to all prepare a sample for the next packet
+	// Tell the registered channels to prepare a sample for the next packet
 	for (i = 0; i < registered_channels_num; i++) {
 		registered_channels[i].ready_datapoints = 0;
 		registered_channels[i].t_next_sample = t_next_sent_packet;
@@ -306,17 +306,41 @@ void cmd_ping(SerialCommand this_scmd) {
 }
 
 /***
- * CH:READ <pin=D0|A0|...>, <sampling_rate>, <bytes_per_datapoint>
+ * CH:BLOCK:START
  *
- * Periodically send back the value of the requested channel.
+ * Start an acquisition block, so start sending data from registered channels.
+ */
+void cmd_ch_block_start(SerialCommand this_scmd) {
+	// Set t_zero to be now.
+	block.t_zero = millis();
+	block.t_zero_set = true;
+
+	// Initialize data packets related timers
+	block.t_next_packet = 0 + DATA_PACKETS_SAMPLING_PERIOD_MS;
+
+	init_data_packets();
+}
+
+/***
+ * CH:BLOCK:STOP
+ *
+ * Stop an acquisition block, so stop sending data from registered channels.
+ */
+void cmd_ch_block_stop(SerialCommand this_scmd) {
+}
+
+/***
+ * CH:REGISTER <pin=D0|A0|...>, <sampling_rate>, <bytes_per_datapoint>
+ *
+ * Register a channel for data acquisition.
  * The data is sent in binary form together with values from other registered channels.
- * The value can be 1|0 for digital pins (for HIGH & LOW) or an analog value.
+ * The value can be 1|0 for digital pins (for HIGH & LOW) or a native analog value.
  *
  * pin:					The pin's name, e.g. D0, A0, etc.
- * sampling_rate:		How often should the pin be read. If equals 0, only a single read will be made.
+ * sampling_rate:		How often should the pin be read.
  * bytes_per_datapoint:	How many bytes are needed for a single data point. This is optional and is mainly relevant for bus cahnnels (I2C, SPI, etc.)
  */
-void cmd_ch_read(SerialCommand this_scmd) {
+void cmd_ch_register(SerialCommand this_scmd) {
 	char *arg;
 	int ch_num, sampling_rate, bytes_per_datapoint;
 	ChannelTypeDesc* ch_type_desc;
@@ -332,11 +356,8 @@ void cmd_ch_read(SerialCommand this_scmd) {
 	ch_num = atol(&arg[1]);
 
 	// get sampling_rate
-	if (!(arg = this_scmd.next())) {
-		sampling_rate = 0;
-	} else {
-		sampling_rate = atol(arg);
-	}
+	if (!(arg = this_scmd.next())) return;
+	sampling_rate = atol(arg);
 
 	// get bytes_per_datapoint
 	if (ch_type_desc->bytes_per_datapoint != 0) {
