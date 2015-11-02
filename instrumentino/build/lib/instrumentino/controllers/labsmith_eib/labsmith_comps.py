@@ -126,27 +126,21 @@ class LabSmithSPS01SyringePump(SysCompLabSmith):
 
     def MoveSyringeToPosition(self, pos):
         eib = self.GetController()
-        eib.accessSemaphore.acquire(True)
         thread = Thread(target=eib.DLL.MoveSyringeToPosition, args=(eib.syringePumps[self.address], c_int(pos)))
         thread.start()
         thread.join()
-        eib.accessSemaphore.release()
         
     def MoveSyringeToVolumePercent(self, percent, maxVolume):
         eib = self.GetController()
-        eib.accessSemaphore.acquire(True)
         thread = Thread(target=eib.DLL.MoveSyringeToVolume, args=(eib.syringePumps[self.address], c_double(percent / 100 * maxVolume)))
         thread.start()
         thread.join()
-        eib.accessSemaphore.release()
         
     def MoveSyringeToVolume(self, volume):
         eib = self.GetController()
-        eib.accessSemaphore.acquire(True)
         thread = Thread(target=eib.DLL.MoveSyringeToVolume, args=(eib.syringePumps[self.address], c_double(volume)))
         thread.start()
         thread.join()
-        eib.accessSemaphore.release()
 
     def StopSyringe(self, address):
         eib = self.GetController()

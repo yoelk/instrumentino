@@ -101,8 +101,10 @@ class LogGraphPanel(wx.Panel):
         lineWidthCycler = cycle(lineWidths)
         for comp in self.sysComps:
             for var in comp.vars.values():
-                name = var.FullName()
+                if not var.showInSignalLog:
+                    continue
                 
+                name = var.FullName()
                 if isinstance(var, SysVarAnalog):
                     variableNamesOnLegend += [name]
                     self.realAnalogData[name] = AnalogData(var.range)

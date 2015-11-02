@@ -7,7 +7,7 @@ from instrumentino.comp import SysVarDigital, SysComp, SysVarAnalog
 from instrumentino import cfg
 import time
 from instrumentino.util import Chdir
-from threading import Semaphore
+from threading import Semaphore, Thread
 
 class LabSmithEIB(InstrumentinoController):
     '''
@@ -112,19 +112,20 @@ class LabSmithEIB(InstrumentinoController):
         return getFunc(self.sensors, c_int(port))
             
     def SetValves(self, **kwargs):
-        self.accessSemaphore.acquire(True)
         valves = ['unchanged', 'unchanged', 'unchanged', 'unchanged']
         for name, value in kwargs.items():
             valveNum = int(name.replace('valve', ''))
             valves[valveNum-1] = value
         
-        self.DLL.SetValves(self.valves,
-                           c_int(self.valveStateToValue[valves[0]]),
-                           c_int(self.valveStateToValue[valves[1]]),
-                           c_int(self.valveStateToValue[valves[2]]),
-                           c_int(self.valveStateToValue[valves[3]]))
+        thread = Thread(target=self.DLL.SetValves, args=(self.valves,
+                                                          c_int(self.valveStateToValue[valves[0]]),
+                                                          c_int(self.valveStateToValue[valves[1]]),
+                                                          c_int(self.valveStateToValue[valves[2]]),
+                                                          c_int(self.valveStateToValue[valves[3]])))
+        thread.start()
+        thread.join()
+
         time.sleep(0.7)
-        self.accessSemaphore.release()
         
     def GetValves(self):
         self.accessSemaphore.acquire(True)
