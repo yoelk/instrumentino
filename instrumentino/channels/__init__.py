@@ -8,6 +8,7 @@ from math import ceil
 import numpy as np
 from instrumentino.libs.abs_ratio import abs_ratio
 from instrumentino.controlino_protocol import ControlinoProtocol
+from kivy.app import App
 
 class DataChannel(EventDispatcher):
     '''A single data channel between instrumentino and controllers connected to it
@@ -117,6 +118,9 @@ class DataChannelIn(DataChannel):
         
         aligned_start_index = int(round(relative_start_timestamp * self.sampling_rate))
         points_difference = aligned_start_index - len(timestamp_series)
+        
+        if App.get_running_app().DEBUG_COMM_STABILITY:
+            if points_difference != 0: print 'points difference: {}'.format(points_difference)
         
         if points_difference > 0:
             # Add dummy time points to fill the gap between the last known time point and the first new one.

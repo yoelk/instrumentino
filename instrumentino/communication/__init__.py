@@ -64,7 +64,7 @@ class CommunicationPort(EventDispatcher):
         '''Transmit a packet to the controller, checking that there are no parallel calls
         '''
         self.transmit_semaphore.acquire()
-        if App.get_running_app().DEBUG:
+        if App.get_running_app().DEBUG_TX:
             print 'TX: {}'.format(packet)
         self._transmit(packet)
         self.transmit_semaphore.release()

@@ -30,14 +30,19 @@ from .screens.automation import Action
 
 from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooser
 from instrumentino.communication import CommunicationTypesLoader
+from instrumentino.communication.serial_port import CommunicationPortSerial
 import time
+from instrumentino.communication.simulated_port import CommunicationPortSimulation
             
 class Instrumentino(NavigationDrawer):
     pass
 
 class InstrumentinoApp(App):
-    DEBUG = False
-    '''Set debug mode
+    DEBUG_RX = False
+    DEBUG_TX = False
+    DEBUG_COMM_STABILITY = True
+    DEBUG_AUTO_CONNECT = True
+    '''Set debug modes
     '''
     
     top = ObjectProperty(None)
@@ -330,6 +335,11 @@ class InstrumentinoApp(App):
         # an update
         # TODO: find a better solution
         Clock.schedule_once(lambda dt: self.force_update_size(), 1)
+
+        if self.DEBUG_AUTO_CONNECT:
+#             communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='', max_input_value=1024)
+            communication_port = CommunicationPortSerial(controller=self.controllers[0], address='/dev/tty.usbserial-13BP1188')
+            print 'online: {}'.format(self.controllers[0].connect(communication_port))
         
     def force_update_size(self):
         '''Add a negligible value to the height, to force the children to update their height
