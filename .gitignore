@@ -23,3 +23,15 @@
 *.mk
 
 controlino/Release/subdir.mk
+
+controlino/.project
+
+controlino/.project
+
+*.prefs
+
+*.d
+
+*.o
+
+*.mk
