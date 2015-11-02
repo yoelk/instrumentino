@@ -92,7 +92,7 @@ class ControlinoProtocol(EventDispatcher):
     
     data_packet_block_id_format = ULInt8('id')
     data_packet_block_length_format = ULInt16('block_length')
-    data_packet_blocks_num_format = ULInt16('blocks_num')
+    data_packet_blocks_num_format = ULInt8('blocks_num')
     data_packet_block_format = Struct('data_packet_block',
                                       data_packet_block_id_format,
                                       PrefixedArray(ULInt8('data_points'), length_field=data_packet_block_length_format)
@@ -109,7 +109,7 @@ class ControlinoProtocol(EventDispatcher):
     '''A data packet (Controller->Instrumentino) has the following form (with sizes in bytes):
     [const_header, 4][type, 1][packet_length, 2]    <- general packet header
     [relative_start_timestamp, 4]                   <- data packet header 
-    [num_of_blocks, 2] 
+    [blocks_num, 1] 
     [block1_id, 1][block1_length, 2][block1_data, ?]
     [block2_id, 1][block2_length, 2][block2_data, ?] ...
     
@@ -134,7 +134,7 @@ class ControlinoProtocol(EventDispatcher):
         '''Parse incoming bytes into packets and act upon them.
         '''
         
-        if App.get_running_app().DEBUG:
+        if App.get_running_app().DEBUG_RX:
             print 'RX: {} ({})'.format(''.join('{:02X}'.format(x) for x in incoming_bytes),
                                        ''.join(chr(x) if chr(x).isalnum() else '.' for x in incoming_bytes))
 

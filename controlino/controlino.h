@@ -67,7 +67,7 @@ typedef struct {
 typedef struct {
 	PacketHeader header;
 	uint32_t relative_start_timestamp;
-	uint16_t num_of_blocks;
+	uint8_t num_of_blocks;
 } DataPacketHeader;
 
 // data block header in a data packet
