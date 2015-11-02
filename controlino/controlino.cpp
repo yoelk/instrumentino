@@ -82,8 +82,9 @@ uint8_t packet_const_header[4] = {0xA5,0xA5,0xA5,0xA5};
 RegisteredChannelDesc registered_channels[MAX_REGISTERED_CHANNELS];
 int registered_channels_num = 0;
 
-// Variables for correctly timing sent packets
-// All t_XXX variables are relative to millis_at_t_zero
+// Variables for correctly timing sent packets are inside a DataBlock
+// Each time we start a new acquisition block, we reset the variables.
+// All t_XXX variables in the code are relative to the block's t_zero
 // All time variables are expressed in milliseconds
 uint32_t millis_at_t_zero = 0;
 boolean t_zero_set = false;
