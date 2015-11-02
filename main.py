@@ -4,16 +4,20 @@ from instrumentino.components import Component
 from instrumentino.variables import AnalogVariable
 from instrumentino.controllers.arduino import Arduino, ArduinoChannelIn_AnalolgInPin
 
-class DummyComp(Component):
-    '''A dummy component
+class ArduinoAnalInPins(Component):
+    '''An array of Arduino analog input pins
     '''
     
     def __init__(self, **kwargs):
-        # Add flow variable
-        ch_in = kwargs.get('ch_in', None)
-        self.add_variable(AnalogVariable(name='Analog', range=[0,100], units='%', channel_in=ch_in))
+        controller = kwargs.get('controller', None)
+        channels_num = kwargs.get('channels_num', None)
+        sampling_rate = kwargs.get('sampling_rate', None)
         
-        super(DummyComp, self).__init__(**kwargs)
+        for i in range(channels_num):
+            ch_in = ArduinoChannelIn_AnalolgInPin(controller=controller, number=i, sampling_rate=sampling_rate)
+            self.add_variable(AnalogVariable(name='Analog'+str(i), range=[0,100], units='%', channel_in=ch_in))
+        
+        super(ArduinoAnalInPins, self).__init__(**kwargs)
 
 if __name__ == '__main__':
 
@@ -30,11 +34,13 @@ if __name__ == '__main__':
     
     ##########
     # Add channels
-    flow1_channel = ArduinoChannelIn_AnalolgInPin(controller=arduino, number=0, sampling_rate=100)
  
     ##########
     # Add components
-    app.add_component(DummyComp(name='MFC1', ch_in=flow1_channel))
+    app.add_component(ArduinoAnalInPins(name='analog inputs',
+                                        controller=arduino,
+                                        channels_num=5,
+                                        sampling_rate=10))
     # ProfileLoader Testing: 
 #    app.remove_component(name='MFC1')
 #    app.remove_components()
