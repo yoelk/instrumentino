@@ -50,7 +50,8 @@ class SysVar(object):
     def Update(self):
         value = self.Get()
         self.UpdatePanel(value)
-        cfg.logGraph.AddData(self.FullName(), value)
+        if self.showInSignalLog:
+            cfg.logGraph.AddData(self.FullName(), value)
             
     def FullName(self):
         unitsStr = ' (' + self.units + ')' if hasattr(self, 'units') else ''
