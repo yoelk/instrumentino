@@ -1,4 +1,4 @@
-#include "controlino2.h"
+#include "controlino.h"
 
 #if BOARD_FAMILY == BOARD_FAMILY_ARDUINO
 /*******************************************************************************

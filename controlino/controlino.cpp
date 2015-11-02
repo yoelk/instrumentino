@@ -37,7 +37,7 @@
  * !!! ATTENTION !!!
  * From here down, you shouldn't touch anything (unless you know what you're doing)
  ******************************************************************************/
-#include "controlino2.h"
+#include "controlino.h"
 #include "string.h"
 
 /*******************************************************************************

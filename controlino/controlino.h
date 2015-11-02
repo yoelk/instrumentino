@@ -1,5 +1,5 @@
-#ifndef _controlino2_h_
-#define _controlino2_h_
+#ifndef _controlino_h_
+#define _controlino_h_
 
 #ifdef __cplusplus
 extern "C" {
@@ -112,4 +112,4 @@ typedef struct {
 // The list of pins to be read when sending periodic data packets
 #define MAX_REGISTERED_PINS	(NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS)
 
-#endif // _controlino2_H_
+#endif // _controlino_H_
