@@ -49,12 +49,18 @@ class DataBlock(UninterruptedBlock):
     This list entries correspond to the timestamp_series list.
     '''
     
-    timestamp_series = ListProperty()
+    timestamp_series = []
     '''The timestamp series that correspond to the data series.
     This is just a reference to the timestamp series saved in the controller.
+    
+    We can't use a kivy ListProperty here because timestamp_series should point 
+    to the list in the controller, and if we initialize it here with a ListProperty, it doesn't point there anymore.  
     '''
     
     def __init__(self, **kwargs):
         if not set(['timestamp_series']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        
+        # Get the timestamp_series
+        self.timestamp_series = kwargs['timestamp_series']
         
         super(DataBlock, self).__init__(**kwargs)
