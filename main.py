@@ -39,8 +39,8 @@ if __name__ == '__main__':
     # Add components
     app.add_component(ArduinoAnalInPins(name='analog inputs',
                                         controller=arduino,
-                                        channels_num=5,
-                                        sampling_rate=10))
+                                        channels_num=20,
+                                        sampling_rate=100))
     # ProfileLoader Testing: 
 #    app.remove_component(name='MFC1')
 #    app.remove_components()

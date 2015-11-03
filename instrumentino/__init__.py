@@ -39,7 +39,7 @@ class Instrumentino(NavigationDrawer):
 
 class InstrumentinoApp(App):
     DEBUG_RX = False
-    DEBUG_TX = False
+    DEBUG_TX = True
     DEBUG_COMM_STABILITY = True
     DEBUG_AUTO_CONNECT = True
     '''Set debug modes
@@ -338,7 +338,7 @@ class InstrumentinoApp(App):
 
         if self.DEBUG_AUTO_CONNECT:
 #             communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='', max_input_value=1024)
-            communication_port = CommunicationPortSerial(controller=self.controllers[0], address='/dev/tty.usbserial-13BP1188')
+            communication_port = CommunicationPortSerial(controller=self.controllers[0], address='/dev/tty.usbserial-A400Y5SF')
             print 'online: {}'.format(self.controllers[0].connect(communication_port))
         
     def force_update_size(self):
