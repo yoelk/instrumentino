@@ -20,10 +20,6 @@ class CommunicationPortSimulation(CommunicationPort):
     '''Keep a record of how many data packets were rendered
     '''
 
-    max_input_value = NumericProperty(100)
-    '''The maximal value that can be read for the simulated channels.
-    '''
-    
     t_zero = NumericProperty(0)
     '''The t=0 time for timestamp calculations
     This is initialized when Instrumentino sends an "RTC:SET" command to the controller.
@@ -39,11 +35,6 @@ class CommunicationPortSimulation(CommunicationPort):
 
     def __init__(self, **kwargs):
         super(CommunicationPortSimulation, self).__init__(**kwargs)
-
-        # Init patterns for simulated data        
-        self.sim_data_patterns = [[self.max_input_value/2 + sin(x)*(self.max_input_value/3) for x in linspace(0, 2*pi, 100, endpoint=False)],
-                                  [self.max_input_value/2 + cos(x)*(self.max_input_value/3) for x in linspace(0, 2*pi, 100, endpoint=False)],
-                                  ]
 
     def _connect(self):
         '''Set up communication. Nothing to do here.
@@ -90,8 +81,9 @@ class CommunicationPortSimulation(CommunicationPort):
                     continue
     
                 # Get the relevant data and serialize it
-                start_index = int(self.sim_data_packets_num*rates_ratio)%len(self.sim_data_patterns[idx])
-                data_points = self.sim_data_patterns[idx][start_index:start_index+data_points_num]
+                pattern = self.__get_sim_data_pattern(channel)
+                start_index = int(self.sim_data_packets_num*rates_ratio)%len(pattern)
+                data_points = pattern[start_index:start_index+data_points_num]
                 data_points_serialized_format = Array(data_points_num, self.controller.get_fitting_data_point_variable(channel.data_bytes))
                 data_points_serialized = data_points_serialized_format.build(data_points)
                 
@@ -125,6 +117,9 @@ class CommunicationPortSimulation(CommunicationPort):
             
         # Send the packet to the communication port
         return sim_packet
+
+    def __get_sim_data_pattern(self, channel):
+        return [channel.max_input_value/2 + sin(x * (channel.number + 1)) * (channel.max_input_value/3) for x in linspace(0, 2*pi, channel.sampling_rate*10, endpoint=False)]
 
     @staticmethod
     def modify_address_field_options_for_settings_menu(json_dict):

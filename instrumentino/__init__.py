@@ -337,8 +337,8 @@ class InstrumentinoApp(App):
         Clock.schedule_once(lambda dt: self.force_update_size(), 1)
 
         if self.DEBUG_AUTO_CONNECT:
-#             communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='', max_input_value=1024)
-            communication_port = CommunicationPortSerial(controller=self.controllers[0], address='/dev/tty.usbserial-A400Y5SF')
+            communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='')
+#             communication_port = CommunicationPortSerial(controller=self.controllers[0], address='/dev/tty.usbserial-A400Y5SF')
             print 'online: {}'.format(self.controllers[0].connect(communication_port))
         
     def force_update_size(self):
