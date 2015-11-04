@@ -23,7 +23,11 @@ class DataChannel(EventDispatcher):
     '''
 
     controller = ObjectProperty()
-    '''The controller to channel is connected
+    '''The relevant controller for this channel
+    '''
+    
+    variable = ObjectProperty()
+    '''The relevant variable for this channel
     '''
     
     data_bits = BoundedNumericProperty(8, min=1)
@@ -69,6 +73,7 @@ class DataChannelIn(DataChannel):
     
     max_input_value = NumericProperty(1)
     '''The maximal value that can be read for this channel.
+    It can be only a positive integer.
     '''
     
     def __init__(self, **kwargs):
@@ -83,7 +88,7 @@ class DataChannelIn(DataChannel):
         # Add the channel in the controller
         self.controller.add_input_channel(self, sampling_rate=self.sampling_rate)
 
-    def translate_to_percentage(self, data):
+    def translate_incoming_data(self, data):
         '''Incoming data is received as whole numbers (not floating point) that result in native read functions in the controller.
         For the sake of uniformity, all values should be translated to a [0-100] scale.
         '''
@@ -140,8 +145,9 @@ class DataChannelIn(DataChannel):
         '''Update the data series with new data points. Pad with 'None' points or overwrite old data points
         in order to keep the data_series in line with the timestamp_series 
         '''
-        # Translate the incoming data
-        self.translate_to_percentage(new_data_points)
+        # Translate the incoming data to a percentage scale (0-100)
+        # The translated data can be presented in the graph 
+        self.translate_incoming_data(new_data_points)
         
         # Use the relevant data block
         data_series = self.get_data_block().data_series
@@ -156,6 +162,9 @@ class DataChannelIn(DataChannel):
             
         # Add the new time points to the series
         data_series.extend(new_data_points)
+        
+        # Notify the variable that new data has arrived
+        
         
     def get_graph_series(self, start_timestamp, end_timestamp, sampling_rate):
         '''Return a list of (x,y) data, x being the timestamp and y being the corresponding datapoints. 

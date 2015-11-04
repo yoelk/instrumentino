@@ -1,5 +1,6 @@
 #:kivy 1.9
 <Variable>:
+#	value_display: value_display
 	size_hint: 1,None
 	size: sp(100),sp(30) # the x size is just a dummy
 	Label:
@@ -9,7 +10,7 @@
 	Label:
 		text: '[' + str(root.lower_limit) + ',' + str(root.upper_limit) + ']'
 	TextInput:
-		text: '???'
+#		id: value_display
 		multiline: False
 		on_text: if root.channel_out: root.write(root.channel_out.self.text)
 	Label:
@@ -17,7 +18,7 @@
 		
 <DigitalVariable>:
 	Spinner:
-		id: spinner
+#		id: value_display
 		text: root.options_dict.keys()[0]
 		values: root.options_dict.keys()
 		on_text: if root.channel_out: root.write(root.channel_out.self.text)

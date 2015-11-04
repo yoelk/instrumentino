@@ -67,6 +67,10 @@ class MySignalView(BoxLayout, MyView):
         super(MySignalView, self).__init__(**kwargs)
         components = kwargs.get('components', [])
         
+        # Init the plotting area
+        self.graph.ymin = 0
+        self.graph.ymax = 100
+        
         # Populate variables' list with variables that have an input channel
         for comp in components:
             self.variables.extend([var for var in comp.variables if var.channel_in])
