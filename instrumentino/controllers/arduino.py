@@ -48,7 +48,7 @@ class ArduinoChannelIn_DigitalPin(DataChannelIn):
         kwargs['data_bits'] = Arduino.BITS_NUM_DIGITAL_PIN
         kwargs['type_str'] = Arduino.CHANNEL_TYPE_STR_DIGITAL
         kwargs['max_input_value'] = Arduino.MAX_VALUE_DIGITAL_PIN
-        super(ArduinoChannelIn_AnalolgInPin, self).__init__(**kwargs)
+        super(ArduinoChannelIn_DigitalPin, self).__init__(**kwargs)
     
 
 class ArduinoChannelOut_DigitalPin(DataChannelOut):
@@ -58,7 +58,7 @@ class ArduinoChannelOut_DigitalPin(DataChannelOut):
     def __init__(self, **kwargs):
         kwargs['data_bits'] = Arduino.BITS_NUM_DIGITAL_PIN
         kwargs['type_str'] = Arduino.CHANNEL_TYPE_STR_DIGITAL
-        super(ArduinoChannelIn_AnalolgInPin, self).__init__(**kwargs)
+        super(ArduinoChannelOut_DigitalPin, self).__init__(**kwargs)
 
     
 class ArduinoChannelInOut_DigitalPin(DataChannelInOut):
@@ -69,7 +69,7 @@ class ArduinoChannelInOut_DigitalPin(DataChannelInOut):
         kwargs['data_bits'] = Arduino.BITS_NUM_DIGITAL_PIN
         kwargs['type_str'] = Arduino.CHANNEL_TYPE_STR_DIGITAL
         kwargs['max_input_value'] = Arduino.MAX_VALUE_DIGITAL_PIN
-        super(ArduinoChannelIn_AnalolgInPin, self).__init__(**kwargs)
+        super(ArduinoChannelInOut_DigitalPin, self).__init__(**kwargs)
     
     
 class ArduinoChannelOut_PwmPin(DataChannelOut):
@@ -79,5 +79,5 @@ class ArduinoChannelOut_PwmPin(DataChannelOut):
     def __init__(self, **kwargs):
         kwargs['data_bits'] = Arduino.BITS_NUM_DIGITAL_PIN
         kwargs['type_str'] = Arduino.CHANNEL_TYPE_STR_PWM
-        super(ArduinoChannelIn_AnalolgInPin, self).__init__(**kwargs)
+        super(ArduinoChannelOut_PwmPin, self).__init__(**kwargs)
 

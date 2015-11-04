@@ -28,19 +28,21 @@ class AnalogVariable(Variable):
     '''An analog variable
     '''
 
-    upper_limit = NumericProperty(100)
+    upper_limit = NumericProperty()
     '''The upper limit this variable accepts
     '''
     
-    lower_limit = NumericProperty(0)
+    lower_limit = NumericProperty()
     '''The lower limit this variable accepts
     '''
     
-    units = StringProperty('%')
+    units = StringProperty()
     '''The units of this variable
     '''
 
     def __init__(self, **kwargs):
+        if not set(['range', 'units']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        
         super(AnalogVariable, self).__init__(**kwargs)
         
         # Let the user define the limits as a range.
@@ -49,15 +51,28 @@ class AnalogVariable(Variable):
             self.upper_limit = the_range[1]
             self.lower_limit = the_range[0]
 
+
+class AnalogVariablePercentage(AnalogVariable):
+    '''An analog variable for percentage values
+    '''
+
+    def __init__(self, **kwargs):
+        kwargs['range'] = [0, 100]
+        kwargs['units'] = '%'        
+        super(AnalogVariablePercentage, self).__init__(**kwargs)
+
+
 class DigitalVariable(Variable):
     '''A digital variable
     '''
 
-    options_dict = DictProperty({'???': None})
+    options_dict = DictProperty()
     '''Translate between the options the user sees and the actual values used with the data channels.
     '''
     
     def __init__(self, **kwargs):
+        if not set(['options_dict']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        
         super(DigitalVariable, self).__init__(**kwargs)
 
 class DigitalVariableOnOff(DigitalVariable):
@@ -65,9 +80,8 @@ class DigitalVariableOnOff(DigitalVariable):
     '''
     
     def __init__(self, **kwargs):
-        options_dict = {'On': 'on',
-                        'Off': 'off'}
-        kwargs['options_dict'] = options_dict
+        kwargs['options_dict'] = {'on': 1,
+                                  'off': 0}
         
         super(DigitalVariableOnOff, self).__init__(**kwargs)
 
