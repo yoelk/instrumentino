@@ -33,14 +33,15 @@ from instrumentino.communication import CommunicationTypesLoader
 from instrumentino.communication.serial_port import CommunicationPortSerial
 import time
 from instrumentino.communication.simulated_port import CommunicationPortSimulation
+import gc
             
 class Instrumentino(NavigationDrawer):
     pass
 
 class InstrumentinoApp(App):
     DEBUG_RX = False
-    DEBUG_TX = True
-    DEBUG_COMM_STABILITY = True
+    DEBUG_TX = False
+    DEBUG_COMM_STABILITY = False
     DEBUG_AUTO_CONNECT = True
     '''Set debug modes
     '''
@@ -382,6 +383,14 @@ class InstrumentinoApp(App):
         print "SaveChart: " + file
         graph.export_to_png(file)
 
+    @staticmethod
+    def create_default_name(object_self):
+        '''Create a default name for GUI items that didn't get their name defined.
+        For example, if an controller from class "Arduino" isn't given a name specifically, it will be called "Arduino 1"
+        '''
+        return '{} {}'.format(type(object_self).__name__, len([obj for obj in gc.get_objects() if isinstance(obj, type(object_self))]))
+
+
 class SettingDynamicOptions(SettingOptions):
     '''Implementation of an option list that creates the items in the possible
     options list by calling an external method, that should be defined in
@@ -402,6 +411,7 @@ class SettingDynamicOptions(SettingOptions):
         
         # Call the parent __init__
         super(SettingDynamicOptions, self)._create_popup(instance)
+
 
 class InstrumentinoSettings(SettingsWithSidebar):
     '''Customized settings panel for Instrumentino.

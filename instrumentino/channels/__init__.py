@@ -41,7 +41,7 @@ class DataChannel(EventDispatcher):
 
     def __init__(self, **kwargs):
         if not set(['controller', 'data_bits', 'type_str', 'number']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
-        
+            
         super(DataChannel, self).__init__(**kwargs)
         self.data_bytes = ceil(self.data_bits/8)
 

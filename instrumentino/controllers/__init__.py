@@ -11,12 +11,13 @@ import time
 import gc
 from instrumentino.channels.blocks import TimeBlock, DataBlock
 from instrumentino.controlino_protocol import ControlinoProtocol
+from kivy.app import App
 
 class Controller(EventDispatcher):
     '''A general controller class
     ''' 
     
-    name = StringProperty('a controller')
+    name = StringProperty()
     '''The controller's name.
     '''
     
@@ -69,7 +70,7 @@ class Controller(EventDispatcher):
     def __init__(self, **kwargs):
         # Set a default name
         if not set(['name']) <= set(kwargs):
-            self.name = '{} {}'.format(type(self).__name__, len([obj for obj in gc.get_objects() if isinstance(obj, type(self))]))
+            self.name = App.get_running_app().create_default_name(self)
         
         super(Controller, self).__init__(**kwargs)
         self.controlino_protocol = ControlinoProtocol(controller=self)
