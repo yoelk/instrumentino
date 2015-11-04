@@ -6,12 +6,13 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from ..screens import MyView
 import time
+from kivy.app import App
 
 class Component(BoxLayout):
     '''An Instrumentino component, hosting variables.
     '''
     
-    name = StringProperty('a component')
+    name = StringProperty()
     '''The variable's name on the screen
     '''
     
@@ -20,6 +21,10 @@ class Component(BoxLayout):
     '''
     
     def __init__(self, **kwargs):
+        # Set a default name
+        if not set(['name']) <= set(kwargs):
+            self.name = App.get_running_app().create_default_name(self)
+        
         super(Component, self).__init__(**kwargs)
         
         # Add all of the variable widgets
