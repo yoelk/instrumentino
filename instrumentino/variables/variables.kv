@@ -2,16 +2,18 @@
 <Variable>:
 	size_hint: 1,None
 	size: sp(100),sp(30) # the x size is just a dummy
-	label_text: root.name
 	Label:
-		text: root.label_text
+		text: root.name
 		
 <AnalogVariable>:
-	label_text: root.name + ' [' + str(root.lower_limit) + ',' + str(root.upper_limit) + '] ' + root.units
+	Label:
+		text: '[' + str(root.lower_limit) + ',' + str(root.upper_limit) + ']'
 	TextInput:
 		text: '???'
 		multiline: False
-		on_text: if root.channel_out: root.write(root.channel_out.self.text) 
+		on_text: if root.channel_out: root.write(root.channel_out.self.text)
+	Label:
+		text: root.units
 		
 <DigitalVariable>:
 	Spinner:
