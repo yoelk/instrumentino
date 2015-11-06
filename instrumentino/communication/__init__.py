@@ -10,6 +10,7 @@ import importlib
 from kivy.clock import Clock
 import time
 from kivy.app import App
+from instrumentino.cfg import *
 
 class CommunicationPort(EventDispatcher):
     '''A communication port for interfacing with a hardware controller.
@@ -37,7 +38,7 @@ class CommunicationPort(EventDispatcher):
     
     def __init__(self, **kwargs):
         # Check that all of the necessary kwargs are given
-        if not set(['controller']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['controller']) <= set(kwargs): raise MissingKwargsError()
         
         # Check that the sub-class has a type_name. This is used for GUI purposes, to show the communication type on the screen
         if not hasattr(self, 'type_name'): raise AttributeError('Subclasses should have a type_name attribute')
@@ -64,7 +65,7 @@ class CommunicationPort(EventDispatcher):
         '''Transmit a packet to the controller, checking that there are no parallel calls
         '''
         self.transmit_semaphore.acquire()
-        if App.get_running_app().DEBUG_TX:
+        if DEBUG_TX:
             print 'TX: {}'.format(packet)
         self._transmit(packet)
         self.transmit_semaphore.release()

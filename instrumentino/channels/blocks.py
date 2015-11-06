@@ -2,6 +2,7 @@ from __future__ import division
 from kivy.event import EventDispatcher
 from kivy.properties import NumericProperty, DictProperty, ListProperty, BooleanProperty
 import time
+from instrumentino.cfg import *
 
 class UninterruptedBlock(EventDispatcher):
     '''A block of uninterrupted information.
@@ -58,7 +59,7 @@ class DataBlock(UninterruptedBlock):
     '''
     
     def __init__(self, **kwargs):
-        if not set(['timestamp_series']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['timestamp_series']) <= set(kwargs): raise MissingKwargsError()
         
         # Get the timestamp_series
         self.timestamp_series = kwargs['timestamp_series']

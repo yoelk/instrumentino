@@ -3,6 +3,7 @@ import os
 import glob
 import time
 from instrumentino.communication import CommunicationPort
+from instrumentino.cfg import *
 try:
     import _winreg as winreg
 except ImportError:
@@ -38,7 +39,7 @@ class CommunicationPortSerial(CommunicationPort):
     def __init__(self, **kwargs):
         '''Setup serial communication.
         '''
-        if not set(['address']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['address']) <= set(kwargs): raise MissingKwargsError()
         
         super(CommunicationPortSerial, self).__init__(**kwargs)
         

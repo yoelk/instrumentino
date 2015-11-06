@@ -9,6 +9,7 @@ from construct.lib.container import Container
 import Queue
 import time
 from kivy.app import App
+from instrumentino.cfg import *
 
 class ControlinoProtocol(EventDispatcher):
     '''The communication protocol used to interface hardware controllers running controlino.
@@ -127,14 +128,14 @@ class ControlinoProtocol(EventDispatcher):
     '''
     
     def __init__(self, **kwargs):
-        if not set(['controller']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['controller']) <= set(kwargs): raise MissingKwargsError()
         super(ControlinoProtocol, self).__init__(**kwargs)
         
     def handle_incoming_bytes(self, incoming_bytes):
         '''Parse incoming bytes into packets and act upon them.
         '''
         
-        if App.get_running_app().DEBUG_RX:
+        if DEBUG_RX:
             print 'RX: {} ({})'.format(''.join('{:02X}'.format(x) for x in incoming_bytes),
                                        ''.join(chr(x) if chr(x).isalnum() else '.' for x in incoming_bytes))
 

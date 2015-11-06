@@ -7,6 +7,7 @@ from construct.lib.container import Container
 import re
 from instrumentino.controlino_protocol import ControlinoProtocol
 from instrumentino.communication import CommunicationPort
+from instrumentino.cfg import *
 
 class CommunicationPortSimulation(CommunicationPort):
     '''A simulated communication port
@@ -119,7 +120,15 @@ class CommunicationPortSimulation(CommunicationPort):
         return sim_packet
 
     def __get_sim_data_pattern(self, channel):
-        return [channel.max_input_value/2 + sin(x * (channel.number + 1)) * (channel.max_input_value/3) for x in linspace(0, 2*pi, channel.sampling_rate*10, endpoint=False)]
+        '''Simulate incoming data
+        '''
+        
+        if channel.type_str == 'A':
+            return [channel.max_input_value/2 + sin(x * (channel.number + 1)) * (channel.max_input_value/3) for x in linspace(0, 2*pi, channel.sampling_rate*10, endpoint=False)]
+        elif channel.type_str == 'D':
+            return [0] * (channel.sampling_rate * (channel.number+1)) + [channel.max_input_value] * (channel.sampling_rate * (channel.number+1))
+        else:
+            raise RuntimeError('Unsopported channel type for simulation')
 
     @staticmethod
     def modify_address_field_options_for_settings_menu(json_dict):

@@ -6,6 +6,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.tabbedpanel import TabbedPanel
 from ..libs.garden.togglebuttonmulti import ToggleButtonMulti
 from kivy.event import EventDispatcher
+from instrumentino.cfg import *
 
 class MyScreen(Screen):
     ''' A custom screen that allows to dynamically remove and add views

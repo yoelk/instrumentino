@@ -9,6 +9,7 @@ import numpy as np
 from instrumentino.libs.abs_ratio import abs_ratio
 from instrumentino.controlino_protocol import ControlinoProtocol
 from kivy.app import App
+from instrumentino.cfg import *
 
 class DataChannel(EventDispatcher):
     '''A single data channel between instrumentino and controllers connected to it
@@ -44,7 +45,7 @@ class DataChannel(EventDispatcher):
     '''
 
     def __init__(self, **kwargs):
-        if not set(['controller', 'data_bits', 'type_str', 'number']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['controller', 'data_bits', 'type_str', 'number']) <= set(kwargs): raise MissingKwargsError()
             
         super(DataChannel, self).__init__(**kwargs)
         self.data_bytes = ceil(self.data_bits/8)
@@ -71,15 +72,15 @@ class DataChannelIn(DataChannel):
     '''The channel's sampling rate (in Hz).
     '''
     
-    max_input_value = NumericProperty(1)
-    '''The maximal value that can be read for this channel.
+    max_input_value = NumericProperty()
+    '''The maximal native value that can be read for this channel.
     It can be only a positive integer.
     '''
     
     def __init__(self, **kwargs):
         super(DataChannelIn, self).__init__(**kwargs)
         
-        if not set(['max_input_value']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['max_input_value']) <= set(kwargs): raise MissingKwargsError()
         
         # Check that the sampling rate is valid
         if not abs_ratio(self.sampling_rate, self.controller.data_packet_rate).is_integer():
@@ -124,7 +125,7 @@ class DataChannelIn(DataChannel):
         aligned_start_index = int(round(relative_start_timestamp * self.sampling_rate))
         points_difference = aligned_start_index - len(timestamp_series)
         
-        if App.get_running_app().DEBUG_COMM_STABILITY:
+        if DEBUG_COMM_STABILITY:
             if points_difference != 0: print 'points difference: {}'.format(points_difference)
         
         if points_difference > 0:
@@ -164,7 +165,7 @@ class DataChannelIn(DataChannel):
         data_series.extend(new_data_points)
         
         # Notify the variable that new data has arrived
-        
+        self.variable.new_data_arrived(new_data_points[-1])
         
     def get_graph_series(self, start_timestamp, end_timestamp, sampling_rate):
         '''Return a list of (x,y) data, x being the timestamp and y being the corresponding datapoints. 
@@ -209,6 +210,11 @@ class DataChannelOut(DataChannel):
     '''Data flows from instrumentino to a controller
     '''
     
+    max_output_value = NumericProperty()
+    '''The maximal native value that can be written for this channel.
+    It can be only a positive integer.
+    '''
+    
     def write(self, **kwargs):
         '''Write data to the channel
         '''
@@ -230,6 +236,6 @@ class DataChannelI2C(DataChannel):
     '''
     
     def __init__(self, **kwargs):
-        if not set(['i2c_address']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['i2c_address']) <= set(kwargs): raise MissingKwargsError()
         
         super(DataChannelI2C, self).__init__(**kwargs)

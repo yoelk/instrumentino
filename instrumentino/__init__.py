@@ -33,17 +33,14 @@ from instrumentino.communication import CommunicationTypesLoader
 from instrumentino.communication.serial_port import CommunicationPortSerial
 import time
 from instrumentino.communication.simulated_port import CommunicationPortSimulation
+from instrumentino.cfg import *
 import gc
             
 class Instrumentino(NavigationDrawer):
     pass
 
 class InstrumentinoApp(App):
-    DEBUG_RX = False
-    DEBUG_TX = False
-    DEBUG_COMM_STABILITY = False
-    DEBUG_AUTO_CONNECT = True
-    '''Set debug modes
+    '''The main application
     '''
     
     top = ObjectProperty(None)
@@ -337,7 +334,7 @@ class InstrumentinoApp(App):
         # TODO: find a better solution
         Clock.schedule_once(lambda dt: self.force_update_size(), 1)
 
-        if self.DEBUG_AUTO_CONNECT:
+        if DEBUG_AUTO_CONNECT:
             communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='')
 #             communication_port = CommunicationPortSerial(controller=self.controllers[0], address='/dev/tty.usbserial-A400Y5SF')
             print 'online: {}'.format(self.controllers[0].connect(communication_port))

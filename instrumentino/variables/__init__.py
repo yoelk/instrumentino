@@ -1,7 +1,9 @@
+from __future__ import division
 from kivy.properties import ObjectProperty, DictProperty, ListProperty, NumericProperty, StringProperty, OptionProperty
 import time
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.spinner import Spinner
+from instrumentino.cfg import *
 
 class Variable(BoxLayout):
     '''An experimental variable, that is controlled/measured by hardware controllers connected to Instrumentino.
@@ -31,7 +33,7 @@ class Variable(BoxLayout):
         if set(['channel_out']) <= set(kwargs):
             self.channel_out.variable = self
             
-    def translate_incoming_data(self, data_point):
+    def percentage_to_variable_units(self, data_point):
         '''Incoming data is received from the input channel as a percentage.
         It needs to be translated to the variable's units.
         Return the translated data_point.
@@ -40,9 +42,10 @@ class Variable(BoxLayout):
         '''
         pass
     
-    def new_data_arrived(self):
+    def new_data_arrived(self, new_data_point):
         '''When new data arrived, we should update the variable's widget.
         '''
+        self.value_display.text = str(self.percentage_to_variable_units(new_data_point))
         
 
 class AnalogVariable(Variable):
@@ -62,7 +65,7 @@ class AnalogVariable(Variable):
     '''
 
     def __init__(self, **kwargs):
-        if not set(['range', 'units']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        if not set(['range', 'units']) <= set(kwargs): raise MissingKwargsError()
         
         super(AnalogVariable, self).__init__(**kwargs)
         
@@ -83,7 +86,7 @@ class AnalogVariableUnipolar(AnalogVariable):
         # Check the range
         if self.upper_limit * self.lower_limit < 0: raise ValueError('Range should be unipolar')
         
-    def translate_incoming_data(self, data_point):
+    def percentage_to_variable_units(self, data_point):
         '''Return the data_point, translated to the variable's units.
         '''
         return self.lower_limit + (data_point / 100 * self.upper_limit)
@@ -103,22 +106,28 @@ class DigitalVariable(Variable):
     '''A digital variable
     '''
 
-    options_dict = DictProperty()
-    '''Translate between the options the user sees and the actual values used with the data channels.
+    options = ListProperty()
+    '''The list of possible values, ordered from lowest to highest.
     '''
     
     def __init__(self, **kwargs):
-        if not set(['options_dict']) <= set(kwargs): raise TypeError('missing mandatory kwargs')
+        # Check initializers
+        if not set(['options']) <= set(kwargs): raise MissingKwargsError()
         
         super(DigitalVariable, self).__init__(**kwargs)
+        
+    def percentage_to_variable_units(self, data_point):
+        '''Return the data_point, translated to the variable's units.
+        '''
+        index = int(data_point / 100 * (len(self.options) - 1))
+        return self.options[index]
 
 class DigitalVariableOnOff(DigitalVariable):
     '''An On/Off digital variable.
     '''
     
     def __init__(self, **kwargs):
-        kwargs['options_dict'] = {'on': 1,
-                                  'off': 0}
+        kwargs['options'] = ['on', 'off']
         
         super(DigitalVariableOnOff, self).__init__(**kwargs)
 

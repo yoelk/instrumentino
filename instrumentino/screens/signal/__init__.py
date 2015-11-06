@@ -12,6 +12,8 @@ from math import sin, cos, pi
 import numpy as np
 import time
 from instrumentino.screens import MyView
+from kivy.app import App
+from instrumentino.cfg import *
 
 class MyGraph(Graph):
     pass
@@ -84,6 +86,14 @@ class MySignalView(BoxLayout, MyView):
             var.plot.variable = var
             self.plots.append(var.plot)
             self.max_sampling_rate = max(self.max_sampling_rate, var.channel_in.sampling_rate)
+        
+        if DEBUG_PLOT_DIGITAL:
+            for var in self.digital_variables:
+                # Keep mutual references for bidirectional access.
+                var.plot = SmoothLinePlot(color=next(self.colors))
+                var.plot.variable = var
+                self.plots.append(var.plot)
+                self.max_sampling_rate = max(self.max_sampling_rate, var.channel_in.sampling_rate)
 
         for plot in self.plots:
             self.graph.add_plot(plot)
