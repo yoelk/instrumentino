@@ -9,17 +9,21 @@
 	value_display: value_display
 	Label:
 		text: '[' + str(root.lower_limit) + ',' + str(root.upper_limit) + ']'
-	TextInput:
+	FloatInput:
 		id: value_display
 		multiline: False
-		on_text: if root.channel_out: root.write(root.channel_out.self.text)
+		on_focus: root.user_is_editing = self.focus
+		on_text_validate: root.user_entered_value(self.text)
+		disabled: root.channel_out == None
 	Label:
 		text: root.units
 		
 <DigitalVariable>:
 	value_display: value_display
-	Spinner:
+	SpinnerWithOnChoiceEvent:
 		id: value_display
 		text: root.options[0]
 		values: root.options
-		on_text: if root.channel_out: root.write(root.channel_out.self.text)
+		on_is_open: root.user_is_editing = self.is_open
+		on_choice: root.user_entered_value(self.text)
+		disabled: root.channel_out == None

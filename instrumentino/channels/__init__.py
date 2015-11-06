@@ -215,7 +215,7 @@ class DataChannelOut(DataChannel):
     It can be only a positive integer.
     '''
     
-    def write(self, **kwargs):
+    def write(self, percentage_value):
         '''Write data to the channel
         '''
         # TODO: implement.

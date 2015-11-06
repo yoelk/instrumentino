@@ -32,8 +32,8 @@ class ArduinoDigitalInOutPins(Component):
         sampling_rate = kwargs.get('sampling_rate', None)
         
         for i in range(channels_num):
-            ch_in = ArduinoChannelInOut_DigitalPin(controller=controller, number=i, sampling_rate=sampling_rate)
-            self.add_variable(DigitalVariableOnOff(name='Digital'+str(i), channel_in=ch_in))
+            ch = ArduinoChannelInOut_DigitalPin(controller=controller, number=i, sampling_rate=sampling_rate)
+            self.add_variable(DigitalVariableOnOff(name='Digital'+str(i), channel_in=ch, channel_out=ch))
         
         super(ArduinoDigitalInOutPins, self).__init__(**kwargs)
 
