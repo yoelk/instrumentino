@@ -74,8 +74,13 @@ class FileChooser (FloatLayout):
 # END: File Chooser
 ############################
 
+class ExitConfirmation(Popup):
+    '''Exit confirmation UI
+    '''
+    pass
+
 class ActivityLog(Popup):
-    '''Activity lod UI
+    '''Activity log UI
     '''
     pass
 

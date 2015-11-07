@@ -52,6 +52,17 @@
 # END: FileChooser
 ##########
 
+<ExitConfirmation>:
+    title: 'Exit?'
+    size_hint: .5, .2
+    BoxLayout:
+        Button:
+            text: "No"
+            on_release: root.dismiss()
+        Button:
+            text: "Yes"
+            on_release: app.get_running_app().stop()
+
 <ActivityLog>:
     title: 'Activity log'
     size_hint: .8, .9

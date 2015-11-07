@@ -28,7 +28,7 @@ from .screens.automation import MyAutomationView
 from .screens.signal import MySignalView
 from .screens.automation import Action
 
-from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooser
+from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooser,ExitConfirmation
 from instrumentino.communication import CommunicationTypesLoader
 from instrumentino.communication.serial_port import CommunicationPortSerial
 import time
@@ -79,6 +79,33 @@ class InstrumentinoApp(App):
     SETTINGS_KEY_COMM_STATUS = 'comm_status'
     '''The key name for communication status (is the controller connected or not)
     '''
+
+    def __init__(self, **kwargs):
+        super(InstrumentinoApp, self).__init__(**kwargs)
+        
+        # Bind methods to the keyboard
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+    ##########
+    # Keyboard methods
+    ##########
+    def _keyboard_closed(self):
+        '''Keyboard closed.  Only for virtual keyboards?
+        '''
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        '''Capture keyboard input
+           The values of the keys are the keycode "common names" used in pygame.
+           See: http://www.pygame.org/docs/ref/key.html
+        '''
+        # Return True to accept/capture the key. Otherwise, it will also be used by
+        # the system.
+        if keycode[1] == 'escape':
+            self.ShowExitConfirmation()
+            return True
 
     ##########
     # Controller methods
@@ -319,6 +346,10 @@ class InstrumentinoApp(App):
     
     def ShowProfileLoader(self):
         p = ProfileLoader(app=self)
+        p.open()
+
+    def ShowExitConfirmation(self):
+        p = ExitConfirmation()
         p.open()
     # END: Popups
     
