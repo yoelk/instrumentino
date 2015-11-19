@@ -27,9 +27,12 @@ void setup();
 // The list of pins to be read when sending periodic data packets
 #define MAX_REGISTERED_CHANNELS	(NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS)
 
+// Channel types maximal length
+#define CH_TYPE_MAX_LEN	10
+
 // A channel descriptor
 typedef struct {
-	char name; // The channel type's name
+	char type[CH_TYPE_MAX_LEN]; // The channel type
 	int bytes_per_datapoint; // The number of bytes needed to describe a single datapoint
 	uint32_t (*read_func) (int ch_num); // Read function for this channel
 	void (*write_func) (int ch_num, uint32_t values[], int values_num); // Write function for this channel

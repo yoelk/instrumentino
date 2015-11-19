@@ -107,23 +107,30 @@ uint32_t t_now() {
 }
 
 /***
- * Get the channel descriptor according to channel type name.
+ * Parse a channel string to its type and number
  *
- * ch_type_name: The channel type to check.
+ * ch_string: 	The channel string to check
  *
- * Return: The found channel type descriptor.
+ * Return through output parameters:
+ * found_type:	The channel's type descriptor
+ * found_num:	The channel's number
+ *
+ * Return: The found channel type descriptor and the channel's number through .
  */
-ChannelTypeDesc* get_ch_type_desc(char ch_type_name) {
+void parse_channel_string(char* ch_string, ChannelTypeDesc** found_type, int* found_num) {
 	int i;
 
 	for (i = 0; i < channel_types_num; i++) {
-		if (ch_type_name == channel_types[i].name) {
-			return &channel_types[i];
+		if (strncmp(ch_string, channel_types[i].type, strlen(channel_types[i].type)) == 0) {
+			*found_type = &channel_types[i];
+			*found_num = atol(&ch_string[strlen(channel_types[i].type)]);
+			return;
 		}
 	}
 
 	// If reached here, it was not found.
-	return NULL;
+	*found_type = NULL;
+	*found_num = 0;
 }
 
 /***
@@ -332,11 +339,8 @@ void cmd_ch_register(SerialCommand this_scmd) {
 
 	// get and check ch_type
 	if (!(arg = this_scmd.next())) return;
-	ch_type_desc = get_ch_type_desc(arg[0]);
+	parse_channel_string(arg, &ch_type_desc, &ch_num);
 	if (!ch_type_desc) return;
-
-	// get ch_num
-	ch_num = atol(&arg[1]);
 
 	// get sampling_rate
 	if (!(arg = this_scmd.next())) return;
@@ -392,11 +396,8 @@ void cmd_ch_dir(SerialCommand this_scmd) {
 
 	// get and check ch_type
 	if (!(arg = this_scmd.next())) return;
-	ch_type_desc = get_ch_type_desc(arg[0]);
+	parse_channel_string(arg, &ch_type_desc, &ch_num);
 	if (!ch_type_desc) return;
-
-	// get ch_num
-	ch_num = atol(&arg[1]);
 
 	// get direction
 	if (!(arg = this_scmd.next())) return;
@@ -434,11 +435,8 @@ void cmd_ch_write(SerialCommand this_scmd) {
 
 	// get and check ch_type
 	if (!(arg = this_scmd.next())) return;
-	ch_type_desc = get_ch_type_desc(arg[0]);
+	parse_channel_string(arg, &ch_type_desc, &ch_num);
 	if (!ch_type_desc) return;
-
-	// get ch_num
-	ch_num = atol(&arg[1]);
 
 	// get the values to write
 	for (arg = this_scmd.next(), values_num = 0; arg != NULL; arg = this_scmd.next()) {

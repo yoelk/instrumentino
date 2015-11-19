@@ -7,10 +7,10 @@
 
 // Channel types
 ChannelTypeDesc channel_types[] = {
-	{'A', 2, arduino_ch_pin_analog_read}, // Analog
-	{'D', 1, arduino_ch_pin_digital_read, arduino_ch_pin_digital_write, arduino_ch_pin_digital_direction}, // Digital
-	{'P', 2, NULL, arduino_ch_pin_pwm_write}, // PWM
-    {'I', CH_BYTES_PER_DATAPOINT_UNKNOWN} // I2C
+	{"A", 2, arduino_ch_pin_analog_read}, // Analog
+	{"D", 1, arduino_ch_pin_digital_read, arduino_ch_pin_digital_write, arduino_ch_pin_digital_direction}, // Digital
+	{"P", 2, NULL, arduino_ch_pin_pwm_write}, // PWM
+    {"I", CH_BYTES_PER_DATAPOINT_UNKNOWN} // I2C
 };
 int channel_types_num (sizeof(channel_types) / sizeof(ChannelTypeDesc));
 
