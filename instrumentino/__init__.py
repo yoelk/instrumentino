@@ -365,9 +365,11 @@ class InstrumentinoApp(App):
         # TODO: find a better solution
         Clock.schedule_once(lambda dt: self.force_update_size(), 1)
 
-        if DEBUG_AUTO_CONNECT:
-            communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='')
-#             communication_port = CommunicationPortSerial(controller=self.controllers[0], address='/dev/tty.usbserial-A400Y5SF')
+        if DEBUG_AUTO_CONNECT['connect']:
+            if DEBUG_AUTO_CONNECT['type'] == 'serial':
+                communication_port = CommunicationPortSerial(controller=self.controllers[0], address=DEBUG_AUTO_CONNECT['address'])
+            elif DEBUG_AUTO_CONNECT['type'] == 'simulation':
+                communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='')
             print 'online: {}'.format(self.controllers[0].connect(communication_port))
         
     def force_update_size(self):
