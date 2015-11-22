@@ -49,12 +49,21 @@ class DataChannel(EventDispatcher):
             
         super(DataChannel, self).__init__(**kwargs)
         self.data_bytes = ceil(self.data_bits/8)
+        
+        # Add the channel to the controller
+        self.controller.add_channel(self)
 
     def get_identifier(self):
         '''Return a string that identifies this data channel in the controller.
         It is made of the channel's type and its number (e.g. 'D1')
         '''
         return self.type_str + str(self.number)
+
+    def do_first_when_online(self):
+        '''Initialization code that has to be done when communication was set up with the controller.
+        To be implemented by sub-classes.
+        '''
+        pass
         
 
 class DataChannelIn(DataChannel):
@@ -85,10 +94,12 @@ class DataChannelIn(DataChannel):
         # Check that the sampling rate is valid
         if not abs_ratio(self.sampling_rate, self.controller.data_packet_rate).is_integer():
             raise ValueError("Sampling rate doesn't fit controller's data packet rate")
-        
-        # Add the channel in the controller
-        self.controller.add_input_channel(self, sampling_rate=self.sampling_rate)
 
+    def do_first_when_online(self):
+        '''Register this channel at the controller
+        '''
+        self.controller.controlino_protocol.register_input_channel(self)
+    
     def translate_incoming_data(self, data):
         '''Incoming data is received as whole numbers (not floating point) that result in native read functions in the controller.
         For the sake of uniformity, all values should be translated to a [0-100] scale.
@@ -218,8 +229,7 @@ class DataChannelOut(DataChannel):
     def write(self, percentage_value):
         '''Write data to the channel
         '''
-        # TODO: implement.
-
+        self.controller.controlino_protocol.write_to_channel(self, [int(percentage_value / 100 * self.max_output_value)])
 
 class DataChannelInOut(DataChannelIn, DataChannelOut):
     '''Data flows both ways between a controller and instrumentino

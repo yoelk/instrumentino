@@ -12,6 +12,8 @@ import gc
 from instrumentino.channels.blocks import TimeBlock, DataBlock
 from instrumentino.controlino_protocol import ControlinoProtocol
 from kivy.app import App
+from __builtin__ import isinstance
+from instrumentino.channels import DataChannelIn
 
 class Controller(EventDispatcher):
     '''A general controller class
@@ -32,6 +34,10 @@ class Controller(EventDispatcher):
           'digital': 'D',
           'pwm': 'P',
           'I2C': 'I'}
+    '''
+    
+    channels = ListProperty()
+    '''The list of all channels used in this controller
     '''
     
     input_channels = ListProperty()
@@ -104,26 +110,28 @@ class Controller(EventDispatcher):
         # No relevant block was found
         return None
 
-    def add_input_channel(self, channel, **kwargs):
+    def add_channel(self, channel, **kwargs):
         '''Add an input channel for updating
         '''
-        # by default request a single data point in each data packet
-        sampling_rate = kwargs.get('sampling_rate', ControlinoProtocol.DEFAULT_DATA_PACKET_RATE)
-
-        # Use the first data block (t_zero not set yet)
-        timestamp_series_dict = self.time_blocks[0].timestamp_series_dict
+        self.channels.append(channel)
+             
+        # Some extra work if it's an input channel   
+        if isinstance(channel, DataChannelIn):
+            # Use the first data block (t_zero not set yet)
+            timestamp_series_dict = self.time_blocks[0].timestamp_series_dict
+            
+            # Start a new timestamp series if necessary.
+            if channel.sampling_rate not in timestamp_series_dict:
+                timestamp_series_dict[channel.sampling_rate] = []
+    
+            # Add a data block that uses the relevant timestamp series from the controller.
+            channel.data_blocks.append(DataBlock(timestamp_series=timestamp_series_dict[channel.sampling_rate]))
+            
+            # Set the appropriate serialized format class, in order to handle incoming data packets
+            channel.data_points_serialized_format = GreedyRange(self.get_fitting_data_point_variable(channel.data_bytes))
+            
+            self.input_channels.append(channel)
         
-        # Start a new timestamp series if necessary.
-        if sampling_rate not in timestamp_series_dict:
-            timestamp_series_dict[sampling_rate] = []
-
-        # Add a data block that uses the relevant timestamp series from the controller.
-        channel.data_blocks.append(DataBlock(timestamp_series=timestamp_series_dict[sampling_rate]))
-        
-        # Set the appropriate serialized format class, in order to handle incoming data packets
-        channel.data_points_serialized_format = GreedyRange(self.get_fitting_data_point_variable(channel.data_bytes))
-        
-        self.input_channels.append(channel)
     
     def update_input_channels(self, new_data_packet):
         '''Update the input data channels with newly read values.
@@ -203,17 +211,20 @@ class Controller(EventDispatcher):
             communication_port.disconnect()
             return False
         
+        # First, set up all of the channels
+        for channel in self.channels:
+            channel.do_first_when_online()
+        
+        # Now initialize the time and data blocks
         # Set t=0 in the controller so we have a mutual time base, and open a new timestamp block for this session
         # If a time block already exists but hasn't had its t_zero set, update it and use this one.
         self.t_zero = time.time()
-        self.controlino_protocol.start_acquiring_data()
         if not self.time_blocks[-1].t_zero:
             self.time_blocks[-1].t_zero = self.t_zero
         else:
             # Create a new time block, based on the last time block
             self.time_blocks.append(self.time_blocks[-1].copy(self.t_zero)) 
             
-        # Now that communication is up, notify the controller that we want to start getting data.
         # Open a new data block for each channel, corresponding to the timestamp block.
         # If a data block already exists but hasn't had its t_zero set, update it and use this one.
         for channel in self.input_channels:
@@ -222,7 +233,9 @@ class Controller(EventDispatcher):
             else:
                 channel.data_blocks.append(DataBlock(timestamp_series=self.get_time_block().timestamp_series_dict[channel.sampling_rate],
                                                      t_zero=self.t_zero))
-            self.controlino_protocol.register_input_channel(channel)
 
+        # Now that we've prepared everything, ask the controller to start acquiring data
+        self.controlino_protocol.start_acquiring_data()
+        
         return True
 

@@ -47,6 +47,8 @@ class ControlinoProtocol(EventDispatcher):
     '''
     
     CMD_CHANNEL_DIRECTION = 'CH:DIR'
+    CHANNEL_DIRECTION_IN = 'IN'
+    CHANNEL_DIRECTION_OUT = 'OUT'
     '''Set the direction of a channel (IN/OUT). 
     '''
     
@@ -212,6 +214,19 @@ class ControlinoProtocol(EventDispatcher):
         '''Ask controller to start sending us data for a channel.
         '''
         packet = self.build_command_packet(self.CMD_CHANNEL_REGISTER, [channel.get_identifier(), str(channel.sampling_rate)])
+        self.transmit(packet)
+        
+    def set_channel_direction(self, channel, is_output):
+        '''Set the channel's direction to be input/output
+        '''
+        packet = self.build_command_packet(self.CMD_CHANNEL_DIRECTION, [channel.get_identifier(), self.CHANNEL_DIRECTION_OUT if is_output else self.CHANNEL_DIRECTION_IN])
+        self.transmit(packet)
+        
+    def write_to_channel(self, channel, values):
+        '''Write values to an output channel.
+        values must be given as an array
+        '''
+        packet = self.build_command_packet(self.CMD_CHANNEL_WRITE, [channel.get_identifier()] + values)
         self.transmit(packet)
 
     def start_acquiring_data(self):

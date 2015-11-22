@@ -51,6 +51,12 @@ class ArduinoChannelIn_DigitalPin(DataChannelIn):
         kwargs['type_str'] = Arduino.CHANNEL_TYPE_STR_DIGITAL
         kwargs['max_input_value'] = Arduino.MAX_VALUE_DIGITAL_PIN
         super(ArduinoChannelIn_DigitalPin, self).__init__(**kwargs)
+        
+    def do_first_when_online(self):
+        '''Tell the Arduino that this is an input pin. 
+        '''
+        self.controller.controlino_protocol.set_channel_direction(self, is_output=False)
+        super(ArduinoChannelIn_DigitalPin, self).do_first_when_online()
     
 
 class ArduinoChannelOut_DigitalPin(DataChannelOut):
@@ -62,6 +68,12 @@ class ArduinoChannelOut_DigitalPin(DataChannelOut):
         kwargs['type_str'] = Arduino.CHANNEL_TYPE_STR_DIGITAL
         kwargs['max_output_value'] = Arduino.MAX_VALUE_DIGITAL_PIN
         super(ArduinoChannelOut_DigitalPin, self).__init__(**kwargs)
+        
+    def do_first_when_online(self):
+        '''Tell the Arduino that this is an output pin. 
+        '''
+        self.controller.controlino_protocol.set_channel_direction(self, is_output=True)
+        super(ArduinoChannelOut_DigitalPin, self).do_first_when_online()
 
     
 class ArduinoChannelInOut_DigitalPin(DataChannelInOut):
@@ -74,6 +86,12 @@ class ArduinoChannelInOut_DigitalPin(DataChannelInOut):
         kwargs['max_input_value'] = Arduino.MAX_VALUE_DIGITAL_PIN
         kwargs['max_output_value'] = Arduino.MAX_VALUE_DIGITAL_PIN
         super(ArduinoChannelInOut_DigitalPin, self).__init__(**kwargs)
+        
+    def do_first_when_online(self):
+        '''Tell the Arduino that this is an output pin. 
+        '''
+        self.controller.controlino_protocol.set_channel_direction(self, is_output=True)
+        super(ArduinoChannelInOut_DigitalPin, self).do_first_when_online()
     
     
 class ArduinoChannelOut_PwmPin(DataChannelOut):

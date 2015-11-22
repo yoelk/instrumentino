@@ -61,9 +61,7 @@ class Variable(BoxLayout):
         '''When the user sets the variable's value, act upon it and write it to the controller.
         '''
         if self.channel_out:
-            self.channel_out.write(self.text_to_percentage(self.value_display.text))
-            
-        print 'user entered value: ' + text
+            self.channel_out.write(self.text_to_percentage(text))
 
     def new_data_arrived(self, new_data_point):
         '''When new data arrived, we should update the variable's widget.
@@ -156,7 +154,7 @@ class DigitalVariable(Variable):
     def text_to_percentage(self, user_input):
         '''Return the user_input, translated to percentage.
         '''
-        return (self.options.index(user_input) + 1) / len(self.options) * 100
+        return self.options.index(user_input) / (len(self.options) - 1) * 100
 
 
 class DigitalVariableOnOff(DigitalVariable):
@@ -164,7 +162,7 @@ class DigitalVariableOnOff(DigitalVariable):
     '''
     
     def __init__(self, **kwargs):
-        kwargs['options'] = ['on', 'off']
+        kwargs['options'] = ['off', 'on']
         
         super(DigitalVariableOnOff, self).__init__(**kwargs)
 

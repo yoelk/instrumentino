@@ -25,5 +25,5 @@
 		text: root.options[0]
 		values: root.options
 		on_is_open: root.user_is_editing = self.is_open
-		on_choice: root.user_entered_value(self.text)
+		on_choice: root.user_entered_value(args[1])
 		disabled: root.channel_out == None
