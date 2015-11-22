@@ -4,7 +4,7 @@ from instrumentino.components import Component
 from instrumentino.variables import AnalogVariablePercentage,\
     DigitalVariableOnOff
 from instrumentino.controllers.arduino import Arduino, ArduinoChannelIn_AnalolgInPin,\
-    ArduinoChannelInOut_DigitalPin
+    ArduinoChannelInOut_DigitalPin, ArduinoChannelOut_DigitalPin
 
 class ArduinoAnalogInPins(Component):
     '''An array of Arduino analog input pins
@@ -31,10 +31,10 @@ class ArduinoDigitalInOutPins(Component):
         channels_num = kwargs.get('channels_num', None)
         sampling_rate = kwargs.get('sampling_rate', None)
         
-        for i in range(channels_num):
+        for i in range(2, 2 + channels_num):
             ch = ArduinoChannelInOut_DigitalPin(controller=controller, number=i, sampling_rate=sampling_rate)
             self.add_variable(DigitalVariableOnOff(name='Digital'+str(i), channel_in=ch, channel_out=ch))
-        
+
         super(ArduinoDigitalInOutPins, self).__init__(**kwargs)
 
 
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     # Add channels
  
     # Add components
-    app.add_component(ArduinoDigitalInOutPins(controller=arduino, channels_num=2, sampling_rate=10))
-    app.add_component(ArduinoAnalogInPins(controller=arduino, channels_num=2, sampling_rate=10))
+    app.add_component(ArduinoDigitalInOutPins(controller=arduino, channels_num=12, sampling_rate=10))
+#     app.add_component(ArduinoAnalogInPins(controller=arduino, channels_num=2, sampling_rate=10))
     
     
     
