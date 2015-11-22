@@ -69,7 +69,7 @@
  * Communication
  ******************************************************************************/
 // USB Serial communication with user (usually with Instrumentino)
-SerialCommand serial_command(Serial);
+SerialCommand ser_cmd(Serial);
 
 // data packet const header for synchronization
 uint8_t packet_const_header[4] = {0xA5,0xA5,0xA5,0xA5};
@@ -258,7 +258,7 @@ void tend_to_registered_channels() {
 		}
 
 		// Transmit the packet
-		serial_command.write(data_packet, data_packet_header->header.packet_length);
+		ser_cmd.write(data_packet, data_packet_header->header.packet_length);
 
 		// Schedule the next sent data packet
 		t_next_sent_packet += DATA_PACKETS_SAMPLING_PERIOD_MS;
@@ -289,7 +289,7 @@ void cmd_ping(SerialCommand this_scmd) {
 	general_header->packet_length = sizeof(PacketHeader) + strlen(reply_string);
 
 	// Transmit reply the packet
-	serial_command.write(packet, general_header->packet_length);
+	ser_cmd.write(packet, general_header->packet_length);
 }
 
 /***
@@ -441,9 +441,10 @@ void cmd_ch_write(SerialCommand this_scmd) {
 	// get the values to write
 	for (arg = this_scmd.next(), values_num = 0; arg != NULL; arg = this_scmd.next()) {
 		values[values_num] = atol(arg);
+		values_num++;
 	}
 
-	// set the direction
+	// write the data
 	if (ch_type_desc->write_func != NULL) {
 		ch_type_desc->write_func(ch_num, values, values_num);
 	}
@@ -612,17 +613,17 @@ void setup() {
 	Serial.begin(SERIAL0_BAUD);
 
 	// Setup callbacks for SerialCommand commands
-	serial_command.addCommand("PING",			cmd_ping);
-	serial_command.addCommand("CH:DIR",			cmd_ch_dir);
-	serial_command.addCommand("CH:WRITE",		cmd_ch_write);
-	serial_command.addCommand("CH:REGISTER",	cmd_ch_register);
-	serial_command.addCommand("ACQUIRE:START",	cmd_acquire_start);
-	serial_command.addCommand("ACQUIRE:STOP",	cmd_acquire_stop);
+	ser_cmd.addCommand("PING",			cmd_ping);
+	ser_cmd.addCommand("CH:DIR",			cmd_ch_dir);
+	ser_cmd.addCommand("CH:WRITE",		cmd_ch_write);
+	ser_cmd.addCommand("CH:REGISTER",	cmd_ch_register);
+	ser_cmd.addCommand("ACQUIRE:START",	cmd_acquire_start);
+	ser_cmd.addCommand("ACQUIRE:STOP",	cmd_acquire_stop);
 #ifdef USE_ARDUINO_PID
-	serial_command.addCommand("PID:RELAY:INIT",	cmd_pid_relay_init);
-	serial_command.addCommand("PID:RELAY:SET",	cmd_pid_relay_set);
-	serial_command.addCommand("PID:RELAY:TUNE",	cmd_pid_relay_tune);
-	serial_command.addCommand("PID:RELAY:ENABLE",	cmd_pid_relay_enable);
+	ser_cmd.addCommand("PID:RELAY:INIT",	cmd_pid_relay_init);
+	ser_cmd.addCommand("PID:RELAY:SET",	cmd_pid_relay_set);
+	ser_cmd.addCommand("PID:RELAY:TUNE",	cmd_pid_relay_tune);
+	ser_cmd.addCommand("PID:RELAY:ENABLE",	cmd_pid_relay_enable);
 #endif
 }
 
@@ -637,7 +638,7 @@ void loop() {
 	tend_to_registered_channels();
 
 	// Tend to serial communication
-	serial_command.readSerial();
+	ser_cmd.readSerial();
 
 #ifdef USE_ARDUINO_PID
 	// Take care PID-relay variables
