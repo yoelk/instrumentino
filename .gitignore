@@ -38,3 +38,5 @@ controlino/.project
 *.mk
 
 controlino/.project
+
+*.pyc
