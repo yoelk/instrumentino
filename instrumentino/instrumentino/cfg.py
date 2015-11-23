@@ -2,6 +2,7 @@ from __future__ import division
 from datetime import datetime
 import time
 import os
+import sys
 from pkg_resources import resource_filename
 import wx
 import threading
@@ -24,6 +25,9 @@ sequenceWildcard = 'Sequence file (*.seq)|*.seq'
 EVT_LOG_UPDATE = wx.NewId()
 EVT_UPDATE_CONTROLS = wx.NewId()
 EVT_POP_MESSAGE = wx.NewId()
+
+# Path
+initial_path = None
 
 app = None
 mainFrame = None
@@ -137,7 +141,10 @@ def GetOrCreateDirectory(name):
     '''
     Enter a directory and create it if needed
     '''
-    path = name + '/'
+    global initial_path
+    
+    initial_path = initial_path or os.path.abspath(os.path.dirname(sys.argv[0]))
+    path = initial_path + '/' + name     
         
     try:
         os.mkdir(path)
