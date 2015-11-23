@@ -122,11 +122,11 @@ class ExecutableListCtrl(object):
         Update the indices in the first column. Used when an item is deleted from the middle.
         '''
         index = self.list.GetNextItem(-1)
-        if self.list.GetNextItem(index) != -1:
-            while index != -1:
-                self.list.SetStringItem(index, 0, str(index + 1))
-                self.list.GetItemWindow(index, 1).SetName(str(index + 1))
-                index = self.list.GetNextItem(index)
+        while index != -1:
+            self.list.SetStringItem(index, 0, str(index + 1))
+            self.list.GetItemWindow(index, 1).SetName(str(index + 1))
+            index = self.list.GetNextItem(index)
+            
     
     def onAddButton(self, evt):
         '''
