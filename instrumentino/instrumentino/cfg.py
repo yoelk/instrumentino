@@ -151,7 +151,7 @@ def GetOrCreateDirectory(name):
     except:
         pass
     
-    return path
+    return path + '/'
 
 def UserFilesPath(relativePath=''):
     '''
