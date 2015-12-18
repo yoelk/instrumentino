@@ -1,6 +1,7 @@
 from __future__ import division
 
-DEBUG_AUTO_CONNECT = {'connect': True, 'type': 'serial', 'address': '/dev/tty.usbserial-A400Y5SF'}
+DEBUG_AUTO_CONNECT = {'connect': True, 'type': 'simulation', 'address': ''}
+# DEBUG_AUTO_CONNECT = {'connect': True, 'type': 'serial', 'address': '/dev/tty.usbserial-A400Y5SF'}
 DEBUG_COMM_STABILITY = False
 DEBUG_RX = False
 DEBUG_TX = False
