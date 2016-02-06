@@ -6,11 +6,11 @@
 		text: root.name
 		
 <AnalogVariable>:
-	value_display: value_display
+	value_display: value_display_widget
 	Label:
 		text: '[' + str(root.lower_limit) + ',' + str(root.upper_limit) + ']'
 	FloatInput:
-		id: value_display
+		id: value_display_widget
 		multiline: False
 		on_focus: root.user_is_editing = self.focus
 		on_text_validate: root.user_entered_value(self.text)
@@ -19,9 +19,9 @@
 		text: root.units
 		
 <DigitalVariable>:
-	value_display: value_display
+	value_display: value_display_widget
 	SpinnerWithOnChoiceEvent:
-		id: value_display
+		id: value_display_widget
 		text: root.options[0]
 		values: root.options
 		on_is_open: root.user_is_editing = self.is_open
