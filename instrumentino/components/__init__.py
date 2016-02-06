@@ -22,8 +22,7 @@ class Component(BoxLayout):
     
     def __init__(self, **kwargs):
         # Set a default name
-        if not set(['name']) <= set(kwargs):
-            self.name = App.get_running_app().create_default_name(self)
+        self.name = self.name or App.get_running_app().create_default_name(self)
         
         super(Component, self).__init__(**kwargs)
         

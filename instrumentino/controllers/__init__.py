@@ -75,8 +75,7 @@ class Controller(EventDispatcher):
 
     def __init__(self, **kwargs):
         # Set a default name
-        if not set(['name']) <= set(kwargs):
-            self.name = App.get_running_app().create_default_name(self)
+        self.name = self.name or App.get_running_app().create_default_name(self)
         
         super(Controller, self).__init__(**kwargs)
         self.controlino_protocol = ControlinoProtocol(controller=self)

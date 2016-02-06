@@ -34,10 +34,10 @@ class Variable(BoxLayout):
         super(Variable, self).__init__(**kwargs)
         
         # Let the channels keep a reference to us
-        if set(['channel_in']) <= set(kwargs):
+        if self.channel_in:
             self.channel_in.variable = self
             
-        if set(['channel_out']) <= set(kwargs):
+        if self.channel_out:
             self.channel_out.variable = self
             
     def percentage_to_text(self, data_point):
