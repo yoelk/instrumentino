@@ -39,8 +39,7 @@ class CommunicationPortSerial(CommunicationPort):
     def __init__(self, **kwargs):
         '''Setup serial communication.
         '''
-        if not set(['address']) <= set(kwargs): raise MissingKwargsError()
-        
+        check_for_necessary_attributes(self, ['address'], kwargs)
         super(CommunicationPortSerial, self).__init__(**kwargs)
         
     def _connect(self):

@@ -59,7 +59,7 @@ class DataBlock(UninterruptedBlock):
     '''
     
     def __init__(self, **kwargs):
-        if not set(['timestamp_series']) <= set(kwargs): raise MissingKwargsError()
+        check_for_necessary_attributes(self, ['timestamp_series'], kwargs)
         
         # Get the timestamp_series
         self.timestamp_series = kwargs['timestamp_series']

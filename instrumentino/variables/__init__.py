@@ -89,8 +89,7 @@ class AnalogVariable(Variable):
     '''
 
     def __init__(self, **kwargs):
-        if not set(['range', 'units']) <= set(kwargs): raise MissingKwargsError()
-        
+        check_for_necessary_attributes(self, ['range', 'units'], kwargs)
         super(AnalogVariable, self).__init__(**kwargs)
         
         # Let the user define the limits as a range.
@@ -125,9 +124,12 @@ class AnalogVariablePercentage(AnalogVariableUnipolar):
     '''An analog variable for percentage values
     '''
 
+    range = [0, 100]
+    units = '%'
+    '''Set necessary attributes.
+    '''
+    
     def __init__(self, **kwargs):
-        kwargs['range'] = [0, 100]
-        kwargs['units'] = '%'        
         super(AnalogVariablePercentage, self).__init__(**kwargs)
         
         
@@ -140,9 +142,7 @@ class DigitalVariable(Variable):
     '''
     
     def __init__(self, **kwargs):
-        # Check initializers
-        if not set(['options']) <= set(kwargs): raise MissingKwargsError()
-        
+        check_for_necessary_attributes(self, ['options'], kwargs)
         super(DigitalVariable, self).__init__(**kwargs)
         
     def percentage_to_text(self, data_point):
@@ -161,8 +161,11 @@ class DigitalVariableOnOff(DigitalVariable):
     '''An On/Off digital variable.
     '''
     
+    options = ['off', 'on']
+    '''Set necessary attributes.
+    '''
+    
     def __init__(self, **kwargs):
-        kwargs['options'] = ['off', 'on']
         
         super(DigitalVariableOnOff, self).__init__(**kwargs)
 

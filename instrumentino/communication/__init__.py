@@ -37,8 +37,7 @@ class CommunicationPort(EventDispatcher):
     '''
     
     def __init__(self, **kwargs):
-        # Check that all of the necessary kwargs are given
-        if not set(['controller']) <= set(kwargs): raise MissingKwargsError()
+        check_for_necessary_attributes(self, ['controller'], kwargs)
         
         # Check that the sub-class has a type_name. This is used for GUI purposes, to show the communication type on the screen
         if not hasattr(self, 'type_name'): raise AttributeError('Subclasses should have a type_name attribute')

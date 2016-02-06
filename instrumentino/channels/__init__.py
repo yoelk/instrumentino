@@ -45,9 +45,9 @@ class DataChannel(EventDispatcher):
     '''
 
     def __init__(self, **kwargs):
-        if not set(['controller', 'data_bits', 'type_str', 'number']) <= set(kwargs): raise MissingKwargsError()
-            
+        check_for_necessary_attributes(self, ['controller', 'data_bits', 'type_str', 'number'], kwargs)
         super(DataChannel, self).__init__(**kwargs)
+
         self.data_bytes = ceil(self.data_bits/8)
         
         # Add the channel to the controller
@@ -88,8 +88,7 @@ class DataChannelIn(DataChannel):
     
     def __init__(self, **kwargs):
         super(DataChannelIn, self).__init__(**kwargs)
-        
-        if not set(['max_input_value']) <= set(kwargs): raise MissingKwargsError()
+        check_for_necessary_attributes(self, ['max_input_value'], kwargs)
         
         # Check that the sampling rate is valid
         if not abs_ratio(self.sampling_rate, self.controller.data_packet_rate).is_integer():
@@ -246,6 +245,5 @@ class DataChannelI2C(DataChannel):
     '''
     
     def __init__(self, **kwargs):
-        if not set(['i2c_address']) <= set(kwargs): raise MissingKwargsError()
-        
+        check_for_necessary_attributes(self, ['i2c_address'], kwargs)
         super(DataChannelI2C, self).__init__(**kwargs)

@@ -130,7 +130,7 @@ class ControlinoProtocol(EventDispatcher):
     '''
     
     def __init__(self, **kwargs):
-        if not set(['controller']) <= set(kwargs): raise MissingKwargsError()
+        check_for_necessary_attributes(self, ['controller'], kwargs)
         super(ControlinoProtocol, self).__init__(**kwargs)
         
     def handle_incoming_bytes(self, incoming_bytes):
