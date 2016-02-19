@@ -103,9 +103,9 @@ class InstrumentinoApp(App):
         '''
         # Return True to accept/capture the key. Otherwise, it will also be used by
         # the system.
-        if keycode[1] == 'escape':
-            self.ShowExitConfirmation()
-            return True
+#         if keycode[1] == 'escape':
+#             self.ShowExitConfirmation()
+#             return True
 
     ##########
     # Controller methods
