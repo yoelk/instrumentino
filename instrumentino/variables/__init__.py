@@ -1,19 +1,23 @@
 from __future__ import division
-from kivy.properties import ObjectProperty, DictProperty, ListProperty, NumericProperty, StringProperty, OptionProperty, BooleanProperty
+from kivy.properties import ObjectProperty, DictProperty, ListProperty, NumericProperty, StringProperty, OptionProperty, BooleanProperty, AliasProperty
 import time
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.spinner import Spinner
 from instrumentino.cfg import *
 import re
 from kivy.uix.textinput import TextInput
+from kivy.app import App
 
 class Variable(BoxLayout):
-    '''An experimental variable, that is controlled/measured by hardware controllers connected to Instrumentino.
-    Each variable has data channels that take care of reading/writing.
+    '''A variable widget for showing different types of variables on the screen.
+    When given a channel_in argument, their value will be automatically updated by this channel.
+    When given a channel_out argument, the value the user enters will be communicated out by that channel.
+    When no channel is given, they can simply be used to get/receive input from the user, for example in action arguments.
+    
     Subclasses are responsible of screen presentation of the variable.
     '''
 
-    name = StringProperty('a variable')
+    name = StringProperty()
     '''The variable's name on the screen
     '''
     
@@ -30,8 +34,16 @@ class Variable(BoxLayout):
     This attribute should be updated by sub-classes.
     '''
     
+    def get_value(self):
+        return self.text_to_percentage(self.value_display.text)
+    value = AliasProperty(get_value)
+    '''A property to access the numerical value for this variable.
+    '''
+    
     def __init__(self, **kwargs):
         super(Variable, self).__init__(**kwargs)
+        
+        self.name = self.name or App.get_running_app().create_default_name(self)
         
         # Let the channels keep a reference to us
         if self.channel_in:
