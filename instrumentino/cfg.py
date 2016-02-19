@@ -28,6 +28,24 @@ def check_for_necessary_attributes(obj, attributes_list, kwargs={}):
             # A necessary attribute is missing or empty
             raise MissingNecessaryAttributeError(attr_name)
 
+def get_attributes_of_type(obj, attribute_type, kwargs={}):
+    '''Return a list of objects of a specific type. The objects might already exist
+    in the object or they've been passed to it through kwargs. 
+    '''
+    matching_attributes = []
+    
+    # First go over the kwargs
+    for key, value in kwargs.items():
+        if isinstance(value, attribute_type):
+            matching_attributes.append(value)
+    
+    # Now go over the existing attributes, but don't add items that we already added from kwargs
+    for attr_name in [n for n in dir(obj) if n not in kwargs.keys()]:
+        attr = getattr(obj, attr_name)
+        if isinstance(attr, attribute_type):
+            matching_attributes.append(attr)
+            
+    return matching_attributes
 
 class MissingNecessaryAttributeError(RuntimeError):
     '''Raised when a necessary attribute is missing in a subclass.
