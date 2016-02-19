@@ -161,12 +161,10 @@ class InstrumentinoApp(App):
     ##########
     # Action methods
     ##########
-    def add_action(self, **kwargs):
+    def add_action(self, action):
         '''Add an action
         '''
-        name = kwargs.get('name', 'an action')
-        function = kwargs.get('function', None)
-        self.actions.append(Action(name=name, function=function))
+        self.actions.append(action)
 
     def remove_action(self, name):
         '''Remove a single action, by the "name" attribute.
