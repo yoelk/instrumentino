@@ -1,3 +1,6 @@
+#: import ListItemButton kivy.uix.listview.ListItemButton
+#: import ListAdapter kivy.adapters.listadapter.ListAdapter
+
 ##########
 # Screens
 ##########
@@ -90,53 +93,29 @@
 	cols: 1
         
 <MyAutomationView>:
-    do_default_tab: False
-    TabbedPanelItem:
-        text: 'Method'
-        BoxLayout:
-            orientation: 'vertical'
-            BoxLayout:
-                size_hint_y: 1
-                orientation: 'vertical'
-                Button:
-                    text: '#1: Flush Capillary'
-                Button:
-                    text: '#2: Thermostat'
-                Button:
-                    text: '#3: HV Separation'
-            Label:
-                # Let this expand to fill all remaining space
-                text: '(empty separator)' 
-            BoxLayout:
-                size_hint_y: .2
-                Button:
-                    text: 'Load'
-                    on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
-                Button:
-                    text: 'Save'
-                    on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
-                    
-    TabbedPanelItem:
-        text: 'Sequence'
-        BoxLayout:
-            orientation: 'vertical'
-            BoxLayout:
-                size_hint_y: 1
-                orientation: 'vertical'
-                Button:
-                    text: 'Method #1'
-            Label:
-                # Let this expand to fill all remaining space
-                text: '(empty separator)' 
-            BoxLayout:
-                size_hint_y: .2
-                Button:
-                    text: 'Load'
-                    on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'sequence_files_dir'),['*.seq'])
-                Button:
-                    text: 'Save'
-                    on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'sequence_files_dir'),['*.seq'])
-
+    orientation: 'vertical'
+    run_items: run_items_list
+    
+    ListView:
+        id: run_items_list
+        adapter:
+            ListAdapter(data=[], cls=ListItemButton)
+    Label:
+        # Let this expand to fill all remaining space
+        text: '(empty separator)' 
+    BoxLayout:
+        size_hint_y: .2
+        Button:
+            text: 'Load'
+            on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
+        Button:
+            text: 'Save'
+            on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
+ 
+ 
+ 
+ 
+ 
 <MyGraph@Graph>:
     x_grid: True
     x_grid_label: True
