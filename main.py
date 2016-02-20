@@ -70,7 +70,7 @@ if __name__ == '__main__':
             print self.var1.value
     
     # Add actions
-    app.add_action(Action1())
+    app.add_action(Action1)
 
     # Run application
     app.run()
