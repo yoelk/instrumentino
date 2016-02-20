@@ -55,8 +55,8 @@ class InstrumentinoApp(App):
     '''The hardware components to be controlled
     '''
     
-    actions = ListProperty([])
-    '''The actions that the system should perform
+    action_classes = ListProperty([])
+    '''The classes of the actions that the system should perform
     '''
 
     SETTINGS_KEY_SEPARATOR = '---'
@@ -161,23 +161,10 @@ class InstrumentinoApp(App):
     ##########
     # Action methods
     ##########
-    def add_action(self, action):
+    def add_action(self, action_class):
         '''Add an action
         '''
-        self.actions.append(action)
-
-    def remove_action(self, name):
-        '''Remove a single action, by the "name" attribute.
-        '''
-        for ndx, action in enumerate(self.actions):
-            if str(action.name) == name:
-                del self.actions[ndx]
-
-    def remove_actions(self):
-        '''Remove all actions.
-        '''
-        for ndx, action in enumerate(self.actions):
-            self.remove_action(action.name)
+        self.action_classes.append(action_class)
 
     def build(self):
         '''Build the screen.
@@ -189,7 +176,7 @@ class InstrumentinoApp(App):
         
         # add the possible views to the screen manager
         self.top.screen_manager.add_view(MyControlView(name='Control', components=self.components))
-        self.top.screen_manager.add_view(MyAutomationView(name='Automation', actions=self.actions))
+        self.top.screen_manager.add_view(MyAutomationView(name='Automation', action_classes=self.action_classes))
         self.top.screen_manager.add_view(MySignalView(name='Signal', components=self.components))
         
         # Application styling
