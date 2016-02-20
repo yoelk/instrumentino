@@ -1,3 +1,4 @@
+#: import automation instrumentino.screens.automation
 #: import ListItemButton kivy.uix.listview.ListItemButton
 #: import ListAdapter kivy.adapters.listadapter.ListAdapter
 
@@ -99,7 +100,7 @@
     ListView:
         id: run_items_list
         adapter:
-            ListAdapter(data=[], cls=ListItemButton)
+            ListAdapter(data=[], cls=automation.AutomationItem)
     Label:
         # Let this expand to fill all remaining space
         text: '(empty separator)' 
@@ -112,6 +113,10 @@
             text: 'Save'
             on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
  
+<AutomationItem>:
+	action_classes: app.action_classes
+	text: self.chosen_action.name if self.chosen_action else ''
+    on_press: print 'action chosen'
  
  
  
