@@ -7,8 +7,7 @@ It consists of two separate programs:
 - instrumentino: which is run on a PC and provides the graphical user interface.
 - controlino:    which is the program running on the Arduino controller itself, and is used to communicate with instrumentino.
 
-See the documents library for further instructions and examples.
-The official Instrumentino website is: http://www.chemie.unibas.ch/~hauser/open-source-lab/instrumentino/index.html
+See the [documents](https://github.com/yoelk/Instrumentino/tree/master/documents) library for further instructions and examples.
 
 We are looking forward for contributors. There is lots of potential for Instrumentino to grow!
 Please contact me if you want to add features and make Instrumentino better.
