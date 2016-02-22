@@ -34,7 +34,12 @@ from instrumentino.communication.serial_port import CommunicationPortSerial
 import time
 from instrumentino.communication.simulated_port import CommunicationPortSimulation
 from instrumentino.cfg import *
-import gc
+from instrumentino.controllers import Controller
+import sys
+from __builtin__ import isinstance
+from instrumentino.controllers.arduino import Arduino
+from instrumentino.components import Component
+from inspect import isclass
             
 class Instrumentino(NavigationDrawer):
     pass
@@ -45,6 +50,10 @@ class InstrumentinoApp(App):
     
     top = ObjectProperty(None)
     '''The top widget of the application
+    '''
+    
+    instrument_module = StringProperty('__main__')
+    '''The system configuration module for the current loaded instrument 
     '''
     
     controllers = ListProperty()
@@ -83,6 +92,11 @@ class InstrumentinoApp(App):
     def __init__(self, **kwargs):
         super(InstrumentinoApp, self).__init__(**kwargs)
         
+        # Extract data from the instrument module
+        self.controllers = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Controller)]
+        self.components = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Component)]
+        self.action_classes = [c for c in sys.modules[self.instrument_module].__dict__.values() if isclass(c) and issubclass(c, Action) and c is not Action]
+        
         # Bind methods to the keyboard
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
@@ -106,65 +120,6 @@ class InstrumentinoApp(App):
 #         if keycode[1] == 'escape':
 #             self.ShowExitConfirmation()
 #             return True
-
-    ##########
-    # Controller methods
-    ##########
-    def add_controller(self, controller):
-        '''Add a controller.
-        '''
-        self.controllers.append(controller)
-
-    def remove_controller(self, name):
-        '''Remove a single controller, by the "name" attribute.
-        '''
-        for ndx, controller in enumerate(self.controllers):
-            if str(controller.name) == name:
-                del self.controllers[ndx]
-
-    def remove_controllers(self):
-        '''Remove all controllers.
-        '''
-        for ndx, controller in enumerate(self.controllers):
-            self.remove_controller(controller.name)
-
-    ##########
-    # Component methods
-    ##########
-    def add_component(self, comp):
-        '''Add a component.
-        '''
-        self.components.append(comp)
-        
-    def remove_component(self, name):
-        '''Remove a single component, by the "name" attribute.
-        '''
-        for ndx, component in enumerate(self.components):
-            if str(component.name) == name:
-                # Notify the controller to unregister all input channels
-                for var in component.variables:
-                    if var.channel_in:
-                        var.channel_in.unregister()
-
-                # Clean up the UI widgets
-                component.remove_variables()
-
-                # Delete the component
-                del self.components[ndx]
-
-    def remove_components(self):
-        '''Remove all components.
-        '''
-        for ndx, component in enumerate(self.components):
-            self.remove_component(component.name)
-
-    ##########
-    # Action methods
-    ##########
-    def add_action(self, action_class):
-        '''Add an action
-        '''
-        self.action_classes.append(action_class)
 
     def build(self):
         '''Build the screen.
@@ -397,13 +352,6 @@ class InstrumentinoApp(App):
         file = join(gDir,date+'_chart.png')
         print "SaveChart: " + file
         graph.export_to_png(file)
-
-    @staticmethod
-    def create_default_name(object_self):
-        '''Create a default name for GUI items that didn't get their name defined.
-        For example, if an controller from class "Arduino" isn't given a name specifically, it will be called "Arduino 1"
-        '''
-        return '{} {}'.format(type(object_self).__name__, len([obj for obj in gc.get_objects() if isinstance(obj, type(object_self))]))
 
 
 class SettingDynamicOptions(SettingOptions):

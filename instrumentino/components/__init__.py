@@ -7,6 +7,7 @@ from kivy.uix.button import Button
 from ..screens import MyView
 import time
 from kivy.app import App
+from instrumentino.cfg import *
 
 class Component(BoxLayout):
     '''An Instrumentino component, hosting variables.
@@ -22,7 +23,7 @@ class Component(BoxLayout):
     
     def __init__(self, **kwargs):
         # Set a default name
-        self.name = self.name or App.get_running_app().create_default_name(self)
+        self.name = self.name or create_default_name(self)
         
         super(Component, self).__init__(**kwargs)
         

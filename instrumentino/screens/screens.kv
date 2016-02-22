@@ -107,6 +107,17 @@
     BoxLayout:
         size_hint_y: .2
         Button:
+            text: 'Add'
+            on_press: root.add_item()
+        Button:
+            text: 'Remove'
+            on_press: root.remove_item()
+        Button:
+            text: 'Run'
+            on_press: root.run_all()
+    BoxLayout:
+        size_hint_y: .2
+        Button:
             text: 'Load'
             on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
         Button:
@@ -114,7 +125,6 @@
             on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
  
 <AutomationItem>:
-	action_classes: app.action_classes
 	text: self.chosen_action.name if self.chosen_action else ''
     on_press: print 'action chosen'
  

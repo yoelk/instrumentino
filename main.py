@@ -8,6 +8,7 @@ from instrumentino.controllers.arduino import Arduino, ArduinoChannelIn_AnalolgI
 from instrumentino.screens.automation import Action
 from instrumentino.controllers import Controller
 import inspect
+import sys
 
 class AnalogInVariables(Component):
     '''An array of analog input variables
@@ -42,35 +43,27 @@ class DigitalInOutVariables(Component):
 
         super(DigitalInOutVariables, self).__init__(**kwargs)
 
-if __name__ == '__main__':
-    app = InstrumentinoApp()
 
-    # Add controllers
-    arduino = Arduino()
-    app.add_controller(arduino)
-    
-    # Add channels
- 
-    # Add components
-    app.add_component(AnalogInVariables(ch_class=ArduinoChannelIn_AnalolgInPin, controller=arduino, channels_numbers=[0,1], sampling_rate=10))
-    app.add_component(DigitalInOutVariables(ch_class=ArduinoChannelInOut_DigitalPin, controller=arduino, channels_numbers=[2,3], sampling_rate=10))
+# Define controllers
+arduino = Arduino()
 
-    # Define actions
-    class Action1(Action):
-        '''An example action
+# Define channels and components
+anal_vars = AnalogInVariables(ch_class=ArduinoChannelIn_AnalolgInPin, controller=arduino, channels_numbers=[0,1], sampling_rate=10)
+digi_vars = DigitalInOutVariables(ch_class=ArduinoChannelInOut_DigitalPin, controller=arduino, channels_numbers=[2,3], sampling_rate=10)
+
+# Define actions
+class Action1(Action):
+    '''An example action
+    '''
+     
+    var1 = AnalogVariablePercentage()
+    '''An example variable
+    '''
+     
+    def on_start(self):
+        '''Describe here what the action does
         '''
-         
-        var1 = AnalogVariablePercentage()
-        '''An example variable
-        '''
-         
-        def on_start(self):
-            '''Describe here what the action does
-            '''
-            print self.var1.value
-    
-    # Add actions
-    app.add_action(Action1)
+        print self.var1.value
 
-    # Run application
-    app.run()
+# Run application
+InstrumentinoApp().run()

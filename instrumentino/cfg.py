@@ -2,6 +2,7 @@ from __future__ import division
 
 DEBUG_AUTO_CONNECT = {'connect': True, 'type': 'simulation', 'address': ''}
 # DEBUG_AUTO_CONNECT = {'connect': True, 'type': 'serial', 'address': '/dev/tty.usbserial-A400Y5SF'}
+import gc
 DEBUG_COMM_STABILITY = False
 DEBUG_RX = False
 DEBUG_TX = False
@@ -46,6 +47,13 @@ def get_attributes_of_type(obj, attribute_type, kwargs={}):
             matching_attributes.append(attr)
             
     return matching_attributes
+
+def create_default_name(object_self):
+    '''Create a default name for GUI items that didn't get their name defined.
+    For example, if an controller from class "Arduino" isn't given a name specifically, it will be called "Arduino 1"
+    '''
+    return '{} {}'.format(type(object_self).__name__, len([obj for obj in gc.get_objects() if isinstance(obj, type(object_self))]))
+
 
 class MissingNecessaryAttributeError(RuntimeError):
     '''Raised when a necessary attribute is missing in a subclass.

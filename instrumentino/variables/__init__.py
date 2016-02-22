@@ -43,7 +43,7 @@ class Variable(BoxLayout):
     def __init__(self, **kwargs):
         super(Variable, self).__init__(**kwargs)
         
-        self.name = self.name or App.get_running_app().create_default_name(self)
+        self.name = self.name or create_default_name(self)
         
         # Let the channels keep a reference to us
         if self.channel_in:
