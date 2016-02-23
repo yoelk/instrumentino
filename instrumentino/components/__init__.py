@@ -8,6 +8,8 @@ from ..screens import MyView
 import time
 from kivy.app import App
 from instrumentino.cfg import *
+from instrumentino.variables import AnalogVariablePercentage,\
+    DigitalVariableOnOff
 
 class Component(BoxLayout):
     '''An Instrumentino component, hosting variables.
@@ -45,3 +47,37 @@ class Component(BoxLayout):
     def build(self):
         '''Add here the component variables. This should be overriden by derived classes
         '''
+
+
+class AnalogInVariables(Component):
+    '''An array of analog input variables
+    '''
+    
+    def __init__(self, **kwargs):
+        ch_class = kwargs.get('ch_class', None)
+        controller = kwargs.get('controller', None)
+        channels_numbers = kwargs.get('channels_numbers', None)
+        sampling_rate = kwargs.get('sampling_rate', None)
+        
+        for i in channels_numbers:
+            ch_in = ch_class(controller=controller, number=i, sampling_rate=sampling_rate)
+            self.add_variable(AnalogVariablePercentage(name='Analog '+str(i), channel_in=ch_in))
+        
+        super(AnalogInVariables, self).__init__(**kwargs)
+
+
+class DigitalInOutVariables(Component):
+    '''An array of digital input/output variables
+    '''
+    
+    def __init__(self, **kwargs):
+        ch_class = kwargs.get('ch_class', None)
+        controller = kwargs.get('controller', None)
+        channels_numbers = kwargs.get('channels_numbers', None)
+        sampling_rate = kwargs.get('sampling_rate', None)
+        
+        for i in channels_numbers:
+            ch = ch_class(controller=controller, number=i, sampling_rate=sampling_rate)
+            self.add_variable(DigitalVariableOnOff(name='Digital '+str(i), channel_in=ch, channel_out=ch))
+
+        super(DigitalInOutVariables, self).__init__(**kwargs)
