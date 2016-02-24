@@ -97,13 +97,9 @@
     orientation: 'vertical'
     run_items: run_items_list
     
-    ListView:
-        id: run_items_list
-        adapter:
-            ListAdapter(data=[], cls=automation.AutomationItem)
-    Label:
-        # Let this expand to fill all remaining space
-        text: '(empty separator)' 
+    BoxLayout:
+	    AutomationList:
+	        id: run_items_list
     BoxLayout:
         size_hint_y: .2
         Button:
@@ -123,6 +119,8 @@
         Button:
             text: 'Save'
             on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
+ 
+<AutomationList>:
  
 <AutomationItem>:
 	text: self.chosen_action.name if self.chosen_action else ''
