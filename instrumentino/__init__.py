@@ -99,7 +99,10 @@ class InstrumentinoApp(App):
         
         # Extract data from the instrument module
         self.controllers = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Controller)]
+        if not self.controllers: raise RuntimeError('At least one controller must be defined')
+        
         self.components = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Component)]
+        
         self.action_classes = [c for c in sys.modules[self.instrument_module].__dict__.values() if isclass(c) and issubclass(c, Action) and c is not Action]
         self.action_classes.extend(self.default_action_classes)
         
@@ -305,12 +308,6 @@ class InstrumentinoApp(App):
     def on_start(self):
         self.top.screen_manager.on_start()
         
-        # For some reason when using the fade transition in the screen manager, the initial view
-        # doesn't fill the screen. So schedule a small window height change in one second to trigger
-        # an update
-        # TODO: find a better solution
-        Clock.schedule_once(lambda dt: self.force_update_size(), 1)
-
         if DEBUG_AUTO_CONNECT['connect']:
             if DEBUG_AUTO_CONNECT['type'] == 'serial':
                 communication_port = CommunicationPortSerial(controller=self.controllers[0], address=DEBUG_AUTO_CONNECT['address'])
@@ -318,15 +315,6 @@ class InstrumentinoApp(App):
                 communication_port = CommunicationPortSimulation(controller=self.controllers[0], address='')
             print 'online: {}'.format(self.controllers[0].connect(communication_port))
         
-    def force_update_size(self):
-        '''Add a negligible value to the height, to force the children to update their height
-        
-        TODO: check if there is a better way to solve this problem
-        '''
-        
-        (x, y) = Window.size
-        Window.size = (x, y+2)
-    
     def on_stop(self):
         '''The application stops so clean up
         '''
