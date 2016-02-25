@@ -48,11 +48,14 @@ def get_attributes_of_type(obj, attribute_type, kwargs={}):
             
     return matching_attributes
 
-def create_default_name(object_self):
+def create_default_name(object_self, use_index=True):
     '''Create a default name for GUI items that didn't get their name defined.
     For example, if an controller from class "Arduino" isn't given a name specifically, it will be called "Arduino 1"
     '''
-    return '{} {}'.format(type(object_self).__name__, len([obj for obj in gc.get_objects() if isinstance(obj, type(object_self))]))
+    name = '{}'.format(type(object_self).__name__)
+    if use_index:
+        name += '{}'.format(len([obj for obj in gc.get_objects() if isinstance(obj, type(object_self))]))
+    return name
 
 
 class MissingNecessaryAttributeError(RuntimeError):
