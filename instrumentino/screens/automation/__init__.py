@@ -79,6 +79,10 @@ class AutomationItemParameterView(CompositeListItemMember, CompositeListItem):
     '''A widget for an automation item parameter
     '''
     
+    parameter = ObjectProperty()
+    '''The parameter we need to show 
+    '''
+    
     def __init__(self, **kwargs):
         # Set the sub-widgets
         cls_dicts = [{'cls': ListItemNormalLabel,
@@ -90,42 +94,66 @@ class AutomationItemParameterView(CompositeListItemMember, CompositeListItem):
         super(AutomationItemParameterView, self).__init__(**kwargs)
 
 
-class AutomationItemView(CompositeListItem):
-    '''A widget for an automation item
+class AutomationItemParametersListView(CompositeListItemMember, CompositeListItem):
+    '''A widget for an automation item parameters list
+    '''
+    
+    action = ObjectProperty()
+    '''The action for which we need to show parameters
     '''
     
     def __init__(self, **kwargs):
         # Set the sub-widgets
-        cls_dicts = [{'cls': ListItemButton,
-                      'kwargs': {'text': '{}'.format(kwargs['index']+1)} },
-                     {'cls': ListItemSpinner,
-                      'kwargs': {'values': ['1', '2'],
-                                 'text': '1'} },
+        cls_dicts = [{'cls': AutomationItemParameterView,
+                      'kwargs': {'parameter': 'XXX'} },
                      {'cls': AutomationItemParameterView,
-                      'kwargs': {} },
+                      'kwargs': {'parameter': 'XXX'} },
+                     ]
+        kwargs['cls_dicts']=cls_dicts
+        kwargs['orientation']='vertical'
+        super(AutomationItemParametersListView, self).__init__(**kwargs)
+
+
+class AutomationItemView(CompositeListItemMember, CompositeListItem):
+    '''A widget for an automation item
+    '''
+    
+    def __init__(self, **kwargs):
+        index = kwargs['index']
+        data = kwargs['data']
+        
+        #TODO: I don't think it would work well if we have two action with the same name. Check and get it to work. 
+        
+        # Set the sub-widgets
+        cls_dicts = [{'cls': ListItemButton,
+                      'kwargs': {'text': '{}'.format(index+1)} },
+                     {'cls': ListItemSpinner,
+                      'kwargs': {'values': [c().name for c in data.action_classes],
+                                 'text': data.chosen_action.name} },
+                     {'cls': AutomationItemParameterView,
+                      },
                      ]
         kwargs['cls_dicts']=cls_dicts
         super(AutomationItemView, self).__init__(**kwargs)
 
 
-class AutomationList(ListView):
-    '''A list of automation items.
+class AutomationItemData(EventDispatcher):
+    '''A class for holding the data of an automation item
+    '''
+    
+    action_classes = ListProperty()
+    '''The possible action classes
+    '''
+    
+    chosen_action = ObjectProperty()
+    '''The currently chosen action
     '''
     
     def __init__(self, **kwargs):
-        args_converter = lambda row_index, obj: {'obj':obj,
-                                                 'height': 30,
-                                                 'size_hint_y': None,}
-
-        actions_list = [Action(on_start=lambda x:1)]*60
-
-        kwargs['adapter'] = ListAdapter(data=actions_list,
-                                        args_converter=args_converter,
-                                        selection_mode='multiple',
-                                        allow_empty_selection=True,
-                                        cls=AutomationItemView)
+        check_for_necessary_attributes(self, ['action_classes'], kwargs)
+        self.chosen_action = self.chosen_action or self.action_classes[0]()
         
-        super(AutomationList, self).__init__(**kwargs)
+        super(AutomationItemData, self).__init__(**kwargs)
 
 
 class Action(EventDispatcher):
@@ -151,13 +179,50 @@ class Action(EventDispatcher):
     
     def __init__(self, **kwargs):
         check_for_necessary_attributes(self, ['on_start'], kwargs)
-        self.name = self.name or create_default_name(self)
+        self.name = self.name or create_default_name(self, use_index=False)
         
         # Automatically populate the arguments' list by collecting all of the "Variable" instances we have.
         self.arguments = get_attributes_of_type(self, Variable, kwargs)
         
         super(Action, self).__init__(**kwargs)
         
+
+class ActionRunFile(EventDispatcher):
+    '''An action that runs the actions stored in an action-list file
+    '''
+    
+    name = 'Run file'
+    
+    arguments = ListProperty()
+
+    def on_start(self):
+        '''Load an action-list file and run it
+        '''
+        #TODO: implement
+        print 'running file...'
+        
+
+class AutomationList(ListView):
+    '''A list of automation items.
+    '''
+    
+    items = ListProperty()
+    '''The current items in the automation list
+    '''
+    
+    def __init__(self, **kwargs):
+        args_converter = lambda index, data: {'data':data,
+                                              'height': 30,
+                                              'size_hint_y': None,}
+
+        kwargs['adapter'] = ListAdapter(data=self.items,
+                                        args_converter=args_converter,
+                                        selection_mode='multiple',
+                                        allow_empty_selection=True,
+                                        cls=AutomationItemView)
+        
+        super(AutomationList, self).__init__(**kwargs)
+
 
 class MyAutomationView(BoxLayout, MyView):
     '''The Automation view allows the user to create and run lists of actions (called methods)
@@ -176,7 +241,7 @@ class MyAutomationView(BoxLayout, MyView):
     def add_item(self):
         '''Add an item to the list
         '''
-        self.run_items.adapter.data.append('')
+        self.run_items.adapter.data.append(AutomationItemData(action_classes=self.action_classes))
         self.run_items._trigger_reset_populate()
     
     def remove_item(self):

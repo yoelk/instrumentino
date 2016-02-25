@@ -40,6 +40,7 @@ from __builtin__ import isinstance
 from instrumentino.controllers.arduino import Arduino
 from instrumentino.components import Component
 from inspect import isclass
+from instrumentino.screens.automation import ActionRunFile
             
 class Instrumentino(NavigationDrawer):
     pass
@@ -67,7 +68,11 @@ class InstrumentinoApp(App):
     action_classes = ListProperty([])
     '''The classes of the actions that the system should perform
     '''
-
+    
+    default_action_classes = ListProperty([ActionRunFile])
+    '''Default action classes, that are valid for every instrument
+    '''
+    
     SETTINGS_KEY_SEPARATOR = '---'
     '''A string separator to be used in complex keys that are made of two parts.
     For example: 'Arduino1>CommType' is the key for the communication type of controller 'Arduino1'
@@ -96,6 +101,7 @@ class InstrumentinoApp(App):
         self.controllers = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Controller)]
         self.components = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Component)]
         self.action_classes = [c for c in sys.modules[self.instrument_module].__dict__.values() if isclass(c) and issubclass(c, Action) and c is not Action]
+        self.action_classes.extend(self.default_action_classes)
         
         # Bind methods to the keyboard
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
@@ -386,6 +392,9 @@ class InstrumentinoSettings(SettingsWithSidebar):
         
 # Load all of the kv files
 Builder.load_file('instrumentino/screens/screens.kv')
+Builder.load_file('instrumentino/screens/control/control.kv')
+Builder.load_file('instrumentino/screens/automation/automation.kv')
+Builder.load_file('instrumentino/screens/signal/signal.kv')
 Builder.load_file('instrumentino/components/components.kv')
 Builder.load_file('instrumentino/variables/variables.kv')
 Builder.load_file('instrumentino/popups/popups.kv')

@@ -17,11 +17,13 @@ digi_vars = DigitalInOutVariables(ch_class=ArduinoChannelInOut_DigitalPin, contr
 class Action1(Action):
     '''An example action
     '''
-     
+
+    name = 'Example'
+    
     var1 = AnalogVariablePercentage()
     '''An example variable
     '''
-     
+
     def on_start(self):
         '''Describe here what the action does
         '''
