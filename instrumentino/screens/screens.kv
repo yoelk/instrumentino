@@ -1,7 +1,3 @@
-#: import automation instrumentino.screens.automation
-#: import ListItemButton kivy.uix.listview.ListItemButton
-#: import ListAdapter kivy.adapters.listadapter.ListAdapter
-
 ##########
 # Screens
 ##########
@@ -85,75 +81,6 @@
 		
 		BoxLayout:
 			id: part3_container
-
-##########
-# Views
-##########
-<MyControlView>:
-	min_component_width: sp(100)
-	cols: 1
-        
-<MyAutomationView>:
-    orientation: 'vertical'
-    run_items: run_items_list
-    
-    BoxLayout:
-	    AutomationList:
-	        id: run_items_list
-    BoxLayout:
-        size_hint_y: .2
-        Button:
-            text: 'Add'
-            on_press: root.add_item()
-        Button:
-            text: 'Remove'
-            on_press: root.remove_item()
-        Button:
-            text: 'Run'
-            on_press: root.run_all()
-    BoxLayout:
-        size_hint_y: .2
-        Button:
-            text: 'Load'
-            on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
-        Button:
-            text: 'Save'
-            on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
- 
-<AutomationList>:
- 
-<AutomationItem>:
-	text: self.chosen_action.name if self.chosen_action else ''
-    on_press: print 'action chosen'
- 
- 
- 
- 
-<MyGraph@Graph>:
-    x_grid: True
-    x_grid_label: True
-    xlabel: 'time (seconds)'
-    xmin: 0
-    xmax: 50
-    x_ticks_major: 1
-    x_ticks_minor: 0
-    y_grid: True
-    y_grid_label: True
-    ylabel: 'percent (%) - dashed line for negative values'
-    ymin: 0
-    ymax: 100
-    y_ticks_minor: 5
-    y_ticks_major: 10
-    # padding: 5
-    # tick_color: 1, 1, .25, 1
-    # background_color: .25,1,1,1
-    # border_color: 1,0,1,0
-    
-<MySignalView>:
-    graph: graph
-    orientation: 'vertical'
-    MyGraph:
-    	id: graph
 
 ##########
 # View chooser

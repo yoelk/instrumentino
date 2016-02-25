@@ -1,0 +1,25 @@
+<MyGraph@Graph>:
+    x_grid: True
+    x_grid_label: True
+    xlabel: 'time (seconds)'
+    xmin: 0
+    xmax: 50
+    x_ticks_major: 1
+    x_ticks_minor: 0
+    y_grid: True
+    y_grid_label: True
+    ylabel: 'percent (%) - dashed line for negative values'
+    ymin: 0
+    ymax: 100
+    y_ticks_minor: 5
+    y_ticks_major: 10
+    # padding: 5
+    # tick_color: 1, 1, .25, 1
+    # background_color: .25,1,1,1
+    # border_color: 1,0,1,0
+    
+<MySignalView>:
+    graph: graph
+    orientation: 'vertical'
+    MyGraph:
+    	id: graph
