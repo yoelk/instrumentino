@@ -105,30 +105,6 @@ class InstrumentinoApp(App):
         self.action_classes = [c for c in sys.modules[self.instrument_module].__dict__.values() if isclass(c) and issubclass(c, Action) and c is not Action]
         self.action_classes.extend(self.default_action_classes)
         
-        # Bind methods to the keyboard
-        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-        self._keyboard.bind(on_key_down=self._on_keyboard_down)
-
-    ##########
-    # Keyboard methods
-    ##########
-    def _keyboard_closed(self):
-        '''Keyboard closed.  Only for virtual keyboards?
-        '''
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
-
-    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        '''Capture keyboard input
-           The values of the keys are the keycode "common names" used in pygame.
-           See: http://www.pygame.org/docs/ref/key.html
-        '''
-        # Return True to accept/capture the key. Otherwise, it will also be used by
-        # the system.
-#         if keycode[1] == 'escape':
-#             self.ShowExitConfirmation()
-#             return True
-
     def build(self):
         '''Build the screen.
         '''
