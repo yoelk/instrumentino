@@ -98,9 +98,8 @@ class MultipleViewManager(ScreenManager):
         '''Select which views are enabled on startup. 
         '''
         
-        self.view_choosers[0].trigger_action(0)
-        self.view_choosers[1].trigger_action(0)
-        self.view_choosers[2].trigger_action(0)
+        for vc in self.view_choosers:
+            vc.trigger_action(0)
 
     def update_screens(self, screen_name, new_state):
         '''Update the screen when a view chooser was pressed, adding/removing views accordingly.
