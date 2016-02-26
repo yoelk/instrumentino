@@ -4,7 +4,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.tabbedpanel import TabbedPanel
-from instrumentino.libs2.multichoicetogglebutton import MultichoiceToggleButton
+from instrumentino.libs.multichoicetogglebutton import MultichoiceToggleButton
 from kivy.event import EventDispatcher
 from instrumentino.cfg import *
 

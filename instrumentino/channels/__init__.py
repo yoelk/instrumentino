@@ -6,7 +6,7 @@ from kivy.event import EventDispatcher
 from __builtin__ import ValueError
 from math import ceil
 import numpy as np
-from instrumentino.libs2.abs_ratio import abs_ratio
+from instrumentino.libs.abs_ratio import abs_ratio
 from instrumentino.controlino_protocol import ControlinoProtocol
 from kivy.app import App
 from instrumentino.cfg import *
