@@ -7,7 +7,7 @@ import random
 from instrumentino.variables import AnalogVariable, DigitalVariable
 import itertools
 from kivy.utils import get_color_from_hex as rgb
-from instrumentino.libs2.old_garden.graph import SmoothLinePlot
+from kivy.garden.graph import SmoothLinePlot
 from math import sin, cos, pi
 import numpy as np
 import time
