@@ -1,0 +1,28 @@
+sources:
+https://kivy.org/docs/installation/installation-osx.html
+https://kivy.org/docs/api-kivy.garden.html?highlight=garden#module-kivy.garden
+
+To install kivy, follow the instructions here: https://kivy.org/#download.
+
+As described in one of the guides (depending on your OS), install the following packages under kivy:
+- numpy
+- pyserial
+- construct
+- kivy-garden
+In mac you do it by typing: kivy -m pip install <modulename>
+
+After that, make sure you install the following garden packages:
+- graph
+- navigationdrawer
+In mac you do it by typing: garden install <modulename>
+In order for the garden command to work, you need to activate the right venv:
+	source /Applications/Kivy.app/Contents/Resources/venv/bin/activate
+	garden install <modulename>
+	deactivate
+ 
+An additional step for mac users: you need to copy the installed garden packages into the kivy application.
+Copy the "garden" folder from ~/.kivy/ to /Applications/Kivy.app/Contents/Resources/.kivy/, as explained here: https://groups.google.com/forum/#!topic/kivy-users/WzkezyqS3MA
+
+If you want to install a garden package inside instrumentino, this is how to do it:
+	cd myapp
+	garden install --app graph
