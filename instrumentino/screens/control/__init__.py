@@ -1,6 +1,6 @@
 from kivy.uix.gridlayout import GridLayout
 from kivy.properties import ListProperty
-from .. import MyView
+from instrumentino.screens import MyView
 from kivy.uix.boxlayout import BoxLayout
 
 class MyControlView(GridLayout, MyView):

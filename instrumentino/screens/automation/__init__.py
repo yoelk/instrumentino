@@ -1,7 +1,7 @@
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.properties import ListProperty
-from .. import MyView
+from instrumentino.screens import MyView
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App

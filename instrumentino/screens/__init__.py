@@ -4,7 +4,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.tabbedpanel import TabbedPanel
-from ..libs.garden.togglebuttonmulti import ToggleButtonMulti
+from instrumentino.libs2.togglebuttonmulti import MultichoiceToggleButton
 from kivy.event import EventDispatcher
 from instrumentino.cfg import *
 
@@ -131,7 +131,7 @@ class MultipleViewManager(ScreenManager):
             self.get_screen('TripleView').add_view(self.views[active_choosers[2].view_name])
             self.current = 'TripleView'
 
-class ViewChooser(ToggleButtonMulti):
+class ViewChooser(MultichoiceToggleButton):
     '''A toggle button to choose which views are visible in the screen manager.
     More than 1 may be allowed.
     '''

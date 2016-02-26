@@ -4,7 +4,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.properties import ObjectProperty, DictProperty, ListProperty, NumericProperty, StringProperty
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from ..screens import MyView
+from instrumentino.screens import MyView
 import time
 from kivy.app import App
 from instrumentino.cfg import *

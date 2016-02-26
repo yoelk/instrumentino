@@ -1,20 +1,44 @@
-import kivy
+'''
+MultichoiceToggleButton
+=======================
+
+The :class:`MultichoiceToggleButton` widget is like the :class:`ToggleButton`
+but it allows choosing more than one button in a group. The maximal and
+minimal numbers of concurrently selected buttons can be set. The same
+settings should be set to all buttons in a group.
+
+Like ToggleButtons, Each button needs to be assigned to a group.
+
+To configure the ToggleButton, you can use the same properties that you can use
+for a :class:`~kivy.uix.button.Button` class.
+
+'''
+
+__all__ = ('MultichoiceToggleButtonBehavior', 'MultichoiceToggleButton')
+
 from kivy.uix.button import Button
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
-kivy.require('1.8.0')
-  
 from kivy.app import App
 from kivy.properties import BooleanProperty, NumericProperty, ObjectProperty, BoundedNumericProperty
 from weakref import ref
 from kivy.uix.behaviors import ButtonBehavior
 
-class ToggleButtonMultiBehavior(ButtonBehavior):
-    '''like ToggleButton behavior, but allow more than 1 choosable button
+class MultichoiceToggleButtonBehavior(ButtonBehavior):
+    '''Like ToggleButtonBehavior, but allowing several buttons selected.
+    See module documentation for more information.
     '''
 
     max_selected = BoundedNumericProperty(1, min=1)
-    '''Max number of concurrently selected buttons
+    '''Maximal number of concurrently selected buttons
+    
+    :attr:`max_selected` is a :class:`BoundedNumericProperty` defaults to 1
+    '''
+    
+    min_selected = BoundedNumericProperty(0, min=0)
+    '''Minimal number of concurrently selected buttons
+    
+    :attr:`min_selected` is a :class:`BoundedNumericProperty` defaults to 0
     '''
 
     __groups = {}
@@ -22,27 +46,17 @@ class ToggleButtonMultiBehavior(ButtonBehavior):
     group = ObjectProperty(None, allownone=True)
     '''Group of the button. If None, no group will be used (button is
     independent). If specified, :attr:`group` must be a hashable object, like
-    a string. Only one button in a group can be in 'down' state.
+    a string.
 
     :attr:`group` is a :class:`~kivy.properties.ObjectProperty`
     '''
 
-    allow_no_selection = BooleanProperty(True)
-    '''This specifies whether the checkbox in group allows everything to
-    be deselected.
-
-    ..versionadded::1.9.0
-
-    :attr:`allow_no_selection` is a :class:`BooleanProperty` defaults to
-    `True`
-    '''
-
     def __init__(self, **kwargs):
         self._previous_group = None
-        super(ToggleButtonMultiBehavior, self).__init__(**kwargs)
+        super(MultichoiceToggleButtonBehavior, self).__init__(**kwargs)
         
     def on_group(self, *largs):
-        groups = ToggleButtonMultiBehavior.__groups
+        groups = MultichoiceToggleButtonBehavior.__groups
         if self._previous_group:
             group = groups[self._previous_group]
             for item in group[:]:
@@ -52,7 +66,7 @@ class ToggleButtonMultiBehavior(ButtonBehavior):
         group = self._previous_group = self.group
         if group not in groups:
             groups[group] = []
-        r = ref(self, ToggleButtonMultiBehavior._clear_groups)
+        r = ref(self, MultichoiceToggleButtonBehavior._clear_groups)
         groups[group].append(r)
 
     def __get_num_selected(self):
@@ -72,24 +86,24 @@ class ToggleButtonMultiBehavior(ButtonBehavior):
         pass
 
     def _do_press(self):
-        num_selected = self.__get_num_selected()
-        if (not self.allow_no_selection and
-            self.group and self.state == 'down'
-            and num_selected <= 1):
+        if not self.group:
             return
+        
+        num_selected = self.__get_num_selected()
 
-        if self.state == 'normal':
-            if num_selected < self.max_selected:
-                self.state = 'down'
-            else:
-                return
-        else:
+        if (self.state == 'normal' and
+            num_selected < self.max_selected):
+            self.state = 'down'
+        elif (self.state == 'down' and
+            num_selected > self.min_selected):
             self.state = 'normal'
+        else:
+            return
 
     @staticmethod
     def _clear_groups(wk):
         # auto flush the element when the weak reference have been deleted
-        groups = ToggleButtonMultiBehavior.__groups
+        groups = MultichoiceToggleButtonBehavior.__groups
         for group in list(groups.values()):
             if wk in group:
                 group.remove(wk)
@@ -104,7 +118,7 @@ class ToggleButtonMultiBehavior(ButtonBehavior):
 
         Always release the result of this method! In doubt, do::
 
-        l = ToggleButtonMultiBehavior.get_widgets('mygroup')
+        l = MultichoiceToggleButtonBehavior.get_widgets('mygroup')
         # do your job
         del l
 
@@ -115,40 +129,46 @@ class ToggleButtonMultiBehavior(ButtonBehavior):
         more elements before flushing it. The return of this method
         is informative, you've been warned!
         '''
-        groups = ToggleButtonMultiBehavior.__groups
+        groups = MultichoiceToggleButtonBehavior.__groups
         if groupname not in groups:
             return []
         return [x() for x in groups[groupname] if x()][:]
 
-
+    
 '''
 Toggle button multi
 ===================
 This is like a normal ToggleButton, but with the option to have more than one
 button pressed at any given time
 '''
-class ToggleButtonMulti(ToggleButtonMultiBehavior, Button):
+class MultichoiceToggleButton(MultichoiceToggleButtonBehavior, Button):
     pass
 
 
-
-
-
-kv_string='''
-BoxLayout:
-    ToggleButtonMulti:
-        max_selected: 2
-        group: 'a'
-    ToggleButtonMulti:
-        max_selected: 2
-        group: 'a'
-    ToggleButtonMulti:
-        max_selected: 2
-        group: 'a'
-'''
-class TestApp(App):
-    def build(self):
-        return Builder.load_string(kv_string)
-
 if __name__ == '__main__':
+
+    kv_string='''
+BoxLayout:
+    orientation: 'vertical'
+    Label:
+        text: 'our main dish today is Hummus.\\nPlease choose two side dishes:'
+
+    BoxLayout:
+        MultichoiceToggleButton:
+            text: 'rice'
+            group: 'side dishes'
+            max_selected: 2
+        MultichoiceToggleButton:
+            text: 'salad'
+            group: 'side dishes'
+            max_selected: 2
+        MultichoiceToggleButton:
+            text: 'soup'
+            group: 'side dishes'
+            max_selected: 2
+'''
+    class TestApp(App):
+        def build(self):
+            return Builder.load_string(kv_string)
+    
     TestApp().run()

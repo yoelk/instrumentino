@@ -13,8 +13,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 
-from .libs.garden.graph import Graph, MeshLinePlot
-from .libs.garden.navigationdrawer import NavigationDrawer
+from kivy.garden.graph import Graph, MeshLinePlot
+from kivy.garden.navigationdrawer import NavigationDrawer
 
 import importlib
 import json
@@ -23,10 +23,9 @@ import datetime
 from os.path import dirname, join 
 import random
 from exceptions import RuntimeError
-from .screens.control import MyControlView
-from .screens.automation import MyAutomationView
-from .screens.signal import MySignalView
-from .screens.automation import Action
+from instrumentino.screens.control import MyControlView
+from instrumentino.screens.automation import MyAutomationView, Action
+from instrumentino.screens.signal import MySignalView
 
 from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooser,ExitConfirmation
 from instrumentino.communication import CommunicationTypesLoader
@@ -40,7 +39,7 @@ from __builtin__ import isinstance
 from instrumentino.controllers.arduino import Arduino
 from instrumentino.components import Component
 from inspect import isclass
-from instrumentino.screens.automation import ActionRunFile
+from instrumentino.screens.automation import ActionRunFile, MyAutomationView
             
 class Instrumentino(NavigationDrawer):
     pass
@@ -379,10 +378,10 @@ class InstrumentinoSettings(SettingsWithSidebar):
         
         
 # Load all of the kv files
-Builder.load_file('instrumentino/screens/screens.kv')
-Builder.load_file('instrumentino/screens/control/control.kv')
-Builder.load_file('instrumentino/screens/automation/automation.kv')
-Builder.load_file('instrumentino/screens/signal/signal.kv')
-Builder.load_file('instrumentino/components/components.kv')
-Builder.load_file('instrumentino/variables/variables.kv')
-Builder.load_file('instrumentino/popups/popups.kv')
+Builder.load_file('screens/screens.kv')
+Builder.load_file('screens/control/control.kv')
+Builder.load_file('screens/automation/automation.kv')
+Builder.load_file('screens/signal/signal.kv')
+Builder.load_file('components/components.kv')
+Builder.load_file('variables/variables.kv')
+Builder.load_file('popups/popups.kv')
