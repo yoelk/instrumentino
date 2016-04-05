@@ -225,8 +225,7 @@ class AutomationList(ListView):
 
 
 class MyAutomationView(BoxLayout, MyView):
-    '''The Automation view allows the user to create and run lists of actions (called methods)
-    and lists of methods (sequences)
+    '''The Automation view allows the user to create and run lists of actions (called methods).
     '''
     
     action_classes = ListProperty()
@@ -245,9 +244,13 @@ class MyAutomationView(BoxLayout, MyView):
         self.run_items._trigger_reset_populate()
     
     def remove_item(self):
-        '''Remove an item from the list
+        '''Remove selected items from the list
         '''
-        pass
+        indices = set(item.parent.index for item in self.run_items.adapter.selection)
+        new_list = [i for j, i in enumerate(self.run_items.adapter.data) if j not in indices]
+        self.run_items.adapter.data = new_list
+        
+        self.run_items._trigger_reset_populate()
     
     def run_all(self):
         '''Run all items in the list
