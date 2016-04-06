@@ -36,20 +36,12 @@ class Component(BoxLayout):
     def add_variable(self, variable):
         self.variables.append(variable)
 
-    #def remove_variable(self): # No do as it would be odd, and difficult
-    #    pass
-
-    def remove_variables(self):
-        self.clear_widgets()
-        for ndx, variable in enumerate(self.variables):
-            del self.variables[ndx]
-
     def build(self):
         '''Add here the component variables. This should be overriden by derived classes
         '''
 
 
-class AnalogInVariables(Component):
+class AnalogVariables(Component):
     '''An array of analog input variables
     '''
     
@@ -63,10 +55,10 @@ class AnalogInVariables(Component):
             ch_in = ch_class(controller=controller, number=i, sampling_rate=sampling_rate)
             self.add_variable(AnalogVariablePercentage(name='Analog '+str(i), channel_in=ch_in))
         
-        super(AnalogInVariables, self).__init__(**kwargs)
+        super(AnalogVariables, self).__init__(**kwargs)
 
 
-class DigitalInOutVariables(Component):
+class DigitalVariables(Component):
     '''An array of digital input/output variables
     '''
     
@@ -80,4 +72,4 @@ class DigitalInOutVariables(Component):
             ch = ch_class(controller=controller, number=i, sampling_rate=sampling_rate)
             self.add_variable(DigitalVariableOnOff(name='Digital '+str(i), channel_in=ch, channel_out=ch))
 
-        super(DigitalInOutVariables, self).__init__(**kwargs)
+        super(DigitalVariables, self).__init__(**kwargs)

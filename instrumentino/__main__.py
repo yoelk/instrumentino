@@ -1,6 +1,6 @@
 from __future__ import division
 from instrumentino import InstrumentinoApp
-from instrumentino.components import AnalogInVariables, DigitalInOutVariables
+from instrumentino.components import AnalogVariables, DigitalVariables
 from instrumentino.variables import AnalogVariablePercentage
 from instrumentino.controllers.arduino import Arduino, ArduinoChannelIn_AnalolgInPin,\
     ArduinoChannelInOut_DigitalPin
@@ -10,8 +10,8 @@ from instrumentino.screens.automation import Action
 arduino = Arduino()
 
 # Define channels and components
-anal_vars = AnalogInVariables(ch_class=ArduinoChannelIn_AnalolgInPin, controller=arduino, channels_numbers=[0,1], sampling_rate=10)
-digi_vars = DigitalInOutVariables(ch_class=ArduinoChannelInOut_DigitalPin, controller=arduino, channels_numbers=[2,3], sampling_rate=10)
+anal_vars = AnalogVariables(ch_class=ArduinoChannelIn_AnalolgInPin, controller=arduino, channels_numbers=[0,1], sampling_rate=10)
+digi_vars = DigitalVariables(ch_class=ArduinoChannelInOut_DigitalPin, controller=arduino, channels_numbers=[2,3], sampling_rate=10)
 
 # Define actions
 class Action1(Action):
