@@ -105,10 +105,8 @@ class AnalogVariable(Variable):
         super(AnalogVariable, self).__init__(**kwargs)
         
         # Let the user define the limits as a range.
-        the_range = kwargs.get('range', None)
-        if the_range:
-            self.upper_limit = the_range[1]
-            self.lower_limit = the_range[0]
+        self.upper_limit = self.range[1]
+        self.lower_limit = self.range[0]
             
 
 class AnalogVariableUnipolar(AnalogVariable):
