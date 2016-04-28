@@ -101,7 +101,7 @@ class DataChannelIn(DataChannel):
     
     def translate_incoming_data(self, data):
         '''Incoming data is received as whole numbers (not floating point) that result in native read functions in the controller.
-        For the sake of uniformity, all values should be translated to a [0-100] scale.
+        For the sake of uniformity, all values should be translated to a [0,100] scale (percentage).
         '''
         data[:] = [x / self.max_input_value * 100 for x in data]
 
