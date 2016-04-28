@@ -6,6 +6,16 @@ from instrumentino.controllers.arduino import Arduino, ArduinoChannelIn_AnalolgI
     ArduinoChannelInOut_DigitalPin
 from instrumentino.screens.automation import Action
 
+############
+from instrumentino.components import Component
+from instrumentino.variables import AnalogVariableDurationInSeconds
+class DurVars(Component):
+    def __init__(self, **kwargs):
+        self.add_variable(AnalogVariableDurationInSeconds(name='a'))
+        super(DurVars, self).__init__(**kwargs)
+a = DurVars()
+############
+
 # Define controllers
 arduino = Arduino()
 

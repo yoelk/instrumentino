@@ -4,6 +4,7 @@
 	size: sp(100),sp(30) # the x size is just a dummy
 	Label:
 		text: root.name
+
 		
 <AnalogVariable>:
 	value_display: value_display_widget
@@ -13,10 +14,22 @@
 		id: value_display_widget
 		multiline: False
 		on_focus: root.user_is_editing = self.focus
-		on_text_validate: root.user_entered_value(self.text)
+		on_text_validate: root.user_entered_text(self.text)
 		disabled: root.channel_out == None
 	Label:
 		text: root.units
+
+
+<AnalogVariableDurationInSeconds>:
+	value_display: value_display_widget
+	DurationInput:
+		id: value_display_widget
+		multiline: False
+		on_focus: root.user_is_editing = self.focus
+		on_text_validate: root.user_entered_text(self.text)
+#		disabled: root.channel_out == None
+		text: '00:00:00.000'
+
 		
 <DigitalVariable>:
 	value_display: value_display_widget
@@ -25,5 +38,5 @@
 		text: root.options[0]
 		values: root.options
 		on_is_open: root.user_is_editing = self.is_open
-		on_choice: root.user_entered_value(args[1])
+		on_choice: root.user_entered_text(args[1])
 		disabled: root.channel_out == None

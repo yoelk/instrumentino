@@ -1,3 +1,35 @@
+'''
+Automation view
+===============
+
+The main class here is :class:`MyAutomationView`. It's a view that can be seen on the 
+screen, alongside the control and signal views.
+
+This view includes an automation list (:class:`AutomationList`) and some 
+buttons below.
+AutomationList implements a ListView, using a list adapter and an
+args converter.
+Each item in the list is actually a dialog for selecting and setting parameters
+in the selected action. The dialog is shown on the screen by
+:class:`AutomationItemView` and data is saved in :class:`AutomationItemData`. 
+
+AutomationItemView is a composite list item that includes (left to right):
+- A button that shows the index number of that item in the list (1,2,3,etc.).
+- A Spinner to let the user choose an action.
+- A panel to hold the chosen action's parameters.
+
+AutomationItemData simply holds a list of possible actions (to populate the
+spinner in AutomationItemView and a reference to the chosed action (with its
+parameters).
+
+:class:`Action` represents a runnable action, with its parameters. It has a
+on_start method that holds the code that should be run for that action, and
+a on_stop method, to be run when the user aborted the action. These are to be
+implemented by sub-classes, such as :class:`ActionRunFile`. 
+
+'''
+
+from __future__ import division
 from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.properties import ListProperty
@@ -79,17 +111,27 @@ class AutomationItemParameterView(CompositeListItemMember, CompositeListItem):
     '''A widget for an automation item parameter
     '''
     
-    parameter = ObjectProperty()
-    '''The parameter we need to show 
-    '''
-    
     def __init__(self, **kwargs):
-        # Set the sub-widgets
+        # The parameter is of the type Variable.
+        parameter = kwargs['parameter']
+        
+        # Add the name to the view
+        name_text = parameter.name
+        if hasattr(parameter, 'units'):
+            name_text += ' (' + parameter.units + ')'
         cls_dicts = [{'cls': ListItemNormalLabel,
-                      'kwargs': {'text': 'time'} },
-                     {'cls': ListItemSingleLineTextInput,
-                      'kwargs': {'text': '00:00:00'} },
+                      'kwargs': {'text': name_text} }
                      ]
+        
+        # Add the value-specific widget to the view. To do this automatically,
+        # we define a new class that inherits the parameter's value_display
+        # widget and CompositeListItemMember.
+        class ValueWidgetInCompositeList(type(parameter.value_display), CompositeListItemMember):
+            pass
+        
+        cls_dicts += [{'cls': ValueWidgetInCompositeList,
+                      'kwargs': {'text': parameter.value} },
+                      ]
         kwargs['cls_dicts']=cls_dicts
         super(AutomationItemParameterView, self).__init__(**kwargs)
 
@@ -98,17 +140,15 @@ class AutomationItemParametersListView(CompositeListItemMember, CompositeListIte
     '''A widget for an automation item parameters list
     '''
     
-    action = ObjectProperty()
-    '''The action for which we need to show parameters
-    '''
-    
     def __init__(self, **kwargs):
-        # Set the sub-widgets
-        cls_dicts = [{'cls': AutomationItemParameterView,
-                      'kwargs': {'parameter': 'XXX'} },
-                     {'cls': AutomationItemParameterView,
-                      'kwargs': {'parameter': 'XXX'} },
-                     ]
+        parameters = kwargs['parameters']
+        
+        # Add a view for each parameter
+        cls_dicts = []
+        for param in parameters:
+            cls_dicts += [{'cls': AutomationItemParameterView,
+                          'kwargs': {'parameter': param} },
+                         ]
         kwargs['cls_dicts']=cls_dicts
         kwargs['orientation']='vertical'
         super(AutomationItemParametersListView, self).__init__(**kwargs)
@@ -130,7 +170,8 @@ class AutomationItemView(CompositeListItemMember, CompositeListItem):
                      {'cls': ListItemSpinner,
                       'kwargs': {'values': [c().name for c in data.action_classes],
                                  'text': data.chosen_action.name} },
-                     {'cls': AutomationItemParameterView,
+                     {'cls': AutomationItemParametersListView,
+                      'kwargs': {'parameters': data.chosen_action.parameters}
                       },
                      ]
         kwargs['cls_dicts']=cls_dicts
@@ -164,8 +205,8 @@ class Action(EventDispatcher):
     '''The action's name on the screen
     '''
     
-    arguments = ListProperty()
-    '''The arguments needed for this action
+    parameters = ListProperty()
+    '''The parameters needed for this action
     '''
 
     on_start = ObjectProperty()
@@ -181,8 +222,8 @@ class Action(EventDispatcher):
         check_for_necessary_attributes(self, ['on_start'], kwargs)
         self.name = self.name or create_default_name(self, use_index=False)
         
-        # Automatically populate the arguments' list by collecting all of the "Variable" instances we have.
-        self.arguments = get_attributes_of_type(self, Variable, kwargs)
+        # Automatically populate the parameters' list by collecting all of the "Variable" instances we have.
+        self.parameters = get_attributes_of_type(self, Variable, kwargs)
         
         super(Action, self).__init__(**kwargs)
         
@@ -193,7 +234,7 @@ class ActionRunFile(EventDispatcher):
     
     name = 'Run file'
     
-    arguments = ListProperty()
+    parameters = ListProperty()
 
     def on_start(self):
         '''Load an action-list file and run it
@@ -255,4 +296,5 @@ class MyAutomationView(BoxLayout, MyView):
     def run_all(self):
         '''Run all items in the list
         '''
-        pass
+        for item in self.run_items.adapter.data:
+            item.chosen_action.on_start() 
