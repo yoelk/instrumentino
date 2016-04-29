@@ -39,43 +39,10 @@ from kivy.uix.textinput import TextInput
 from kivy.app import App
 from kivy.event import EventDispatcher
 
-class VariableOnlineBeavior(EventDispatcher):
-    '''The functionality of a variable that allows it to be connected to channels.
-    When given a channel_in argument, their value will be automatically updated by this channel.
-    When given a channel_out argument, the value the user enters will be communicated out by that channel.
-    '''
-
-    channel_in = ObjectProperty(None)
-    '''The input channel
-    '''
-    
-    channel_out = ObjectProperty(None)
-    '''The output channel
-    '''
-
-    percentage_value = NumericProperty()
-    '''A property to access the numerical value for this variable, as a
-    percentage. This is used for serialization through the communication
-    channels.
-    '''
-
-    def percentage_to_text(self, percentage_value):
-        '''Translate a percentage value to a textual representation.
-        
-        Sub-classes should implement that
-        '''
-        raise NotImplementedError()
-    
-    def text_to_percentage(self, text):
-        '''Translate a textual representation to a percentage value.
-        
-        Sub-classes should implement that
-        '''
-        raise NotImplementedError()
-        
-
 class Variable(BoxLayout):
     '''A variable widget for showing different types of variables on the screen.
+    When given a channel_in argument, their value will be automatically updated by this channel.
+    When given a channel_out argument, the value the user enters will be communicated out by that channel.
     
     Subclasses are responsible of screen presentation of the variable.
     '''
@@ -89,18 +56,53 @@ class Variable(BoxLayout):
     This attribute should be updated by sub-classes.
     '''
     
+    value = ObjectProperty()
+    '''Return the native value for the variable. Default is text.
+    Sub-classes should implement this for different behaviors. 
+    '''
+
+    channel_in = ObjectProperty(None)
+    '''The input channel
+    '''
+    
+    channel_out = ObjectProperty(None)
+    '''The output channel
+    '''
+
     def get_text_value(self):
-        return self.percentage_to_text(self.percentage_value)
+        return self.value_to_text(self.value)
     text = AliasProperty(get_text_value)
     '''A property to access the variable's value as text.
     '''
     
-    def get_value(self):
-        return self.text
-    value = AliasProperty(get_value)
-    '''Return the native value for the variable. Default is text.
-    '''
+    def text_to_value(self, text):
+        '''Return the native value for this variable by translating a textual input.
+        It is used to receive input from the user.
+        Default is a simple cast to the variable's value's type.
+        '''
+        return type(self.value)(text)
     
+    def value_to_text(self, value):
+        '''Return the textual representation of the variable's value.
+        It is used to display the variable's value on the screen.
+        Default is a simple cast to text.
+        '''
+        return str(value)
+
+    def percentage_to_value(self, percentage):
+        '''Return the native value for this variable by translating a percentage.
+        Sub-classes should implement this if they want to be able to receive
+        data from input channels.
+        '''
+        raise NotImplementedError()
+    
+    def value_to_percentage(self, value):
+        '''Translate the variable's value into a percentage.
+        Sub-classes should implement this if they want to be able to transmit
+        data to output channels.
+        '''
+        raise NotImplementedError()
+        
     def __init__(self, **kwargs):
         super(Variable, self).__init__(**kwargs)
         
@@ -116,17 +118,17 @@ class Variable(BoxLayout):
     def user_entered_text(self, text):
         '''When the user sets the variable's value, act upon it and write it to the controller.
         '''
-        self.percentage_value = self.text_to_percentage(text)
+        self.value = self.text_to_value(text)
         
         if self.channel_out:
-            self.channel_out.write(self.percentage_value)
+            self.channel_out.write(self.value_to_percentage(self.value))
 
 
-    def new_data_arrived(self, percentage_value):
-        '''When new data arrived, we should update the variable's widget.
+    def new_data_arrived(self, percentage):
+        '''Handle incoming data from the input channel (if it exists).
         '''
         
-        self.percentage_value = percentage_value
+        self.value = self.percentage_to_value(percentage)
         
         # Don't update the text while the user is editing
         if not self.user_is_editing:
@@ -149,10 +151,11 @@ class AnalogVariable(Variable):
     '''The units of this variable
     '''
 
-    def get_value(self):
-        '''Return the native value for an analog variable. 
+    def value_to_text(self, value):
+        '''Return the textual representation of the variable's value.
+        It is used to display the variable's value on the screen.
         '''
-        return self.lower_limit + self.percentage_value / 100 * (self.upper_limit - self.lower_limit)
+        return '{:2.2f}'.format(value)
     
     def __init__(self, **kwargs):
         check_for_necessary_attributes(self, ['range', 'units'], kwargs)
@@ -167,23 +170,23 @@ class AnalogVariableUnipolar(AnalogVariable):
     '''An analog variable for unipolar values
     '''
 
+    def percentage_to_value(self, percentage):
+        '''Return the native value for this variable by translating a percentage.
+        '''
+        return self.lower_limit + percentage / 100 * (self.upper_limit - self.lower_limit)
+    
+    def value_to_percentage(self, value):
+        '''Translate the variable's value into a percentage.
+        '''
+        return (value - self.lower_limit) / (self.upper_limit - self.lower_limit) * 100
+        
     def __init__(self, **kwargs):
         super(AnalogVariableUnipolar, self).__init__(**kwargs)
         
         # Check the range
         if self.upper_limit * self.lower_limit < 0: raise ValueError('Range should be unipolar')
+
         
-    def percentage_to_text(self, percentage_value):
-        '''Translate a percentage value to a textual representation.
-        '''
-        return '{:2.2f}'.format(self.lower_limit + percentage_value / 100 * (self.upper_limit - self.lower_limit))
-    
-    def text_to_percentage(self, text):
-        '''Translate a textual representation to a percentage value.
-        '''
-        return (float(text) - self.lower_limit) / (self.upper_limit - self.lower_limit) * 100
-
-
 class AnalogVariablePercentage(AnalogVariableUnipolar):
     '''An analog variable for percentage values
     '''
@@ -201,23 +204,35 @@ class AnalogVariableDurationInSeconds(Variable):
     '''A variable that represents a duration of time, measured in seconds. 
     '''
     
-    def __init__(self, **kwargs):
-        super(AnalogVariableDurationInSeconds, self).__init__(**kwargs)
-
-    def get_value(self):
-        return self.lower_limit + self.percentage_value / 100 * (self.upper_limit - self.lower_limit)
-    '''Return the native value for an analog variable. 
+    pattern = re.compile('(..):(..):(.*)')
+    '''The time is presented in the format: 00:00:00.000 (hours:minutes:seconds.milliseconds).
     '''
     
-    def percentage_to_text(self, percentage_value):
-        '''Translate a percentage value to a textual representation.
+    def text_to_value(self, text):
+        '''Return the native value for this variable by translating a textual input.
+        It is used to receive input from the user.
         '''
-        return '{:2.2f}'.format(self.lower_limit + percentage_value / 100 * (self.upper_limit - self.lower_limit))
+        match = self.pattern.match(text)
+        h = int(match.group(1))
+        m = int(match.group(2))
+        s = float(match.group(3))
+        
+        # return the number of seconds
+        print str(h*60*60 + m*60 + s)
+        return h*60*60 + m*60 + s
     
-    def text_to_percentage(self, text):
-        '''Translate a textual representation to a percentage value.
+    def value_to_text(self, value):
+        '''Return the textual representation of the variable's value.
+        It is used to display the variable's value on the screen.
         '''
-        return (float(text) - self.lower_limit) / (self.upper_limit - self.lower_limit) * 100
+        m, s = divmod(value, 60)
+        h, m = divmod(m, 60)
+        return '{:02d}:{:02d}:{:06.3f}'.format(h, m, s)
+
+    def __init__(self, **kwargs):
+        if not 'value' in kwargs:
+            kwargs['value'] = 0
+        super(AnalogVariableDurationInSeconds, self).__init__(**kwargs)
 
 
 class DigitalVariable(Variable):
@@ -228,21 +243,21 @@ class DigitalVariable(Variable):
     '''The list of possible values, ordered from lowest to highest.
     '''
     
+    def percentage_to_value(self, percentage):
+        '''Return the native value for this variable by translating a percentage.
+        '''
+        index = int(percentage / 100 * (len(self.options) - 1))
+        return self.options[index]
+    
+    def value_to_percentage(self, value):
+        '''Translate the variable's value into a percentage.
+        '''
+        return self.options.index(value) / (len(self.options) - 1) * 100
+        
     def __init__(self, **kwargs):
         check_for_necessary_attributes(self, ['options'], kwargs)
         super(DigitalVariable, self).__init__(**kwargs)
         
-    def percentage_to_text(self, percentage_value):
-        '''Translate a percentage value to a textual representation.
-        '''
-        index = int(percentage_value / 100 * (len(self.options) - 1))
-        return self.options[index]
-
-    def text_to_percentage(self, text):
-        '''Translate a textual representation to a percentage value.
-        '''
-        return self.options.index(text) / (len(self.options) - 1) * 100
-
 
 class DigitalVariableOnOff(DigitalVariable):
     '''An On/Off digital variable.
@@ -287,6 +302,10 @@ class DurationInput(TextInput):
     '''The number of digits to display. 2+2+2+3 for hours+minutes+seconds+milliseconds.
     '''
     
+    last_text = StringProperty()
+    '''Remember the text before the current change
+    '''
+    
     def cursor_advancement_in_real_text(self, cursor, digits_added):
         '''Calculate the new position of the cursor after adding a number
         of digits, considering the text format.
@@ -309,7 +328,14 @@ class DurationInput(TextInput):
         '''Make sure text is inserted correctly into the allowed pattern
         The text should always have the form: '00:00:00.000'
         '''
-        
+
+        # Check if the user accidentally deleted some of the text
+        if len(self.text) != len(self.last_text):
+            cc, cr = self.cursor
+            self.text = self.last_text
+            self.cursor = (cc, cr)
+            return
+
         # Only accept digits 
         pattern = self.pattern
         stripped_substring = re.sub(pattern, '', substring)
@@ -333,6 +359,18 @@ class DurationInput(TextInput):
         # Set the cursor in the right place
         cc = self.cursor_advancement_in_real_text(cc, len(stripped_substring))
         self.cursor = (cc, cr)
+        
+        self.last_text = self.text 
+        
+    def do_backspace(self, from_undo=False, mode='bkspc'):
+        '''Disable backspace.
+        '''
+        pass
+    
+    def select_text(self, start, end):
+        '''Disable selection.
+        '''
+        pass
     
     
 class SpinnerWithOnChoiceEvent(Spinner):
