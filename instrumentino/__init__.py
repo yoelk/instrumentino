@@ -1,4 +1,16 @@
 from __future__ import division
+import importlib
+import json
+import os
+import datetime
+from os.path import dirname, join 
+import random
+from exceptions import RuntimeError
+import time
+import sys
+from __builtin__ import isinstance
+from inspect import isclass
+
 from kivy.lang import Builder
 from kivy.app import App
 from kivy.core.window import Window
@@ -16,30 +28,18 @@ from kivy.uix.widget import Widget
 from kivy.garden.graph import Graph, MeshLinePlot
 from kivy.garden.navigationdrawer import NavigationDrawer
 
-import importlib
-import json
-import os
-import datetime
-from os.path import dirname, join 
-import random
-from exceptions import RuntimeError
-from instrumentino.screens.control import MyControlView
-from instrumentino.screens.automation import MyAutomationView, Action
-from instrumentino.screens.signal import MySignalView
-
 from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooser,ExitConfirmation
 from instrumentino.communication import CommunicationTypesLoader
 from instrumentino.communication.serial_port import CommunicationPortSerial
-import time
 from instrumentino.communication.simulated_port import CommunicationPortSimulation
 from instrumentino.cfg import *
 from instrumentino.controllers import Controller
-import sys
-from __builtin__ import isinstance
 from instrumentino.controllers.arduino import Arduino
+from instrumentino.screens.automation import ActionRunFile, MyAutomationView, Action
 from instrumentino.components import Component
-from inspect import isclass
-from instrumentino.screens.automation import ActionRunFile, MyAutomationView
+from instrumentino.screens.control import MyControlView
+from instrumentino.screens.signal import MySignalView
+
             
 class Instrumentino(NavigationDrawer):
     pass
@@ -354,10 +354,10 @@ class InstrumentinoSettings(SettingsWithSidebar):
         
         
 # Load all of the kv files
-Builder.load_file('screens/screens.kv')
 Builder.load_file('screens/control/control.kv')
+Builder.load_file('components/components.kv')
+Builder.load_file('screens/screens.kv')
 Builder.load_file('screens/automation/automation.kv')
 Builder.load_file('screens/signal/signal.kv')
-Builder.load_file('components/components.kv')
 Builder.load_file('variables/variables.kv')
 Builder.load_file('popups/popups.kv')

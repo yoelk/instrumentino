@@ -20,7 +20,7 @@ class Action1(Action):
 
     name = 'Example'
     
-    var1 = AnalogVariablePercentage()
+    var1 = AnalogVariablePercentage(name='var1')
     '''An example variable
     '''
 

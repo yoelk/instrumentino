@@ -29,22 +29,63 @@ There are 3 principle types of variables:
 '''
 
 from __future__ import division
-from kivy.properties import ObjectProperty, DictProperty, ListProperty, NumericProperty, StringProperty, OptionProperty, BooleanProperty, AliasProperty
+import re
 import time
+from kivy.properties import ObjectProperty, DictProperty, ListProperty, NumericProperty, StringProperty, OptionProperty, BooleanProperty, AliasProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.spinner import Spinner
-from instrumentino.cfg import *
-import re
 from kivy.uix.textinput import TextInput
 from kivy.app import App
 from kivy.event import EventDispatcher
+from kivy.uix.listview import CompositeListItem
+from instrumentino.cfg import *
+from instrumentino.screens.list_widgets import CompositeListItemMember, ListItemNormalLabel,\
+    ListItemFloatInput, SubclassedCompositeListItem
 
-class Variable(BoxLayout):
+class VariableView(CompositeListItemMember, SubclassedCompositeListItem):
+    '''A widget for a basic variable.
+    '''
+    
+    def __init__(self, **kwargs):
+        check_for_necessary_attributes(self, ['variable'], kwargs)
+        
+        # Set the sub-widgets
+        added_cls_dicts = [{'cls': ListItemNormalLabel,
+                            'kwargs': {'text': self.variable.name} },
+                           ]
+        self.add_cls_dicts(added_cls_dicts, kwargs)
+        super(VariableView, self).__init__(**kwargs)
+
+
+class VariablesListView(CompositeListItemMember, CompositeListItem):
+    '''A widget for showing a list of variables
+    '''
+    
+    def __init__(self, **kwargs):
+        variables = kwargs['variables']
+        
+        # Add a view for each parameter
+        cls_dicts = []
+        for var in variables:
+            cls_dicts += [{'cls': var.view_class,
+                          'kwargs': {'variable': var} },
+                         ]
+        kwargs['cls_dicts']=cls_dicts
+        kwargs['orientation']='vertical'
+        super(VariablesListView, self).__init__(**kwargs)
+
+
+class Variable(EventDispatcher):
     '''A variable widget for showing different types of variables on the screen.
     When given a channel_in argument, their value will be automatically updated by this channel.
     When given a channel_out argument, the value the user enters will be communicated out by that channel.
     
     Subclasses are responsible of screen presentation of the variable.
+    '''
+
+    view_class = ObjectProperty(VariableView)
+    '''The class in charge for displaying this variable.
+    Sub-classes should set this according to their needs.
     '''
 
     name = StringProperty()
@@ -57,8 +98,8 @@ class Variable(BoxLayout):
     '''
     
     value = ObjectProperty()
-    '''Return the native value for the variable. Default is text.
-    Sub-classes should implement this for different behaviors. 
+    '''The native value for this variable.
+    Sub-classes should redefine this property to set its type. 
     '''
 
     channel_in = ObjectProperty(None)
@@ -69,12 +110,6 @@ class Variable(BoxLayout):
     '''The output channel
     '''
 
-    def get_text_value(self):
-        return self.value_to_text(self.value)
-    text = AliasProperty(get_text_value)
-    '''A property to access the variable's value as text.
-    '''
-    
     def text_to_value(self, text):
         '''Return the native value for this variable by translating a textual input.
         It is used to receive input from the user.
@@ -102,18 +137,20 @@ class Variable(BoxLayout):
         data to output channels.
         '''
         raise NotImplementedError()
-        
+
     def __init__(self, **kwargs):
         super(Variable, self).__init__(**kwargs)
         
         self.name = self.name or create_default_name(self)
-        
+
         # Let the channels keep a reference to us
         if self.channel_in:
             self.channel_in.variable = self
             
         if self.channel_out:
             self.channel_out.variable = self
+            
+
             
     def user_entered_text(self, text):
         '''When the user sets the variable's value, act upon it and write it to the controller.
@@ -132,13 +169,38 @@ class Variable(BoxLayout):
         
         # Don't update the text while the user is editing
         if not self.user_is_editing:
-            self.value_display.text = self.text
+            self.value_display.text = self.value_to_text(self.value)
         
+
+class AnalogVariableView(VariableView):
+    '''An extension to the basic variable widget for an analog variable.
+    '''
+    
+    def __init__(self, **kwargs):
+        check_for_necessary_attributes(self, ['variable'], kwargs)
+        
+        # Set the sub-widgets
+        added_cls_dicts = [{'cls': ListItemNormalLabel,
+                            'kwargs': {'text': '[' + str(self.variable.lower_limit) + ',' + str(self.variable.upper_limit) + ']'} },
+                           {'cls': ListItemFloatInput,
+                            'kwargs': {} },
+                           {'cls': ListItemNormalLabel,
+                            'kwargs': {'text': self.variable.units} }
+                           ]
+        self.add_cls_dicts(added_cls_dicts, kwargs)
+        super(AnalogVariableView, self).__init__(**kwargs)
+
 
 class AnalogVariable(Variable):
     '''An analog variable
     '''
 
+    view_class = ObjectProperty(AnalogVariableView)
+
+    value = NumericProperty()
+    '''The native value for this variable is a number.
+    '''
+    
     upper_limit = NumericProperty()
     '''The upper limit this variable accepts
     '''
@@ -158,8 +220,9 @@ class AnalogVariable(Variable):
         return '{:2.2f}'.format(value)
     
     def __init__(self, **kwargs):
-        check_for_necessary_attributes(self, ['range', 'units'], kwargs)
         super(AnalogVariable, self).__init__(**kwargs)
+        
+        check_for_necessary_attributes(self, ['range', 'units'], kwargs)
         
         # Let the user define the limits as a range.
         self.upper_limit = self.range[1]
@@ -230,9 +293,10 @@ class AnalogVariableDurationInSeconds(Variable):
         return '{:02d}:{:02d}:{:06.3f}'.format(h, m, s)
 
     def __init__(self, **kwargs):
+        super(AnalogVariableDurationInSeconds, self).__init__(**kwargs)
+        
         if not 'value' in kwargs:
             kwargs['value'] = 0
-        super(AnalogVariableDurationInSeconds, self).__init__(**kwargs)
 
 
 class DigitalVariable(Variable):
@@ -255,8 +319,9 @@ class DigitalVariable(Variable):
         return self.options.index(value) / (len(self.options) - 1) * 100
         
     def __init__(self, **kwargs):
-        check_for_necessary_attributes(self, ['options'], kwargs)
         super(DigitalVariable, self).__init__(**kwargs)
+        
+        check_for_necessary_attributes(self, ['options'], kwargs)
         
 
 class DigitalVariableOnOff(DigitalVariable):
@@ -270,130 +335,3 @@ class DigitalVariableOnOff(DigitalVariable):
     def __init__(self, **kwargs):
         
         super(DigitalVariableOnOff, self).__init__(**kwargs)
-
-
-class FloatInput(TextInput):
-    '''A TextInput widget that allows only floating points numbers to be enterd.
-    '''
-
-    pattern = re.compile('[^0-9]')
-    
-    def insert_text(self, substring, from_undo=False):
-        '''Make sure text is inserted correctly into the allowed pattern
-        '''
-        pattern = self.pattern
-        if '.' in self.text:
-            s = re.sub(pattern, '', substring)
-        else:
-            s = '.'.join([re.sub(pattern, '', s) for s in substring.split('.', 1)])
-        return super(FloatInput, self).insert_text(s, from_undo=from_undo)
-    
-    
-class DurationInput(TextInput):
-    '''A TextInput widget that allows to input a duration of time.
-    The time is presented in the format: 00:00:00.000 (hours:minutes:seconds.milliseconds)
-    '''
-
-    pattern = re.compile('[^0-9]')
-    '''A pattern to match everything but digits
-    '''
-
-    total_seconds_digits = 2+2+2+3
-    '''The number of digits to display. 2+2+2+3 for hours+minutes+seconds+milliseconds.
-    '''
-    
-    last_text = StringProperty()
-    '''Remember the text before the current change
-    '''
-    
-    def cursor_advancement_in_real_text(self, cursor, digits_added):
-        '''Calculate the new position of the cursor after adding a number
-        of digits, considering the text format.
-        '''
-        separators_positions = [2,5,8]
-        for _ in range(digits_added):
-            # skip over separators
-            if cursor in separators_positions:
-                cursor += 1
-            
-            # advance cursor
-            cursor += 1
-        
-        if cursor in separators_positions:
-            cursor += 1
-                
-        return min(cursor, len(self.text)-1)
-    
-    def insert_text(self, substring, from_undo=False):
-        '''Make sure text is inserted correctly into the allowed pattern
-        The text should always have the form: '00:00:00.000'
-        '''
-
-        # Check if the user accidentally deleted some of the text
-        if len(self.text) != len(self.last_text):
-            cc, cr = self.cursor
-            self.text = self.last_text
-            self.cursor = (cc, cr)
-            return
-
-        # Only accept digits 
-        pattern = self.pattern
-        stripped_substring = re.sub(pattern, '', substring)
-        
-        # Replace the digits in the stripped text and check it doesn't contain too many digits
-        cc, cr = self.cursor
-        cc = self.cursor_advancement_in_real_text(cc, 0)
-        new_stripped_text = re.sub(pattern, '', self.text[:cc]) + stripped_substring + re.sub(pattern, '', self.text[cc:])[len(stripped_substring):]
-        new_stripped_text = new_stripped_text[:self.total_seconds_digits]
-        
-        # Format the text again for display
-        milliseconds = new_stripped_text[-3:]
-        new_stripped_text = new_stripped_text[:-3]
-            
-        new_formatted_text = ':'.join(re.findall('..', new_stripped_text))
-        if len(milliseconds):
-            new_formatted_text += '.' + milliseconds
-        
-        self.text = new_formatted_text
-        
-        # Set the cursor in the right place
-        cc = self.cursor_advancement_in_real_text(cc, len(stripped_substring))
-        self.cursor = (cc, cr)
-        
-        self.last_text = self.text 
-        
-    def do_backspace(self, from_undo=False, mode='bkspc'):
-        '''Disable backspace.
-        '''
-        pass
-    
-    def select_text(self, start, end):
-        '''Disable selection.
-        '''
-        pass
-    
-    
-class SpinnerWithOnChoiceEvent(Spinner):
-    '''A spinner with an additional event, that fires when the user chose an option.
-    This is necessary to differentiate between text changes done by the user and changes done programatically.
-    '''
-    
-    def __init__(self, **kwargs):
-        super(SpinnerWithOnChoiceEvent, self).__init__(**kwargs)
-
-        # Register the event        
-        self.register_event_type('on_choice')
-        
-    def _on_dropdown_select(self, instance, data, *largs):
-        '''Override this method to create the event.
-        '''
-        # Fire the event.
-        self.dispatch('on_choice', data)
-        
-        # Call the parent method
-        super(SpinnerWithOnChoiceEvent, self)._on_dropdown_select(instance, data, *largs)
-        
-    def on_choice(self, *args):
-        '''A default handler for the on_choice event
-        '''
-        pass

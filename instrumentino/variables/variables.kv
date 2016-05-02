@@ -1,14 +1,14 @@
 #:kivy 1.9
-<Variable>:
+<Variable_OLD>:
 	size_hint: 1,None
 	size: sp(100),sp(30) # the x size is just a dummy
-	Label:
+	ListItemNormalLabel:
 		text: root.name
 
 		
-<AnalogVariable>:
+<AnalogVariable_OLD>:
 	value_display: value_display_widget
-	Label:
+	ListItemNormalLabel:
 		text: '[' + str(root.lower_limit) + ',' + str(root.upper_limit) + ']'
 	FloatInput:
 		id: value_display_widget
@@ -16,11 +16,11 @@
 		on_focus: root.user_is_editing = self.focus
 		on_text_validate: root.user_entered_text(self.text)
 		disabled: root.channel_out == None and root.channel_in != None
-	Label:
+	ListItemNormalLabel:
 		text: root.units
 
 
-<AnalogVariableDurationInSeconds>:
+<AnalogVariableDurationInSeconds_OLD>:
 	value_display: value_display_widget
 	DurationInput:
 		id: value_display_widget
@@ -32,7 +32,7 @@
 		last_text: root.text
 
 		
-<DigitalVariable>:
+<DigitalVariable_OLD>:
 	value_display: value_display_widget
 	SpinnerWithOnChoiceEvent:
 		id: value_display_widget

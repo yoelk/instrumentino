@@ -175,7 +175,8 @@ class DataChannelIn(DataChannel):
         data_series.extend(new_data_points)
         
         # Notify the variable that new data has arrived
-        self.variable.new_data_arrived(new_data_points[-1])
+        if self.variable:
+            self.variable.new_data_arrived(new_data_points[-1])
         
     def get_graph_series(self, start_timestamp, end_timestamp, sampling_rate):
         '''Return a list of (x,y) data, x being the timestamp and y being the corresponding datapoints. 
