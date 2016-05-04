@@ -90,18 +90,4 @@
 	group: 'view choosers'
 	allow_no_selection: False
     text: root.view_name
-    on_state: app.top.screen_manager.update_screens(root.name, self.state)    	
-
-    
-##########
-# List widgets
-##########
-<ListItemSingleLineTextInput>:
-	multiline: False
-
-<ListItemFloatInput>:
-	id: value_display_widget
-	multiline: False
-	on_focus: self.parent.variable.user_is_editing = self.focus
-	on_text_validate: self.parent.variable.user_entered_text(self.text)
-	disabled: self.parent == None or (self.parent.variable.channel_out == None and self.parent.variable.channel_in != None)
+    on_state: app.top.screen_manager.update_screens(root.name, self.state)

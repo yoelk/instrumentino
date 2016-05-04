@@ -40,7 +40,8 @@ from kivy.event import EventDispatcher
 from kivy.uix.listview import CompositeListItem
 from instrumentino.cfg import *
 from instrumentino.screens.list_widgets import CompositeListItemMember, ListItemNormalLabel,\
-    ListItemFloatInput, SubclassedCompositeListItem
+    ListItemVariableFloatInput, SubclassedCompositeListItem, ListItemSpinnerWithOnChoiceEvent,\
+    ListItemVariableDurationInput, ListItemVariableSpinnerWithOnChoiceEvent
 
 class VariableView(CompositeListItemMember, SubclassedCompositeListItem):
     '''A widget for a basic variable.
@@ -86,6 +87,10 @@ class Variable(EventDispatcher):
     view_class = ObjectProperty(VariableView)
     '''The class in charge for displaying this variable.
     Sub-classes should set this according to their needs.
+    '''
+
+    value_display_widget = ObjectProperty()
+    '''The widget that displays the variable's value
     '''
 
     name = StringProperty()
@@ -168,8 +173,8 @@ class Variable(EventDispatcher):
         self.value = self.percentage_to_value(percentage)
         
         # Don't update the text while the user is editing
-        if not self.user_is_editing:
-            self.value_display.text = self.value_to_text(self.value)
+        if not self.user_is_editing and self.value_display_widget:
+            self.value_display_widget.text = self.value_to_text(self.value)
         
 
 class AnalogVariableView(VariableView):
@@ -182,8 +187,8 @@ class AnalogVariableView(VariableView):
         # Set the sub-widgets
         added_cls_dicts = [{'cls': ListItemNormalLabel,
                             'kwargs': {'text': '[' + str(self.variable.lower_limit) + ',' + str(self.variable.upper_limit) + ']'} },
-                           {'cls': ListItemFloatInput,
-                            'kwargs': {} },
+                           {'cls': ListItemVariableFloatInput,
+                            'kwargs': {'variable': self.variable} },
                            {'cls': ListItemNormalLabel,
                             'kwargs': {'text': self.variable.units} }
                            ]
@@ -263,10 +268,27 @@ class AnalogVariablePercentage(AnalogVariableUnipolar):
         super(AnalogVariablePercentage, self).__init__(**kwargs)
         
         
+class AnalogVariableDurationInSecondsView(VariableView):
+    '''An extension to the basic variable widget for an analog variable.
+    '''
+    
+    def __init__(self, **kwargs):
+        check_for_necessary_attributes(self, ['variable'], kwargs)
+        
+        # Set the sub-widgets
+        added_cls_dicts = [{'cls': ListItemVariableDurationInput,
+                            'kwargs': {'variable': self.variable} },
+                           ]
+        self.add_cls_dicts(added_cls_dicts, kwargs)
+        super(AnalogVariableDurationInSecondsView, self).__init__(**kwargs)
+
+
 class AnalogVariableDurationInSeconds(Variable):
     '''A variable that represents a duration of time, measured in seconds. 
     '''
     
+    view_class = ObjectProperty(AnalogVariableDurationInSecondsView)
+        
     pattern = re.compile('(..):(..):(.*)')
     '''The time is presented in the format: 00:00:00.000 (hours:minutes:seconds.milliseconds).
     '''
@@ -299,9 +321,26 @@ class AnalogVariableDurationInSeconds(Variable):
             kwargs['value'] = 0
 
 
+class DigitalVariableView(VariableView):
+    '''An extension to the basic variable widget for a digital variable.
+    '''
+    
+    def __init__(self, **kwargs):
+        check_for_necessary_attributes(self, ['variable'], kwargs)
+        
+        # Set the sub-widgets
+        added_cls_dicts = [{'cls': ListItemVariableSpinnerWithOnChoiceEvent,
+                            'kwargs': {'variable': self.variable} }
+                           ]
+        self.add_cls_dicts(added_cls_dicts, kwargs)
+        super(DigitalVariableView, self).__init__(**kwargs)
+
+
 class DigitalVariable(Variable):
     '''A digital variable
     '''
+
+    view_class = ObjectProperty(DigitalVariableView)
 
     options = ListProperty()
     '''The list of possible values, ordered from lowest to highest.

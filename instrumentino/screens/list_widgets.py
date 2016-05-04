@@ -1,17 +1,29 @@
 import re
-from kivy.properties import StringProperty, ListProperty, NumericProperty, DictProperty
-from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
-from kivy.app import App
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.tabbedpanel import TabbedPanel
+from kivy.properties import StringProperty, ObjectProperty
 from kivy.event import EventDispatcher
-from instrumentino.cfg import *
-from kivy.uix.listview import ListItemButton, ListView, CompositeListItem,\
+from kivy.uix.listview import CompositeListItem,\
     SelectableView, ListItemReprMixin
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner
-from instrumentino.libs.multichoicetogglebutton import MultichoiceToggleButton
+
+class VariableValueDisplayWidget(EventDispatcher):
+    '''A base-class for widgets that are used for displaying a variable's value.
+    '''
+    
+    variable = ObjectProperty()
+    '''The variable for which this widget is used.
+    '''
+    
+    def __init__(self, **kwargs):
+        super(VariableValueDisplayWidget, self).__init__(**kwargs)
+        
+        # Connect to the variable
+        self.variable.value_display_widget = self
+        
+        # disable user input if needed
+        self.disabled = (self.variable.channel_out == None and self.variable.channel_in != None)
+
 
 class SubclassedCompositeListItem(CompositeListItem):
     '''This class extends CompositeListItem to add functionality for cases
@@ -62,12 +74,26 @@ class CompositeListItemMemberWithSelection(ListItemReprMixin, CompositeListItemM
         return super(CompositeListItemMemberWithSelection, self).on_touch_down(touch)
 
 
-class ListItemSingleLineTextInput(CompositeListItemMember, TextInput):
+class ListItemVariableSingleLineTextInput(VariableValueDisplayWidget, CompositeListItemMember, TextInput):
     '''A single line text input for usage in a composite list item.
     '''
 
     def __init__(self, **kwargs):
-        super(ListItemSingleLineTextInput, self).__init__(**kwargs)
+        super(ListItemVariableSingleLineTextInput, self).__init__(**kwargs)
+        
+        self.multiline = False
+        self.bind(focus=self.on_user_focus)
+        self.bind(on_text_validate=self.on_user_input)
+
+    def on_user_focus(self, instance, value):
+        '''Tell the variable the user is editing
+        '''
+        self.variable.user_is_editing = value
+
+    def on_user_input(self, instance):
+        '''Tell the variable the user has entered text
+        '''
+        self.variable.user_entered_text(self.text)
 
 
 class ListItemNormalLabel(CompositeListItemMember, Label):
@@ -78,19 +104,13 @@ class ListItemNormalLabel(CompositeListItemMember, Label):
         super(ListItemNormalLabel, self).__init__(**kwargs)
 
 
-class ListItemSpinner(CompositeListItemMember, SelectableView, Spinner):
-    '''A spinner for usage in a composite list item.
-    '''
-
-    def __init__(self, **kwargs):
-        super(ListItemSpinner, self).__init__(**kwargs)
-        
-
-class ListItemFloatInput(CompositeListItemMember, TextInput):
+class ListItemVariableFloatInput(ListItemVariableSingleLineTextInput):
     '''A TextInput widget that allows only floating points numbers to be enterd.
     '''
 
     pattern = re.compile('[^0-9]')
+    '''A regular expression pattern that helps with filtering user input
+    '''
     
     def insert_text(self, substring, from_undo=False):
         '''Make sure text is inserted correctly into the allowed pattern
@@ -100,10 +120,10 @@ class ListItemFloatInput(CompositeListItemMember, TextInput):
             s = re.sub(pattern, '', substring)
         else:
             s = '.'.join([re.sub(pattern, '', s) for s in substring.split('.', 1)])
-        return super(ListItemFloatInput, self).insert_text(s, from_undo=from_undo)
+        return super(ListItemVariableFloatInput, self).insert_text(s, from_undo=from_undo)
     
-    
-class DurationInput(TextInput):
+
+class ListItemVariableDurationInput(ListItemVariableSingleLineTextInput):
     '''A TextInput widget that allows to input a duration of time.
     The time is presented in the format: 00:00:00.000 (hours:minutes:seconds.milliseconds)
     '''
@@ -186,14 +206,13 @@ class DurationInput(TextInput):
         '''
         pass
     
-    
-class SpinnerWithOnChoiceEvent(Spinner):
+class ListItemSpinnerWithOnChoiceEvent(CompositeListItemMember, SelectableView, Spinner):
     '''A spinner with an additional event, that fires when the user chose an option.
     This is necessary to differentiate between text changes done by the user and changes done programatically.
     '''
     
     def __init__(self, **kwargs):
-        super(SpinnerWithOnChoiceEvent, self).__init__(**kwargs)
+        super(ListItemSpinnerWithOnChoiceEvent, self).__init__(**kwargs)
 
         # Register the event        
         self.register_event_type('on_choice')
@@ -205,9 +224,33 @@ class SpinnerWithOnChoiceEvent(Spinner):
         self.dispatch('on_choice', data)
         
         # Call the parent method
-        super(SpinnerWithOnChoiceEvent, self)._on_dropdown_select(instance, data, *largs)
+        super(ListItemSpinnerWithOnChoiceEvent, self)._on_dropdown_select(instance, data, *largs)
         
     def on_choice(self, *args):
         '''A default handler for the on_choice event
         '''
         pass
+
+    
+class ListItemVariableSpinnerWithOnChoiceEvent(VariableValueDisplayWidget, ListItemSpinnerWithOnChoiceEvent):
+    '''A spinner with a choice event that is used for a variable's value display
+    '''
+    
+    def __init__(self, **kwargs):
+        super(ListItemVariableSpinnerWithOnChoiceEvent, self).__init__(**kwargs)
+        
+        self.text = self.variable.options[0]
+        self.values = self.variable.options
+        
+        self.bind(on_is_open=self.on_user_open)
+        self.bind(on_choice=self.on_user_choice)
+        
+    def on_user_open(self, instance, value):
+        '''Tell the variable the user is editing
+        '''
+        self.variable.user_is_editing = value
+        
+    def on_user_choice(self, instance, value):
+        '''Tell the variable the user has entered text
+        '''
+        self.variable.user_entered_text(value)

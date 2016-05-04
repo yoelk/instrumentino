@@ -44,7 +44,7 @@ from kivy.uix.textinput import TextInput
 from instrumentino.cfg import *
 from instrumentino.screens import MyView
 from instrumentino.screens.list_widgets import CompositeListItemMember,\
-    ListItemNormalLabel, ListItemSpinner
+    ListItemNormalLabel, ListItemSpinnerWithOnChoiceEvent
 from instrumentino.variables import Variable, AnalogVariablePercentage,\
     AnalogVariableView, VariablesListView
 from kivy.uix.listview import CompositeListItem, ListItemButton, ListView
@@ -65,9 +65,10 @@ class AutomationItemView(CompositeListItemMember, CompositeListItem):
         # Set the sub-widgets
         cls_dicts = [{'cls': ListItemButton,
                       'kwargs': {'text': '{}'.format(index+1)} },
-                     {'cls': ListItemSpinner,
+                     {'cls': ListItemSpinnerWithOnChoiceEvent,
                       'kwargs': {'values': [c().name for c in data.action_classes],
-                                 'text': data.chosen_action.name} },
+                                 'text': data.chosen_action.name,
+                                 'on_choice': self.on_user_choice} },#TODO: act upon the user's choice
                     {'cls': VariablesListView,
                      'kwargs': {'variables': data.chosen_action.parameters,
                                 'text':''}
@@ -76,6 +77,10 @@ class AutomationItemView(CompositeListItemMember, CompositeListItem):
         kwargs['cls_dicts']=cls_dicts
         super(AutomationItemView, self).__init__(**kwargs)
 
+    def on_user_choice(self, instance, value):
+        '''The user chose an option in the spinner
+        '''
+        pass        
 
 class AutomationItem(EventDispatcher):
     '''A class for holding the data of an automation item
