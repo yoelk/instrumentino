@@ -23,6 +23,8 @@ class VariableValueDisplayWidget(EventDispatcher):
         
         # disable user input if needed
         self.disabled = (self.variable.channel_out == None and self.variable.channel_in != None)
+        
+        self.text = self.variable.value_to_text(self.variable.value)
 
 
 class SubclassedCompositeListItem(CompositeListItem):
@@ -121,7 +123,7 @@ class ListItemVariableFloatInput(ListItemVariableSingleLineTextInput):
         else:
             s = '.'.join([re.sub(pattern, '', s) for s in substring.split('.', 1)])
         return super(ListItemVariableFloatInput, self).insert_text(s, from_undo=from_undo)
-    
+
 
 class ListItemVariableDurationInput(ListItemVariableSingleLineTextInput):
     '''A TextInput widget that allows to input a duration of time.
@@ -140,6 +142,10 @@ class ListItemVariableDurationInput(ListItemVariableSingleLineTextInput):
     '''Remember the text before the current change
     '''
     
+    def __init__(self, **kwargs):
+        super(ListItemVariableDurationInput, self).__init__(**kwargs)
+        self.last_text = self.text
+ 
     def cursor_advancement_in_real_text(self, cursor, digits_added):
         '''Calculate the new position of the cursor after adding a number
         of digits, considering the text format.
@@ -211,12 +217,16 @@ class ListItemSpinnerWithOnChoiceEvent(CompositeListItemMember, SelectableView, 
     This is necessary to differentiate between text changes done by the user and changes done programatically.
     '''
     
+    on_choice_callback = ObjectProperty()
+    '''Call this function when on_choice is dispatched.
+    '''
+    
     def __init__(self, **kwargs):
         super(ListItemSpinnerWithOnChoiceEvent, self).__init__(**kwargs)
-
+        
         # Register the event        
         self.register_event_type('on_choice')
-        
+
     def _on_dropdown_select(self, instance, data, *largs):
         '''Override this method to create the event.
         '''
@@ -226,10 +236,12 @@ class ListItemSpinnerWithOnChoiceEvent(CompositeListItemMember, SelectableView, 
         # Call the parent method
         super(ListItemSpinnerWithOnChoiceEvent, self)._on_dropdown_select(instance, data, *largs)
         
-    def on_choice(self, *args):
+    def on_choice(self, text):
         '''A default handler for the on_choice event
         '''
-        pass
+        if self.on_choice_callback:
+            # Send the both the new text and the old text 
+            self.on_choice_callback(text, self.text)
 
     
 class ListItemVariableSpinnerWithOnChoiceEvent(VariableValueDisplayWidget, ListItemSpinnerWithOnChoiceEvent):
@@ -242,13 +254,13 @@ class ListItemVariableSpinnerWithOnChoiceEvent(VariableValueDisplayWidget, ListI
         self.text = self.variable.options[0]
         self.values = self.variable.options
         
-        self.bind(on_is_open=self.on_user_open)
         self.bind(on_choice=self.on_user_choice)
         
-    def on_user_open(self, instance, value):
+    def on_is_open(self, instance, value):
         '''Tell the variable the user is editing
         '''
         self.variable.user_is_editing = value
+        super(ListItemVariableSpinnerWithOnChoiceEvent, self).on_is_open(instance, value)
         
     def on_user_choice(self, instance, value):
         '''Tell the variable the user has entered text

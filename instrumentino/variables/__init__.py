@@ -288,6 +288,10 @@ class AnalogVariableDurationInSeconds(Variable):
     '''
     
     view_class = ObjectProperty(AnalogVariableDurationInSecondsView)
+
+    value = NumericProperty()
+    '''The native value for this variable is a number (the number of seconds).
+    '''
         
     pattern = re.compile('(..):(..):(.*)')
     '''The time is presented in the format: 00:00:00.000 (hours:minutes:seconds.milliseconds).

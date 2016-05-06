@@ -30,7 +30,7 @@ implemented by sub-classes, such as :class:`ActionRunFile`.
 '''
 
 from __future__ import division
-from kivy.properties import StringProperty, ObjectProperty, BooleanProperty, AliasProperty
+from kivy.properties import StringProperty, ObjectProperty, BooleanProperty, AliasProperty, NumericProperty
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.properties import ListProperty
 from kivy.uix.widget import Widget
@@ -46,29 +46,38 @@ from instrumentino.screens import MyView
 from instrumentino.screens.list_widgets import CompositeListItemMember,\
     ListItemNormalLabel, ListItemSpinnerWithOnChoiceEvent
 from instrumentino.variables import Variable, AnalogVariablePercentage,\
-    AnalogVariableView, VariablesListView
+    AnalogVariableView, VariablesListView, AnalogVariableDurationInSeconds
 from kivy.uix.listview import CompositeListItem, ListItemButton, ListView
 
 class AutomationItemView(CompositeListItemMember, CompositeListItem):
     '''A widget for an automation item
     '''
     
+    list = ObjectProperty()
+    '''The list in which this item resides
+    '''
+    
+    index = NumericProperty()
+    '''The index for this item
+    '''
+    
     def __init__(self, **kwargs):
-        index = kwargs['index']
+        self.index = kwargs['index']
         data = kwargs['data']
+        self.list = kwargs['list']
         
         #TODO: I don't think it would work well if we have two action with the same name. Check and get it to work. 
         
         # Set the height according to the number of parameters we need to show
-        kwargs['height'] = kwargs['height'] * len(data.chosen_action.parameters)
+        kwargs['height'] = kwargs['height'] * max(1, len(data.chosen_action.parameters))
         
         # Set the sub-widgets
         cls_dicts = [{'cls': ListItemButton,
-                      'kwargs': {'text': '{}'.format(index+1)} },
+                      'kwargs': {'text': '{}'.format(self.index+1)} },
                      {'cls': ListItemSpinnerWithOnChoiceEvent,
                       'kwargs': {'values': [c().name for c in data.action_classes],
                                  'text': data.chosen_action.name,
-                                 'on_choice': self.on_user_choice} },#TODO: act upon the user's choice
+                                 'on_choice_callback': self.on_user_choice} },#TODO: act upon the user's choice
                     {'cls': VariablesListView,
                      'kwargs': {'variables': data.chosen_action.parameters,
                                 'text':''}
@@ -77,10 +86,11 @@ class AutomationItemView(CompositeListItemMember, CompositeListItem):
         kwargs['cls_dicts']=cls_dicts
         super(AutomationItemView, self).__init__(**kwargs)
 
-    def on_user_choice(self, instance, value):
+    def on_user_choice(self, text, last_text):
         '''The user chose an option in the spinner
         '''
-        pass        
+        if text != last_text:
+            self.list.refresh_item(self.index, text)
 
 class AutomationItem(EventDispatcher):
     '''A class for holding the data of an automation item
@@ -111,6 +121,7 @@ class AutomationListView(ListView):
     
     def __init__(self, **kwargs):
         args_converter = lambda index, data: {'data':data,
+                                              'list':self,
                                               'height': 30,
                                               'size_hint_y': None,}
 
@@ -121,6 +132,34 @@ class AutomationListView(ListView):
                                         cls=AutomationItemView)
         
         super(AutomationListView, self).__init__(**kwargs)
+        
+    def add_item(self):
+        '''Add an item to the list
+        '''
+        self.adapter.data.append(AutomationItem(action_classes=self.action_classes))
+        self._trigger_reset_populate()
+    
+    def remove_item(self):
+        '''Remove selected items from the list
+        '''
+        indices = set(item.parent.index for item in self.adapter.selection)
+        new_list = [item for i, item in enumerate(self.adapter.data) if i not in indices]
+        self.adapter.data = new_list
+        
+        self._trigger_reset_populate()
+    
+    def run_all(self):
+        '''Run all items in the list
+        '''
+        for item in self.adapter.data:
+            item.chosen_action.on_start()            
+
+    def refresh_item(self, index, chosen_action_name):
+        '''The user chose a new action in one of the list items so this item needs to be rebuilt
+        '''
+        chosen_action_class = [cls for cls in self.action_classes if cls().name == chosen_action_name][0]
+        self.adapter.data[index] = AutomationItem(action_classes=self.action_classes, chosen_action=chosen_action_class())
+        self._trigger_reset_populate()
 
 
 class MyAutomationView(BoxLayout, MyView):
@@ -136,27 +175,6 @@ class MyAutomationView(BoxLayout, MyView):
         
         super(MyAutomationView, self).__init__(**kwargs)
         
-    def add_item(self):
-        '''Add an item to the list
-        '''
-        self.run_items_list.adapter.data.append(AutomationItem(action_classes=self.action_classes))
-        self.run_items_list._trigger_reset_populate()
-    
-    def remove_item(self):
-        '''Remove selected items from the list
-        '''
-        indices = set(item.parent.index for item in self.run_items_list.adapter.selection)
-        new_list = [i for j, i in enumerate(self.run_items_list.adapter.data) if j not in indices]
-        self.run_items_list.adapter.data = new_list
-        
-        self.run_items_list._trigger_reset_populate()
-    
-    def run_all(self):
-        '''Run all items in the list
-        '''
-        for item in self.run_items_list.adapter.data:
-            item.chosen_action.on_start()
-            
 
 class Action(EventDispatcher):
     '''An action to be performed in the system
@@ -189,11 +207,14 @@ class Action(EventDispatcher):
         super(Action, self).__init__(**kwargs)
         
 
-class ActionRunFile(EventDispatcher):
+class ActionRunFile(Action):
     '''An action that runs the actions stored in an action-list file
     '''
     
     name = 'Run file'
+    
+#     path = 
+#TODO: add a path variable here
 
     def on_start(self):
         '''Load an action-list file and run it
