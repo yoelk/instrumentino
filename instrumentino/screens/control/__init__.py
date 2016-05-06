@@ -1,23 +1,21 @@
-from kivy.uix.gridlayout import GridLayout
 from kivy.properties import ListProperty
 from instrumentino.screens import MyView
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.listview import ListView
+from kivy.adapters.listadapter import ListAdapter
+from instrumentino.components import Component
+from instrumentino.cfg import check_for_necessary_attributes
 
-class MyControlView(GridLayout, MyView):
+class MyControlView(BoxLayout, MyView):
     '''The Control view allows the user to manually control and monitor all of the system's components individually
-    '''
-    
-    components = ListProperty()
-    '''The hardware components to be controlled
     '''
     
     def __init__(self, **kwargs):
         super(MyControlView, self).__init__(**kwargs)
         
-        # Populate components
+        check_for_necessary_attributes(self, ['components'], kwargs)
+        
+        # Add components
         for comp in self.components:
-            self.add_widget(comp)
-            
-        # Add a place holder in case the components can't fill the screen vertically
-        # This is nicer than stretching the component widgets vertically
-        self.add_widget(BoxLayout())
+            self.components_list.adapter.data.append(comp)
+        self.components_list._trigger_reset_populate()

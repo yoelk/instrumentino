@@ -1,12 +1,17 @@
+import re
 from kivy.properties import StringProperty, ListProperty, NumericProperty, DictProperty
 from kivy.uix.screenmanager import Screen, ScreenManager, FadeTransition
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.tabbedpanel import TabbedPanel
-from instrumentino.libs.multichoicetogglebutton import MultichoiceToggleButton
 from kivy.event import EventDispatcher
 from instrumentino.cfg import *
+from kivy.uix.listview import ListItemButton, ListView, CompositeListItem,\
+    SelectableView, ListItemReprMixin
+from kivy.uix.textinput import TextInput
+from kivy.uix.label import Label
+from kivy.uix.spinner import Spinner
+from instrumentino.libs.multichoicetogglebutton import MultichoiceToggleButton
 
 class MyScreen(Screen):
     ''' A custom screen that allows to dynamically remove and add views

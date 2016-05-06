@@ -1,21 +1,22 @@
 <MyAutomationView>:
     orientation: 'vertical'
-    run_items: run_items_list
+    run_items_list: run_items_list_id
     
     BoxLayout:
-	    AutomationList:
-	        id: run_items_list
+	    AutomationListView:
+	        id: run_items_list_id
+	        action_classes: root.action_classes
     BoxLayout:
         size_hint_y: .2
         Button:
             text: 'Add'
-            on_press: root.add_item()
+            on_press: run_items_list_id.add_item()
         Button:
             text: 'Remove'
-            on_press: root.remove_item()
+            on_press: run_items_list_id.remove_item()
         Button:
             text: 'Run'
-            on_press: root.run_all()
+            on_press: run_items_list_id.run_all()
     BoxLayout:
         size_hint_y: .2
         Button:

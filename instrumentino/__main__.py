@@ -20,8 +20,9 @@ class Action1(Action):
 
     name = 'Example'
     
-    var1 = AnalogVariablePercentage()
-    '''An example variable
+    var1 = AnalogVariablePercentage(name='var1')
+    var2 = AnalogVariablePercentage(name='var2')
+    '''Example variables
     '''
 
     def on_start(self):

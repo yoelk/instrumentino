@@ -1,8 +1,10 @@
 from __future__ import division
+from __builtin__ import list
 
 DEBUG_AUTO_CONNECT = {'connect': True, 'type': 'simulation', 'address': ''}
 # DEBUG_AUTO_CONNECT = {'connect': True, 'type': 'serial', 'address': '/dev/tty.usbserial-A400Y5SF'}
 import gc
+import collections
 DEBUG_COMM_STABILITY = False
 DEBUG_RX = False
 DEBUG_TX = False
@@ -29,22 +31,30 @@ def check_for_necessary_attributes(obj, attributes_list, kwargs={}):
             # A necessary attribute is missing or empty
             raise MissingNecessaryAttributeError(attr_name)
 
-def get_attributes_of_type(obj, attribute_type, kwargs={}):
+def get_attributes_of_type(obj, attribute_type, kwargs={}, search_in_lists=True):
     '''Return a list of objects of a specific type. The objects might already exist
     in the object or they've been passed to it through kwargs. 
     '''
     matching_attributes = []
     
     # First go over the kwargs
-    for key, value in kwargs.items():
-        if isinstance(value, attribute_type):
-            matching_attributes.append(value)
+    search_list = kwargs.values()
     
     # Now go over the existing attributes, but don't add items that we already added from kwargs
-    for attr_name in [n for n in dir(obj) if n not in kwargs.keys()]:
-        attr = getattr(obj, attr_name)
+    search_list.extend([getattr(obj, attr_name) for attr_name in dir(obj) if attr_name not in kwargs.keys()])
+
+    for attr in search_list:
         if isinstance(attr, attribute_type):
             matching_attributes.append(attr)
+            continue
+        
+        # Check if fitting attributes are saved in list attributes (or other iterables like tuples etc.)
+        if search_in_lists and (isinstance(attr, list) or
+                                isinstance(attr, tuple) or
+                                isinstance(attr, set)):
+            for sub_attr in attr:
+                if isinstance(sub_attr, attribute_type) and not sub_attr in matching_attributes:
+                    matching_attributes.append(sub_attr)
             
     return matching_attributes
 
