@@ -4,7 +4,15 @@ from instrumentino.controllers.arduino import SysCompArduino,\
 __author__ = 'yoelk'
 
 class PewatronPressureSensor(SysCompArduino):
-    def __init__(self, name, rangeP, pinInP):
+    def __init__(self, name, rangeP, units, pinInP, pinInVoltsMax, pinInVoltsMin):
         SysCompArduino.__init__(self, name,
-                                (SysVarAnalogArduinoUnipolar('P', rangeP, pinInP, None, name, 'Pressure', 'mbar', pinInVoltsMax=4.5, pinInVoltsMin=0.5),),
+                                (SysVarAnalogArduinoUnipolar(name='P',
+                                                             range=rangeP,
+                                                             pinAnalIn=pinInP,
+                                                             pinPwmOut=None,
+                                                             compName=name,
+                                                             helpLine='Pressure',
+                                                             units=units,
+                                                             pinInVoltsMax=pinInVoltsMax,
+                                                             pinInVoltsMin=pinInVoltsMin),),
                                 'monitor pressure')
