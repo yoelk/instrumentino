@@ -1,7 +1,4 @@
-##########
-# BEGIN: FileChooser
-##########
-<FileChooserLoadDialog>:     # FileChooser file Load
+<FileChooserLoadDialog>:
     title: 'Load file'
     filechooser_widget: filechooser
     BoxLayout:
@@ -10,18 +7,18 @@
         orientation: "vertical"
         FileChooserListView:
             id: filechooser
+            on_submit: root.parent.on_file_choice(args[1][0])
         BoxLayout:
             size_hint_y: None
             height: 30
             Button:
                 text: "Cancel"
                 on_release: root.cancel()
-
             Button:
                 text: "Load"
                 on_release: root.load(filechooser.path, filechooser.selection)
 
-<FileChooserSaveDialog>:     # FileChooser file Save
+<FileChooserSaveDialog>:
     title: 'Save file'
     filechooser_widget: filechooser
     text_input: text_input
@@ -48,9 +45,6 @@
             Button:
                 text: "Save"
                 on_release: root.save(filechooser.path, text_input.text)
-##########
-# END: FileChooser
-##########
 
 <ExitConfirmation>:
     title: 'Exit?'

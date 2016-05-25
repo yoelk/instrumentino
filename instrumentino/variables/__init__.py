@@ -41,7 +41,8 @@ from kivy.uix.listview import CompositeListItem
 from instrumentino.cfg import *
 from instrumentino.screens.list_widgets import CompositeListItemMember, ListItemNormalLabel,\
     ListItemVariableFloatInput, SubclassedCompositeListItem, ListItemSpinnerWithOnChoiceEvent,\
-    ListItemVariableDurationInput, ListItemVariableSpinnerWithOnChoiceEvent
+    ListItemVariableDurationInput, ListItemVariableSpinnerWithOnChoiceEvent,\
+    ListItemVariablePathInput
 
 class VariableView(CompositeListItemMember, SubclassedCompositeListItem):
     '''A widget for a basic variable.
@@ -378,3 +379,48 @@ class DigitalVariableOnOff(DigitalVariable):
     def __init__(self, **kwargs):
         
         super(DigitalVariableOnOff, self).__init__(**kwargs)
+        
+
+class PathVariableView(VariableView):
+    '''An extension to the basic variable widget for a path variable.
+    '''
+    
+    def __init__(self, **kwargs):
+        check_for_necessary_attributes(self, ['variable'], kwargs)
+        
+        # Set the sub-widgets
+        added_cls_dicts = [{'cls': ListItemVariablePathInput,
+                            'kwargs': {'variable': self.variable} },
+                           ]
+        self.add_cls_dicts(added_cls_dicts, kwargs)
+        super(PathVariableView, self).__init__(**kwargs)
+
+
+class PathVariable(Variable):
+    '''A path variable
+    '''
+
+    view_class = ObjectProperty(PathVariableView)
+
+    value = StringProperty()
+    '''The native value for this variable is a string.
+    '''
+    
+    name = 'path'
+
+    base_path = StringProperty('/')
+    '''The path to start from 
+    '''
+    
+    file_filters = ListProperty([])
+    '''The files we're interested in
+    '''
+
+    def value_to_text(self, value):
+        '''Return the textual representation of the variable's value.
+        It is used to display the variable's value on the screen.
+        '''
+        return str(value)
+    
+    def __init__(self, **kwargs):
+        super(PathVariable, self).__init__(**kwargs)

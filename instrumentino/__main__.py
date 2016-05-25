@@ -1,7 +1,8 @@
 from __future__ import division
 from instrumentino import InstrumentinoApp
 from instrumentino.components import AnalogVariables, DigitalVariables
-from instrumentino.variables import AnalogVariablePercentage
+from instrumentino.variables import AnalogVariablePercentage,\
+    AnalogVariableDurationInSeconds
 from instrumentino.controllers.arduino import Arduino, ArduinoChannelIn_AnalolgInPin,\
     ArduinoChannelInOut_DigitalPin
 from instrumentino.screens.automation import Action
@@ -21,7 +22,7 @@ class Action1(Action):
     name = 'Example'
     
     var1 = AnalogVariablePercentage(name='var1')
-    var2 = AnalogVariablePercentage(name='var2')
+    var2 = AnalogVariableDurationInSeconds(name='var2')
     '''Example variables
     '''
 

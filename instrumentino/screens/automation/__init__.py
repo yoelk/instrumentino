@@ -25,7 +25,7 @@ parameters).
 :class:`Action` represents a runnable action, with its parameters. It has a
 on_start method that holds the code that should be run for that action, and
 a on_stop method, to be run when the user aborted the action. These are to be
-implemented by sub-classes, such as :class:`ActionRunFile`. 
+implemented by sub-classes, such as :class:`ActionRunSequenceFile`. 
 
 '''
 
@@ -46,7 +46,8 @@ from instrumentino.screens import MyView
 from instrumentino.screens.list_widgets import CompositeListItemMember,\
     ListItemNormalLabel, ListItemSpinnerWithOnChoiceEvent
 from instrumentino.variables import Variable, AnalogVariablePercentage,\
-    AnalogVariableView, VariablesListView, AnalogVariableDurationInSeconds
+    AnalogVariableView, VariablesListView, AnalogVariableDurationInSeconds,\
+    PathVariable
 from kivy.uix.listview import CompositeListItem, ListItemButton, ListView
 
 class AutomationItemView(CompositeListItemMember, CompositeListItem):
@@ -202,20 +203,25 @@ class Action(EventDispatcher):
         self.name = self.name or create_default_name(self, use_index=False)
         
         # Automatically populate the parameters' list by collecting all of the "Variable" instances we have.
-        self.parameters = get_attributes_of_type(self, Variable, kwargs)
+        self.parameters = get_instances_in_object(self, Variable, kwargs)
         
         super(Action, self).__init__(**kwargs)
         
 
-class ActionRunFile(Action):
-    '''An action that runs the actions stored in an action-list file
+class ActionRunSequenceFile(Action):
+    '''An action that runs the actions stored in an action-list file (called a sequence file)
     '''
     
     name = 'Run file'
     
-#     path = 
-#TODO: add a path variable here
+    path = PathVariable(file_filters=['*.seq'])
+    
+    def __init__(self, **kwargs):
+        super(ActionRunSequenceFile, self).__init__(**kwargs)
 
+        # Define the path variable. This can only be done when the app is running.
+        self.path.base_path=App.get_running_app().get_instrument_path()
+    
     def on_start(self):
         '''Load an action-list file and run it
         '''

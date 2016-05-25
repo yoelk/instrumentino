@@ -1,6 +1,6 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import StringProperty,ObjectProperty
+from kivy.properties import StringProperty, ObjectProperty, OptionProperty
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
@@ -13,12 +13,46 @@ from kivy.config import ConfigParser
 from os.path import dirname, join
 import os
 from kivy.app import App
+from instrumentino.cfg import check_for_necessary_attributes
+from kivy.uix.filechooser import FileChooserListView
+
+class FileChooserPopup(Popup):
+    '''A popup that shows a file chooser.
+    It can be used for file operations like loading/saving a file.
+    '''
+
+    file_operation =  OptionProperty('load', options=['load', 'save'])
+    '''The allowed file operations for this popup
+    '''
+    
+    file_chooser = ObjectProperty()
+    '''The file chooser widget
+    '''
+
+    def __init__(self, **kwargs):
+        # Act according to the desired file operation
+        check_for_necessary_attributes(self, ['file_operation'], kwargs)
+        if self.file_operation == 'load':
+            self.title = 'Load file'
+        elif self.file_operation == 'save':
+            self.title = 'Save file'
+            
+        # Add the content
+        self.file_chooser = FileChooserListView()
+        self.content = self.file_chooser
+        self.file_chooser.bind('on_submit', XXXXX)
+        
+        super(FileChooserPopup, self).__init__(**kwargs)
+        
 
 ############################
 # BEGIN: File Chooser
 # http://kivy.org/docs/api-kivy.uix.filechooser.html?highlight=loaddialog
 ############################
 class FileChooserLoadDialog(FloatLayout):
+    '''A dialog for loading a file
+    '''
+    
     load = ObjectProperty(None)
     cancel = ObjectProperty(None)
     
@@ -27,30 +61,44 @@ class FileChooserSaveDialog(FloatLayout):
     text_input = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
-class FileChooser (FloatLayout):
+class FileChooserPopup(FloatLayout):
     '''Allows selecting a file name on the filesystem to load or save
     '''
     loadfile = ObjectProperty(None)
     savefile = ObjectProperty(None)
     text_input = ObjectProperty(None)
 
+    file_operation_callback = ObjectProperty()
+    '''Call this function when a file is chosen for loading
+    '''
+    
     def dismiss_popup(self):
         self._popup.dismiss()
 
-    def show_load(self,dir,filter):
+    def show_load(self, dir, filters, file_operation_callback=None):
         
+        self.file_operation_callback = file_operation_callback
+            
         content = FileChooserLoadDialog(load=self.load, cancel=self.dismiss_popup)
         content.filechooser_widget.path=dir
-        content.filechooser_widget.filters=filter
+        content.filechooser_widget.filters=filters
         
         self._popup = Popup(title="Load file", content=content,
                             size_hint=(0.9, 0.9))
         self._popup.open()
 
-    def show_save(self,dir,filter):
+    def on_file_choice(self, chosen_file):
+        '''Called when the user chose a file (with double click)
+        '''
+        self.dismiss_popup()
+        print chosen_file
+        if self.file_operation_callback:
+            self.file_operation_callback(chosen_file)
+
+    def show_save(self, dir, filters):
         content = FileChooserSaveDialog(save=self.save, cancel=self.dismiss_popup)
         content.filechooser_widget.path=dir
-        content.filechooser_widget.filters=filter
+        content.filechooser_widget.filters=filters
         
         self._popup = Popup(title="Save file", content=content,
                             size_hint=(0.9, 0.9))

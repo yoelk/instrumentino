@@ -6,6 +6,7 @@ from kivy.uix.listview import CompositeListItem,\
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner
+from instrumentino.popups import FileChooserPopup
 
 class VariableValueDisplayWidget(EventDispatcher):
     '''A base-class for widgets that are used for displaying a variable's value.
@@ -123,6 +124,24 @@ class ListItemVariableFloatInput(ListItemVariableSingleLineTextInput):
         else:
             s = '.'.join([re.sub(pattern, '', s) for s in substring.split('.', 1)])
         return super(ListItemVariableFloatInput, self).insert_text(s, from_undo=from_undo)
+
+
+class ListItemVariablePathInput(ListItemVariableSingleLineTextInput):
+    '''A TextInput widget that allows the user to choose a path for file.
+    '''
+    
+    def __init__(self, **kwargs):
+        super(ListItemVariablePathInput, self).__init__(**kwargs)
+
+    def on_user_focus(self, instance, value):
+        super(ListItemVariablePathInput, self).on_user_focus(instance, value)
+        f = FileChooserPopup()
+        f.show_load(self.variable.base_path , self.variable.file_filters)
+        
+    def insert_text(self, substring, from_undo=False):
+        '''Don't allow to enter any text manually
+        '''
+        pass
 
 
 class ListItemVariableDurationInput(ListItemVariableSingleLineTextInput):

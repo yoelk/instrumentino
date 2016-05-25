@@ -74,7 +74,7 @@ class Component(BoxLayout):
         self.name = self.name or create_default_name(self)
 
         # Automatically populate the variables' list by collecting all of the Variable instances we have.
-        self.variables = get_attributes_of_type(self, Variable, kwargs)
+        self.variables = get_instances_in_object(self, Variable, kwargs)
                 
         super(Component, self).__init__(**kwargs)
         

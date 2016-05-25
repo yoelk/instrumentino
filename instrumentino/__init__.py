@@ -28,14 +28,14 @@ from kivy.uix.widget import Widget
 from kivy.garden.graph import Graph, MeshLinePlot
 from kivy.garden.navigationdrawer import NavigationDrawer
 
-from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooser,ExitConfirmation
+from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooserPopup,ExitConfirmation
 from instrumentino.communication import CommunicationTypesLoader
 from instrumentino.communication.serial_port import CommunicationPortSerial
 from instrumentino.communication.simulated_port import CommunicationPortSimulation
 from instrumentino.cfg import *
 from instrumentino.controllers import Controller
 from instrumentino.controllers.arduino import Arduino
-from instrumentino.screens.automation import ActionRunFile, MyAutomationView, Action
+from instrumentino.screens.automation import ActionRunSequenceFile, MyAutomationView, Action
 from instrumentino.components import Component
 from instrumentino.screens.control import MyControlView
 from instrumentino.screens.signal import MySignalView
@@ -68,7 +68,7 @@ class InstrumentinoApp(App):
     '''The classes of the actions that the system should perform
     '''
     
-    default_action_classes = ListProperty([ActionRunFile])
+    default_action_classes = ListProperty([ActionRunSequenceFile])
     '''Default action classes, that are valid for every instrument
     '''
     
@@ -97,14 +97,19 @@ class InstrumentinoApp(App):
         super(InstrumentinoApp, self).__init__(**kwargs)
         
         # Extract data from the instrument module
-        self.controllers = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Controller)]
+        self.controllers = get_instances_in_module(self.instrument_module, Controller)
         if not self.controllers: raise RuntimeError('At least one controller must be defined')
         
-        self.components = [o for o in sys.modules[self.instrument_module].__dict__.values() if isinstance(o, Component)]
-        
+        self.components = get_instances_in_module(self.instrument_module, Component)
+
         self.action_classes = [c for c in sys.modules[self.instrument_module].__dict__.values() if isclass(c) and issubclass(c, Action) and c is not Action]
         self.action_classes.extend(self.default_action_classes)
         
+    def get_instrument_path(self):
+        '''Return the path to the current instrument file
+        '''
+        return os.path.dirname(sys.modules[self.instrument_module].__file__)
+    
     def build(self):
         '''Build the screen.
         '''
@@ -253,11 +258,11 @@ class InstrumentinoApp(App):
 
     # BEGIN: Popups
     def OpenFileChooserLoad(self,dir,filter):
-        f = FileChooser()
+        f = FileChooserPopup()
         f.show_load(dir,filter)
         
     def OpenFileChooserSave(self,dir,filter):
-        f = FileChooser()
+        f = FileChooserPopup()
         f.show_save(dir,filter)
     
     def ShowHelp(self):
