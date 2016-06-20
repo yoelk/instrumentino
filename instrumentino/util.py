@@ -64,7 +64,7 @@ class SerialUtil():
                 for portname in self.enumerate_serial_ports():
                     ports.append(portname)
             elif os.name == 'posix':
-                ports = glob.glob('/dev/tty.*')
+                ports = glob.glob('/dev/tty*')
                 
             return ports
         
