@@ -323,9 +323,15 @@ class Arduino(InstrumentinoController):
         
     def I2cWrite(self, address, values):
         '''
-        Send a list of values over the I2C bus
+        Send a list of values (bytes) over the I2C bus
         '''
         self._sendData('I2cWrite %d %s'%(address, ' '.join(str(n) for n in values)), wait=True)
+    
+    def SpiWrite(self, cs_pin, values):
+        '''
+        Send a list of values (bytes) over the SPI bus
+        '''
+        self._sendData('SpiWrite %d %s'%(cs_pin, ' '.join(str(n) for n in values)), wait=True)
     
     def _sendData(self, txData, addLineBreak=True, lock=True, wait=False, log=False):
         '''
@@ -416,14 +422,6 @@ class SysVarDigitalArduino(SysVarDigital):
         self.lastSetState = state
         if self.pin != None:
             self.GetController().DigitalWrite(self.pin, self.stateToValue[state])
-
-class ArduinoI2cDac():
-    def __init__(self, dacBits, address):
-        self.maxVal = 2**dacBits-1
-        self.address = address
-
-    def WriteFraction(self, fraction, controller):
-        controller.I2cWrite(self.address, (0, self.maxVal * fraction,))
 
 class SysVarAnalogArduino(SysVarAnalog):
     '''

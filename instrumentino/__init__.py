@@ -1,4 +1,5 @@
 from __future__ import division
+from instrumentino.controllers.arduino.dac import DacSpiMCP4922, DacI2cMAX517
 __author__ = 'yoelk'
 
 import wx
@@ -385,6 +386,11 @@ class Instrument():
 # The second has a unipolar negative range (-5 to 0 V).
 # The third has a bipolar range (-5 to 5 V) while a digital pin sets the polarity.
 if __name__ == '__main__':
+    '''The SPI and I2C channels can only be used with the appropriate wiring.
+    If you have the right circuit, you can uncomment devices "spi_dac_channels" and "i2c_dac_channels"
+    in the system class below.
+    '''
+    
     '''
     *** System constants
     '''
@@ -393,7 +399,19 @@ if __name__ == '__main__':
     pinAnal_unipolarNegative = 1
     pinAnal_bipolar = 2
     pinDigi_polarity = 2
-            
+
+    # To use this, hook an MCP4922 to your Arduino's SPI lines and use pin 53 as chip-select
+    # Connect the DAC's outputs to pins 15 and 14
+    spi_dac1 = DacSpiMCP4922(53, 0)
+    spi_dac1_anal_in = 15
+    spi_dac2 = DacSpiMCP4922(53, 1)
+    spi_dac2_anal_in = 14
+
+    # To use this, hook a MAX517 to your Arduino's I2C lines and configure it to use address 0x2C
+    # Connect the DAC's output to pin 13 
+    i2c_dac = DacI2cMAX517(0x2C)
+    i2c_dac_anal_in = 13
+    
     '''
     *** System components
     '''
@@ -405,6 +423,13 @@ if __name__ == '__main__':
     def GetPolarityPositiveFunc():
         return polarityVariable.Get() == 'on'
     
+    spi_dac_channels = AnalogPins('SPI DAC channels',
+                                  (SysVarAnalogArduinoUnipolar('Ch1',[0,5],spi_dac1_anal_in,None, units='V', I2cDac=spi_dac1),
+                                   SysVarAnalogArduinoUnipolar('Ch2',[0,5],spi_dac2_anal_in,None, units='V', I2cDac=spi_dac2),))
+     
+    i2c_dac_channels = AnalogPins('I2C DAC channels',
+                                  (SysVarAnalogArduinoUnipolar('0x2C',[0,5],i2c_dac_anal_in,None, units='V', I2cDac=i2c_dac),))
+                           
     analPins = AnalogPins('analog pins',
                           (SysVarAnalogArduinoUnipolar('unipolar +',[0,5],pinAnal_unipolarPositive,None, units='V'),
                            SysVarAnalogArduinoUnipolar('unipolar -',[-5,0],pinAnal_unipolarNegative,None, units='V'),
@@ -438,7 +463,12 @@ if __name__ == '__main__':
     '''
     class System(Instrument):
         def __init__(self):
-            comps = (analPins, digiPins)
+            comps = (analPins,
+                     digiPins,
+                     #!!!!!!! uncomment this if you have the right circuit
+#                      spi_dac_channels,
+#                      i2c_dac_channels
+                     )
             actions = (SysActionSetPolarity(),
                        SysActionSleep())
             name = 'Basic Arduino example'
@@ -446,7 +476,9 @@ if __name__ == '__main__':
                              Use an Arduino to track the values of two analog pins.\n
                              The first has a unipolar positive range (0 to 5 V).\n
                              The second has a unipolar negative range (-5 to 0 V).\n
-                             The third has a bipolar range (-5 to 5 V) while a digital pin sets the polarity.'''
+                             The third has a bipolar range (-5 to 5 V) while a digital pin sets the polarity.
+                             There are also SPI and I2C digital-analog converters (DAC) but they require
+                             the relevant ICs to be present and wired correctly so by default they're commented out.'''
             version = '1.0'
             
             Instrument.__init__(self, comps, actions, version, name, description)
