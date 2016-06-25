@@ -9,7 +9,7 @@ class ArduinoDac():
         '''
         pass
 
-class DacI2cMAX517():
+class DacI2cMAX517(ArduinoDac):
     '''An I2C DAC connected to an Arduino.
     '''
     def __init__(self, address):
@@ -20,7 +20,7 @@ class DacI2cMAX517():
     def WriteFraction(self, fraction, controller):
         controller.I2cWrite(self.address, (0, self.maxVal * fraction,))
 
-class DacSpiMCP4922():
+class DacSpiMCP4922(ArduinoDac):
     '''A channel in an SPI DAC connected to an Arduino.
     '''
     def __init__(self, cs_pin, channel):
