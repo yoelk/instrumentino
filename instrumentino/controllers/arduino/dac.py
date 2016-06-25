@@ -1,6 +1,6 @@
 from __future__ import division
 
-class ArduinoDac():
+class ArduinoDac(object):
     def __init__(self, dacBits):
         self.maxVal = 2**dacBits-1
 
