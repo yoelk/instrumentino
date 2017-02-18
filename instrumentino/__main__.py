@@ -19,17 +19,19 @@ class Action1(Action):
     '''An example action
     '''
 
-    name = 'Example'
+    def __init__(self, **kwargs):
+        self.name = 'Example'
     
-    var1 = AnalogVariablePercentage(name='var1')
-    var2 = AnalogVariableDurationInSeconds(name='var2')
-    '''Example variables
-    '''
+        self.var1 = AnalogVariablePercentage(name='var1')
+        var2 = AnalogVariableDurationInSeconds(name='var2')
+
+        super(Action1, self).__init__(**kwargs)
 
     def on_start(self):
         '''Describe here what the action does
         '''
         print self.var1.value
+        print self.var2.value
 
 # Run application
 InstrumentinoApp().run()
