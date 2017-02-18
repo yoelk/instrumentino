@@ -225,6 +225,13 @@ class AnalogVariable(Variable):
         '''
         return '{:2.2f}'.format(value)
     
+    def text_to_value(self, text):
+        '''Return the native value for this variable by translating a textual input.
+        It is used to receive input from the user.
+        Default analog value type is float.
+        '''
+        return float(text)
+    
     def __init__(self, **kwargs):
         super(AnalogVariable, self).__init__(**kwargs)
         
@@ -308,7 +315,6 @@ class AnalogVariableDurationInSeconds(Variable):
         s = float(match.group(3))
         
         # return the number of seconds
-        print str(h*60*60 + m*60 + s)
         return h*60*60 + m*60 + s
     
     def value_to_text(self, value):
