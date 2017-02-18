@@ -1,6 +1,7 @@
 sources:
 https://kivy.org/docs/installation/installation-osx.html
 https://kivy.org/docs/api-kivy.garden.html?highlight=garden#module-kivy.garden
+http://kivy.readthedocs.io/en/latest/index.html
 
 To install kivy, follow the instructions here: https://kivy.org/#download.
 
