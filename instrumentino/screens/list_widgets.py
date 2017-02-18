@@ -7,6 +7,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner
 from instrumentino.popups import FileChooserPopup
+from instrumentino.cfg import check_for_necessary_attributes
 
 class VariableValueDisplayWidget(EventDispatcher):
     '''A base-class for widgets that are used for displaying a variable's value.
@@ -17,6 +18,7 @@ class VariableValueDisplayWidget(EventDispatcher):
     '''
     
     def __init__(self, **kwargs):
+        check_for_necessary_attributes(self, ['variable'], kwargs)
         super(VariableValueDisplayWidget, self).__init__(**kwargs)
         
         # Connect to the variable
@@ -92,10 +94,14 @@ class ListItemVariableSingleLineTextInput(VariableValueDisplayWidget, CompositeL
         '''Tell the variable the user is editing
         '''
         self.variable.user_is_editing = value
+        
+        # User stopped editing, so check what was entered
+        if self.variable.user_is_editing == False:
+            self.on_user_input(instance)
 
     def on_user_input(self, instance):
         '''Tell the variable the user has entered text
-        '''
+        '''                
         self.variable.user_entered_text(self.text)
 
 

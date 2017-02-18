@@ -137,12 +137,14 @@ class AutomationListView(ListView):
     def add_item(self):
         '''Add an item to the list
         '''
+
         self.adapter.data.append(AutomationItem(action_classes=self.action_classes))
         self._trigger_reset_populate()
     
     def remove_item(self):
         '''Remove selected items from the list
         '''
+
         indices = set(item.parent.index for item in self.adapter.selection)
         new_list = [item for i, item in enumerate(self.adapter.data) if i not in indices]
         self.adapter.data = new_list
@@ -152,8 +154,9 @@ class AutomationListView(ListView):
     def run_all(self):
         '''Run all items in the list
         '''
+        
         for item in self.adapter.data:
-            item.chosen_action.on_start()            
+            item.chosen_action.on_start()
 
     def refresh_item(self, index, chosen_action_name):
         '''The user chose a new action in one of the list items so this item needs to be rebuilt
