@@ -323,7 +323,7 @@ class AnalogVariableDurationInSeconds(Variable):
         '''
         m, s = divmod(value, 60)
         h, m = divmod(m, 60)
-        return '{:02d}:{:02d}:{:06.3f}'.format(h, m, s)
+        return '{:02d}:{:02d}:{:06.3f}'.format(int(h), int(m), s)
 
     def __init__(self, **kwargs):
         super(AnalogVariableDurationInSeconds, self).__init__(**kwargs)
