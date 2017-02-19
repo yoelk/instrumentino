@@ -23,15 +23,14 @@ class Action1(Action):
         self.name = 'Example'
     
         self.var1 = AnalogVariablePercentage(name='var1')
-        var2 = AnalogVariableDurationInSeconds(name='var2')
+        self.var2 = AnalogVariableDurationInSeconds(name='var2')
 
         super(Action1, self).__init__(**kwargs)
 
     def on_start(self):
         '''Describe here what the action does
         '''
-        print self.var1.value
-        print self.var2.value
+        print 'vars={}'.format([self.var1.value, self.var2.value])
 
 # Run application
 InstrumentinoApp().run()
