@@ -28,7 +28,7 @@ from kivy.uix.widget import Widget
 from kivy.garden.graph import Graph, MeshLinePlot
 from kivy.garden.navigationdrawer import NavigationDrawer
 
-from instrumentino.popups import ProfileLoader,Help,ActivityLog,FileChooserPopup,ExitConfirmation
+from instrumentino.popups import ProfileLoader,Help,ActivityLog,ExitConfirmation
 from instrumentino.communication import CommunicationTypesLoader
 from instrumentino.communication.serial_port import CommunicationPortSerial
 from instrumentino.communication.simulated_port import CommunicationPortSimulation

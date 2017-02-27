@@ -1,9 +1,10 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import StringProperty, ObjectProperty, OptionProperty
+from kivy.properties import StringProperty, ObjectProperty, OptionProperty, NumericProperty
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
+from kivy.clock import Clock
 
 from instrumentino.instruments import Instrument
 from instrumentino.users import User
@@ -12,115 +13,173 @@ from kivy.config import ConfigParser
 
 from os.path import dirname, join
 import os
+from os.path import sep, expanduser, isdir, dirname
 from kivy.app import App
 from instrumentino.cfg import check_for_necessary_attributes
 from kivy.uix.filechooser import FileChooserListView
+from kivy.event import EventDispatcher
+from kivy.garden.filebrowser import FileBrowser
+import ntpath
+from pip._vendor.requests.api import head
+from kivy.uix.label import Label
 
-class FileChooserPopup(Popup):
-    '''A popup that shows a file chooser.
-    It can be used for file operations like loading/saving a file.
+class FileDialogPopup(Popup):
+    '''A dialog for loading/saving files in a popup. To open, call the open()
+    method.
     '''
-
+    
     file_operation =  OptionProperty('load', options=['load', 'save'])
     '''The allowed file operations for this popup
     '''
     
-    file_chooser = ObjectProperty()
-    '''The file chooser widget
+    action_button_text = StringProperty()
+    '''The string to be shown on action button
+    '''
+    
+    on_file_choice_callback = ObjectProperty()
+    '''Call this function when a file was chosen. The callback is called with
+    a string arguments:
+    - filepath: full path to the chosen file
+    '''
+    
+    chosen_filepath = StringProperty()
+    '''The filepath chosen by the user
+    '''
+    
+    def __init__(self, **kwargs):
+        # Act according to the desired file operation
+        check_for_necessary_attributes(self, ['file_operation', 'on_file_choice_callback'], kwargs)
+        
+        # Set strings according to the file operation
+        if self.file_operation == 'load':
+            self.title = 'Load file'
+            self.action_button_text = 'Load'
+        elif self.file_operation == 'save':
+            self.title = 'Save file'
+            self.action_button_text = 'Save'
+        
+        # Init the file browser
+        if os.name == 'nt':
+            user_path = dirname(expanduser('~')) + sep + 'Documents'
+        else:
+            user_path = expanduser('~') + sep + 'Documents'
+        browser = FileBrowser(select_string=self.action_button_text,
+                              favorites=[(user_path, 'Documents')])
+        browser.bind(on_success=self.on_file_choice,
+                     on_canceled=self.cancel)
+
+        # Add the browser to the content        
+        kwargs['content'] = browser
+        
+        super(FileDialogPopup, self).__init__(**kwargs)
+
+    def on_file_choice(self, instance):
+        '''A file was chosen by the user. Act upon it.
+        '''
+        # extract file's basename
+        head, tail = ntpath.split(instance.filename)
+        basename = tail or ntpath.basename(head)
+        self.chosen_filepath = os.path.join(instance.path, basename)
+
+        # Check for file overwrite
+        if self.file_operation == 'save' and ntpath.exists(self.chosen_filepath):
+            ConfirmationPopup(question_text='Overwrite {}?'.format(basename), on_user_choice_callback=self.confirm_overwrite).open()
+            return
+        
+        self.on_file_choice_callback(self.chosen_filepath)
+        self.dismiss()
+    
+    def confirm_overwrite(self, user_agreed):
+        '''Act upon the user's agreement to overwrite a file
+        '''
+        if user_agreed:
+            self.on_file_choice_callback(self.chosen_filepath)
+            self.dismiss()
+        
+    def cancel(self, instance):
+        '''Cancel this dialog
+        '''
+        self.dismiss()
+    
+class LoadFileDialogPopup(FileDialogPopup):
+    '''A dialog for file loading
+    '''
+    
+    def __init__(self, **kwargs):
+        kwargs['file_operation'] = 'load'
+        super(LoadFileDialogPopup, self).__init__(**kwargs)
+        
+class SaveFileDialogPopup(FileDialogPopup):
+    '''A dialog for file saving
+    '''
+    
+    def __init__(self, **kwargs):
+        kwargs['file_operation'] = 'save'
+        super(SaveFileDialogPopup, self).__init__(**kwargs)
+
+
+class ConfirmationPopup(Popup):
+    '''A popup to ask the user for confirmation (yes/no question)
+    '''
+
+    question_text = StringProperty()
+    '''A yes/no question the user should answer
+    '''
+
+    on_user_choice_callback = ObjectProperty()
+    '''Call this function when a the user chose a button. The callback is called
+    with one boolean argument:
+    - user_agreed: True/False according to the user's choice
+    '''
+    
+    def __init__(self, **kwargs):
+        # Act according to the desired file operation
+        check_for_necessary_attributes(self, ['question_text', 'on_user_choice_callback'], kwargs)
+
+        super(ConfirmationPopup, self).__init__(**kwargs)
+        
+    def on_user_choice(self, user_agreed):
+        '''Act upon the user's choice
+        '''
+        self.on_user_choice_callback(user_agreed)
+        self.dismiss()
+
+
+class NotificationPopup(Popup):
+    '''A popup to show information to the user. It has the option to dismiss
+    itself automatically after a given time
+    '''
+
+    dismiss_timeout = NumericProperty(1)
+    '''Max time (in seconds) before the popup is dismissed. If equals zero,
+    the popup will wait for the user to dismiss the popup.
     '''
 
     def __init__(self, **kwargs):
         # Act according to the desired file operation
-        check_for_necessary_attributes(self, ['file_operation'], kwargs)
-        if self.file_operation == 'load':
-            self.title = 'Load file'
-        elif self.file_operation == 'save':
-            self.title = 'Save file'
-            
-        # Add the content
-        self.file_chooser = FileChooserListView()
-        self.content = self.file_chooser
-        self.file_chooser.bind('on_submit', XXXXX)
+        check_for_necessary_attributes(self, ['text'], kwargs)
+
+        kwargs['title']='Notification'
+        kwargs['content'] = Label(text=kwargs['text'])
+        kwargs['auto_dismiss']=True
         
-        super(FileChooserPopup, self).__init__(**kwargs)
+        # Set the timer
+        if self.dismiss_timeout:
+            Clock.schedule_once(self.timer_expired, self.dismiss_timeout)
         
-
-############################
-# BEGIN: File Chooser
-# http://kivy.org/docs/api-kivy.uix.filechooser.html?highlight=loaddialog
-############################
-class FileChooserLoadDialog(FloatLayout):
-    '''A dialog for loading a file
-    '''
-    
-    load = ObjectProperty(None)
-    cancel = ObjectProperty(None)
-    
-class FileChooserSaveDialog(FloatLayout):
-    save = ObjectProperty(None)
-    text_input = ObjectProperty(None)
-    cancel = ObjectProperty(None)
-
-class FileChooserPopup(FloatLayout):
-    '''Allows selecting a file name on the filesystem to load or save
-    '''
-    loadfile = ObjectProperty(None)
-    savefile = ObjectProperty(None)
-    text_input = ObjectProperty(None)
-
-    file_operation_callback = ObjectProperty()
-    '''Call this function when a file is chosen for loading
-    '''
-    
-    def dismiss_popup(self):
-        self._popup.dismiss()
-
-    def show_load(self, dir, filters, file_operation_callback=None):
+        super(NotificationPopup, self).__init__(**kwargs)
         
-        self.file_operation_callback = file_operation_callback
-            
-        content = FileChooserLoadDialog(load=self.load, cancel=self.dismiss_popup)
-        content.filechooser_widget.path=dir
-        content.filechooser_widget.filters=filters
-        
-        self._popup = Popup(title="Load file", content=content,
-                            size_hint=(0.9, 0.9))
-        self._popup.open()
-
-    def on_file_choice(self, chosen_file):
-        '''Called when the user chose a file (with double click)
+    def timer_expired(self, dt):
+        '''Dismiss the popup if the timer expired
         '''
-        self.dismiss_popup()
-        print chosen_file
-        if self.file_operation_callback:
-            self.file_operation_callback(chosen_file)
-
-    def show_save(self, dir, filters):
-        content = FileChooserSaveDialog(save=self.save, cancel=self.dismiss_popup)
-        content.filechooser_widget.path=dir
-        content.filechooser_widget.filters=filters
+        self.dismiss()
         
-        self._popup = Popup(title="Save file", content=content,
-                            size_hint=(0.9, 0.9))
-        self._popup.open()
 
-    def load(self, path, filename):
-        print "Would have loaded file: " + os.path.join(path, filename[0])
-        #with open(os.path.join(path, filename[0])) as stream:
-        #    self.text_input.text = stream.read()
 
-        self.dismiss_popup()
 
-    def save(self, path, filename):
-        print "Would have saved file: " + os.path.join(path, filename)
-        #with open(os.path.join(path, filename), 'w') as stream:
-        #    stream.write(self.text_input.text)
-
-        self.dismiss_popup()
-
-############################
-# END: File Chooser
-############################
+########
+# everything down here I'm not sure of
+########
 
 class ExitConfirmation(Popup):
     '''Exit confirmation UI

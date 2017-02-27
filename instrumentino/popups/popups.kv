@@ -1,51 +1,16 @@
-<FileChooserLoadDialog>:
-    title: 'Load file'
-    filechooser_widget: filechooser
-    BoxLayout:
-        size: root.size
-        pos: root.pos
-        orientation: "vertical"
-        FileChooserListView:
-            id: filechooser
-            on_submit: root.parent.on_file_choice(args[1][0])
-        BoxLayout:
-            size_hint_y: None
-            height: 30
-            Button:
-                text: "Cancel"
-                on_release: root.cancel()
-            Button:
-                text: "Load"
-                on_release: root.load(filechooser.path, filechooser.selection)
+<ConfirmationPopup@Popup>
+	title: root.question_text
+	BoxLayout:
+		Button:
+			text: 'Yes'
+			on_release: root.on_user_choice(True)
+		Button:
+			text: 'No'
+			on_release: root.on_user_choice(False)
 
-<FileChooserSaveDialog>:
-    title: 'Save file'
-    filechooser_widget: filechooser
-    text_input: text_input
-    BoxLayout:
-        size: root.size
-        pos: root.pos
-        orientation: "vertical"
-        FileChooserListView:
-            id: filechooser
-            on_selection: text_input.text = self.selection and self.selection[0] or ''
-        TextInput:
-            id: text_input
-            size_hint_y: None
-            height: 30
-            multiline: False
-
-        BoxLayout:
-            size_hint_y: None
-            height: 30
-            Button:
-                text: "Cancel"
-                on_release: root.cancel()
-
-            Button:
-                text: "Save"
-                on_release: root.save(filechooser.path, text_input.text)
-
+########
+# everything down here I'm not sure of
+######## 
 <ExitConfirmation>:
     title: 'Exit?'
     size_hint: .5, .2
