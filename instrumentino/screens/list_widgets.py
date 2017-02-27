@@ -6,7 +6,6 @@ from kivy.uix.listview import CompositeListItem,\
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner
-from instrumentino.popups import FileChooserPopup
 from instrumentino.cfg import check_for_necessary_attributes
 
 class VariableValueDisplayWidget(EventDispatcher):
