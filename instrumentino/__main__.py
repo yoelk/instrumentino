@@ -19,9 +19,9 @@ class Action1(Action):
     '''An example action
     '''
 
+    name = 'Example'
+
     def __init__(self, **kwargs):
-        self.name = 'Example'
-    
         self.var1 = AnalogVariablePercentage(name='var1')
         self.var2 = AnalogVariableDurationInSeconds(name='var2')
 
