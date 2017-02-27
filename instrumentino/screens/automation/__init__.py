@@ -49,6 +49,11 @@ from instrumentino.variables import Variable, AnalogVariablePercentage,\
     AnalogVariableView, VariablesListView, AnalogVariableDurationInSeconds,\
     PathVariable
 from kivy.uix.listview import CompositeListItem, ListItemButton, ListView
+from instrumentino.popups import FileDialogPopup, SaveFileDialogPopup,\
+    LoadFileDialogPopup, NotificationPopup
+from kivy.uix.popup import Popup
+import pickle
+import ntpath
 
 class AutomationItemView(CompositeListItemMember, CompositeListItem):
     '''A widget for an automation item
@@ -106,18 +111,14 @@ class AutomationItem(EventDispatcher):
     '''
     
     def __init__(self, **kwargs):
-        check_for_necessary_attributes(self, ['action_classes'], kwargs)
-        self.chosen_action = self.chosen_action or self.action_classes[0]()
-        
         super(AutomationItem, self).__init__(**kwargs)
+
+        check_for_necessary_attributes(self, ['action_classes'], kwargs)        
+        self.chosen_action = self.chosen_action or self.action_classes[0]()
 
 
 class AutomationListView(ListView):
     '''A list of automation items.
-    '''
-    
-    items = ListProperty()
-    '''The current items in the automation list
     '''
     
     def __init__(self, **kwargs):
@@ -126,31 +127,38 @@ class AutomationListView(ListView):
                                               'height': 30,
                                               'size_hint_y': None,}
 
-        kwargs['adapter'] = ListAdapter(data=self.items,
+        kwargs['adapter'] = ListAdapter(data=[],
                                         args_converter=args_converter,
                                         selection_mode='multiple',
                                         allow_empty_selection=True,
                                         cls=AutomationItemView)
         
         super(AutomationListView, self).__init__(**kwargs)
-        
-    def add_item(self):
+
+    def get_items(self):
+        return self.adapter.data
+            
+    def add_item(self, action=None):
         '''Add an item to the list
         '''
-
-        self.adapter.data.append(AutomationItem(action_classes=self.action_classes))
+        self.adapter.data.append(AutomationItem(action_classes=self.action_classes, chosen_action=action))
         self._trigger_reset_populate()
     
     def remove_item(self):
         '''Remove selected items from the list
         '''
-
         indices = set(item.parent.index for item in self.adapter.selection)
         new_list = [item for i, item in enumerate(self.adapter.data) if i not in indices]
         self.adapter.data = new_list
         
         self._trigger_reset_populate()
     
+    def remove_all_items(self):
+        '''Remove all items from the list
+        '''
+        self.adapter.data = []
+        self._trigger_reset_populate()
+        
     def run_all(self):
         '''Run all items in the list
         '''
@@ -167,7 +175,7 @@ class AutomationListView(ListView):
 
 
 class MyAutomationView(BoxLayout, MyView):
-    '''The Automation view allows the user to create and run lists of actions (called methods).
+    '''The Automation view allows the user to create and run lists of actions (called sequences).
     '''
     
     action_classes = ListProperty()
@@ -178,6 +186,47 @@ class MyAutomationView(BoxLayout, MyView):
         check_for_necessary_attributes(self, ['action_classes'], kwargs)
         
         super(MyAutomationView, self).__init__(**kwargs)
+        
+    def on_load(self):
+        '''Load a file
+        '''
+        LoadFileDialogPopup(on_file_choice_callback=self.load_sequence_file).open()
+        
+    def on_save(self):
+        '''Save a file
+        '''
+        SaveFileDialogPopup(on_file_choice_callback=self.save_sequence_file).open()
+        
+    def load_sequence_file(self, filepath):
+        '''Load a sequence file to the automation list
+        '''
+        try:
+            # Read the file
+            input = open(filepath, 'rb')
+            actions_data = pickle.load(input)
+            input.close()
+            
+            # Remove all items and add the read items
+            self.run_items_list.remove_all_items()
+            for data in actions_data:
+                action = data['class'](pickled_data=data)
+                self.run_items_list.add_item(action)
+                
+        except:
+            NotificationPopup(text='Error opening file').open()
+    
+    def save_sequence_file(self, filepath):
+        '''Save the automation list's content to a file
+        '''
+        try:
+            output = open(filepath, 'wb')
+            actions_data = [item.chosen_action.serialize() for item in self.run_items_list.get_items()]
+            pickle.dump(actions_data, output, pickle.HIGHEST_PROTOCOL)
+            output.close()
+        except:
+            NotificationPopup(text='Error saving file').open()
+            
+        NotificationPopup(text='File saved').open()
         
 
 class Action(EventDispatcher):
@@ -202,14 +251,52 @@ class Action(EventDispatcher):
     
     
     def __init__(self, **kwargs):
+        super(Action, self).__init__(**kwargs)
+        
+        # Support initiating an action from pickled data
+        if 'pickled_data' in kwargs:
+            try:
+                self.unserialize(kwargs['pickled_data'])
+            except:
+                NotificationPopup(text='Error reading file').open()
+        
         check_for_necessary_attributes(self, ['on_start'], kwargs)
         self.name = self.name or create_default_name(self, use_index=False)
         
         # Automatically populate the parameters' list by collecting all of the "Variable" instances we have.
         self.parameters = get_instances_in_object(self, Variable, kwargs)
         
-        super(Action, self).__init__(**kwargs)
+    def serialize(self):
+        '''Return a dictionary of the important data that needs to be pickled.
+        This is done to avoid trying to pickle the whole class, which is a
+        problem for EventDispatcher subclasses.
+        '''
+        data_dict = {}
         
+        # Store the name and the class type
+        data_dict['name'] = self.name
+        data_dict['class'] = type(self)
+        
+        # Store the parameters
+        data_dict['parameters'] = {}
+        for p in self.parameters:
+            data_dict['parameters'][p.name] = {'type': type(p),
+                                               'value': p.value}
+            
+        return data_dict
+    
+    def unserialize(self, pickled_data):
+        '''Init an action from pickled data
+        '''
+        # Set name
+        self.name = pickled_data['name']
+        
+        # Set parameter values
+        params_data = pickled_data['parameters']
+        for param_name in params_data.keys():
+            param = params_data[param_name]['type'](name=param_name, value=params_data[param_name]['value'])
+            setattr(self, param_name, param)
+            
 
 class ActionRunSequenceFile(Action):
     '''An action that runs the actions stored in an action-list file (called a sequence file)
@@ -217,16 +304,16 @@ class ActionRunSequenceFile(Action):
     
     name = 'Run file'
     
-    path = PathVariable(file_filters=['*.seq'])
-    
     def __init__(self, **kwargs):
+        self.path = PathVariable(file_filters=['*.seq'])
+        
         super(ActionRunSequenceFile, self).__init__(**kwargs)
 
         # Define the path variable. This can only be done when the app is running.
         self.path.base_path=App.get_running_app().get_instrument_path()
     
     def on_start(self):
-        '''Load an action-list file and run it
+        '''Load a saved sequence file and run it
         '''
         #TODO: implement
         print 'running file...'

@@ -21,7 +21,7 @@
         size_hint_y: .2
         Button:
             text: 'Load'
-            on_press: app.OpenFileChooserLoad(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
+            on_press: root.on_load()
         Button:
             text: 'Save'
-            on_press: app.OpenFileChooserSave(app.config.get('files_and_dirs', 'method_files_dir'),['*.mtd'])
+            on_press: root.on_save()
