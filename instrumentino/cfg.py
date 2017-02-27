@@ -19,14 +19,17 @@ def check_for_necessary_attributes(obj, attributes_list, kwargs={}):
     If they're empty, check if attr value was passed to them through kwargs.
     '''
     
+    # Copy the list since we need to modify it in the loop.
+    updated_attr_list = list(attributes_list)
+    
     # First use all of the given kwargs
     for attr_name in attributes_list:
         if attr_name in kwargs.keys():
             setattr(obj, attr_name, kwargs[attr_name])
-            attributes_list.remove(attr_name)
+            updated_attr_list.remove(attr_name)
     
     # Now check if all of the necessary attributes exist
-    for attr_name in attributes_list:
+    for attr_name in updated_attr_list:
         if (not hasattr(obj, attr_name) or
             not getattr(obj, attr_name)):
             # A necessary attribute is missing or empty
