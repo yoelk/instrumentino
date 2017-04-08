@@ -5,12 +5,24 @@ import random
 from kivy.event import EventDispatcher
 from __builtin__ import ValueError
 from math import ceil
+from construct.macros import UBInt8, UBInt16, UBInt32, UBInt64, GreedyRange
 import numpy as np
+import pandas as pd
+from datetime import timedelta
 from instrumentino.libs.abs_ratio import abs_ratio
 from instrumentino.controlino_protocol import ControlinoProtocol
 from kivy.app import App
 from instrumentino.cfg import *
 
+def get_fitting_data_point_variable(bytes_num):
+        '''Translate between the number of required bytes per data point and an appropriately sized variable.
+        '''
+        return {0<bytes_num<=1: UBInt8(''),
+                1<bytes_num<=2: UBInt16(''),
+                2<bytes_num<=4: UBInt32(''),
+                4<bytes_num<=8: UBInt64(''),
+                }[True]
+                
 class DataChannel(EventDispatcher):
     '''A single data channel between instrumentino and controllers connected to it
     '''
@@ -70,15 +82,19 @@ class DataChannelIn(DataChannel):
     '''Data flows from a controller to instrumentino
     '''
 
-    data_blocks = ListProperty()
+    data_frames = ListProperty()
     '''A list that contains all of the data that was recorded for this
-    channel. A data block starts whenever a controller is connected
-    (having an online communication_port). Each block contains a data_series.
-    The timestamps associated with the data are stored in the controller's data_blocks. 
+    channel. A data frame starts whenever a controller is connected
+    (having an online communication_port). Each data frame has a DateTimeIndex
+    named 'time' and a single 'data' column 
     '''
 
     sampling_rate = BoundedNumericProperty(ControlinoProtocol.DEFAULT_DATA_PACKET_RATE, min=0)
     '''The channel's sampling rate (in Hz).
+    '''
+    
+    sampling_period = BoundedNumericProperty(1/ControlinoProtocol.DEFAULT_DATA_PACKET_RATE, min=0)
+    '''The channel's sampling period (in seconds).
     '''
     
     max_input_value = NumericProperty()
@@ -93,7 +109,16 @@ class DataChannelIn(DataChannel):
         # Check that the sampling rate is valid
         if not abs_ratio(self.sampling_rate, self.controller.data_packet_rate).is_integer():
             raise ValueError("Sampling rate doesn't fit controller's data packet rate")
-
+        self.sampling_period = 1/self.sampling_rate
+        
+        # Init the first data_frame structure
+        df = pd.DataFrame(columns=['time', 'percent'])
+        df = df.set_index('time')
+        self.data_frames.append(df)
+        
+        # Set the appropriate serialized format class, in order to handle incoming data packets
+        self.data_points_serialized_format = GreedyRange(get_fitting_data_point_variable(self.data_bytes))
+                
     def do_first_when_online(self):
         '''Register this channel at the controller
         '''
@@ -103,80 +128,27 @@ class DataChannelIn(DataChannel):
         '''Incoming data is received as whole numbers (not floating point) that result in native read functions in the controller.
         For the sake of uniformity, all values should be translated to a [0,100] scale (percentage).
         '''
-        data[:] = [x / self.max_input_value * 100 for x in data]
+        return [x / self.max_input_value * 100 for x in data]
 
-    def get_data_block(self, timestamp=None):
-        '''Return the relevant data block according to the given timestamp
+    def update_data_series(self, packet_timedelta, raw_data_points):
+        '''Update the data series with new data points. 
         '''
-        # Use the current time if not specified
-        timestamp = timestamp or time.time()
         
-        for block in reversed(self.data_blocks):
-            if ((block.t_zero != 0 and block.t_zero <= timestamp) and
-                (block.t_end == 0 or block.t_end >= timestamp)):
-                return block
-            
-        # No relevant block was found
-        return None
-    
-    def update_timestamp_series(self, relative_start_timestamp, new_data_points_num):
-        '''Update the timestamp series with incoming data. The added timestamps are aligned to the expected timestamps in the series.
-        For example, in a 1 Hz channel, the timestamp series (relative to t_zero) will be [0,1,2,...] even if we got [0.1,1.05,1.99,...].
-        Because timing can't be perfect, we might get positive or negative drifts.
-        If the received start timestamp is too late (positive drift), fill in the gap.
-        If it's too early (negative drift), overwrite the existing data.
+        # Create the time series based on the packet's timestamp
+        packet_datetime = self.controller.t_zero + packet_timedelta
+        time_series = [packet_datetime + timedelta(seconds=self.sampling_period) * i for i in range(len(raw_data_points))]
         
-        Return the number of points that were added as padding (positive value)
-        or the number of old points that were deleted (negative value).
-        '''
-        # Use the relevant data block
-        timestamp_series = self.get_data_block().timestamp_series
-        
-        aligned_start_index = int(round(relative_start_timestamp * self.sampling_rate))
-        points_difference = aligned_start_index - len(timestamp_series)
-        
-        if DEBUG_COMM_STABILITY:
-            if points_difference != 0: print 'points difference: {}'.format(points_difference)
-        
-        if points_difference > 0:
-            # Add dummy time points to fill the gap between the last known time point and the first new one.
-            new_data_points_num += points_difference
-        elif points_difference < 0:
-            # Delete old time points so we can rewrite them.
-            for _ in range(abs(points_difference)):
-                timestamp_series.pop()
-        
-        # Add the new time points to the series
-        adjusted_aligned_start_index = aligned_start_index - points_difference
-        timestamp_series.extend([self.controller.t_zero + (1/self.sampling_rate)*(adjusted_aligned_start_index+i) for i in range(new_data_points_num)])
-        
-        return points_difference
-    
-    def update_data_series(self, new_data_points, points_difference):
-        '''Update the data series with new data points. Pad with 'None' points or overwrite old data points
-        in order to keep the data_series in line with the timestamp_series 
-        '''
         # Translate the incoming data to a percentage scale (0-100)
-        # The translated data can be presented in the graph 
-        self.translate_incoming_data(new_data_points)
+        # The translated data can be presented in a graph with a common Y axis (percentage) 
+        percent_data_points = self.translate_incoming_data(raw_data_points)
         
-        # Use the relevant data block
-        data_series = self.get_data_block().data_series
-        
-        if points_difference > 0:
-            # Add dummy data points to fill the gap between the last known data point and the first new one.
-            new_data_points = [None]*points_difference + new_data_points
-        elif points_difference < 0:
-            # Delete old data points so we can rewrite them.
-            for _ in range(abs(points_difference)):
-                data_series.pop()
-            
-        # Add the new time points to the series
-        data_series.extend(new_data_points)
+        # Add the timed data to the current data frame
+        for time, percent in zip(time_series, percent_data_points):
+            self.data_frames[-1].loc[time] = percent
         
         # Notify the variable that new data has arrived
         if self.variable:
-            self.variable.new_data_arrived(new_data_points[-1])
+            self.variable.new_data_arrived(self.data_frames[-1]['percent'].iloc[-1])
         
     def get_graph_series(self, start_timestamp, end_timestamp, sampling_rate):
         '''Return a list of (x,y) data, x being the timestamp and y being the corresponding datapoints. 

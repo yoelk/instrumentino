@@ -8,6 +8,8 @@ import re
 from instrumentino.controlino_protocol import ControlinoProtocol
 from instrumentino.communication import CommunicationPort
 from instrumentino.cfg import *
+from instrumentino.channels import DataChannelIn
+from instrumentino import channels
 
 class CommunicationPortSimulation(CommunicationPort):
     '''A simulated communication port
@@ -85,7 +87,7 @@ class CommunicationPortSimulation(CommunicationPort):
                 pattern = self.__get_sim_data_pattern(channel)
                 start_index = int(self.sim_data_packets_num*rates_ratio)%len(pattern)
                 data_points = pattern[start_index:start_index+data_points_num]
-                data_points_serialized_format = Array(data_points_num, self.controller.get_fitting_data_point_variable(channel.data_bytes))
+                data_points_serialized_format = Array(data_points_num, channels.get_fitting_data_point_variable(channel.data_bytes))
                 data_points_serialized = data_points_serialized_format.build(data_points)
                 
                 # Build the rest of the data packet block
