@@ -111,5 +111,5 @@ class MySignalView(BoxLayout, MyView):
         
         # TODO: for now the x data is given in whole seconds. it should be possible to zoom in and out.
         # TODO: support showing more than one data block
-        for plot in self.plots:
-            plot.points = plot.variable.channel_in.get_graph_series(self.graph.xmin, self.graph.xmax, self.max_sampling_rate)
+#         for plot in self.plots:
+#             plot.points = plot.variable.channel_in.get_dataframe_subset(self.graph.xmin, self.graph.xmax, self.max_sampling_rate)

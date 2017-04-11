@@ -82,7 +82,7 @@ class DataChannelIn(DataChannel):
     '''Data flows from a controller to instrumentino
     '''
 
-    data_frames = ListProperty()
+    data_frame = ObjectProperty()
     '''A list that contains all of the data that was recorded for this
     channel. A data frame starts whenever a controller is connected
     (having an online communication_port). Each data frame has a DateTimeIndex
@@ -111,10 +111,9 @@ class DataChannelIn(DataChannel):
             raise ValueError("Sampling rate doesn't fit controller's data packet rate")
         self.sampling_period = 1/self.sampling_rate
         
-        # Init the first data_frame structure
-        df = pd.DataFrame(columns=['time', 'percent'])
-        df = df.set_index('time')
-        self.data_frames.append(df)
+        # Init the data frame structure
+        self.data_frame = pd.DataFrame(columns=['time', 'percent'])
+        self.data_frame = self.data_frame.set_index('time')
         
         # Set the appropriate serialized format class, in order to handle incoming data packets
         self.data_points_serialized_format = GreedyRange(get_fitting_data_point_variable(self.data_bytes))
@@ -144,50 +143,18 @@ class DataChannelIn(DataChannel):
         
         # Add the timed data to the current data frame
         for time, percent in zip(time_series, percent_data_points):
-            self.data_frames[-1].loc[time] = percent
+            self.data_frame.loc[time] = percent
         
         # Notify the variable that new data has arrived
         if self.variable:
-            self.variable.new_data_arrived(self.data_frames[-1]['percent'].iloc[-1])
+            self.variable.new_data_arrived(self.data_frame['percent'].iloc[-1])
         
-    def get_graph_series(self, start_timestamp, end_timestamp, sampling_rate):
+    def get_dataframe_subset(self, start_timestamp, end_timestamp, sampling_rate):
         '''Return a list of (x,y) data, x being the timestamp and y being the corresponding datapoints. 
         '''
-        #TODO: support returning more than one graph series (for more than one data block)
-        # currently we just return the last relevant data block
-        
-        # Use the relevant data block
-        data_block = self.get_data_block(end_timestamp)
-        if (not data_block or
-            len(data_block.timestamp_series) == 0):
-            return []
-        data_series = data_block.data_series
-        timestamp_series = data_block.timestamp_series
-        
-        # Align requested timestamps with the existing data
-        start_timestamp = timestamp_series[0] + int((start_timestamp - timestamp_series[0])*sampling_rate)/sampling_rate
-        end_timestamp = timestamp_series[0] + int((end_timestamp - timestamp_series[0])*sampling_rate)/sampling_rate
-
-        # Check if we don't have the beginning of the requested data.
-        start_timestamp_difference = start_timestamp - timestamp_series[0]
-        if start_timestamp_difference < 0:
-            first_timestamp_index = None
-        else:
-            first_timestamp_index = int(start_timestamp_difference * self.sampling_rate)
-        
-        # Check if we don't have the end of the requested data.
-        end_timestamp_difference = end_timestamp - timestamp_series[-1]
-        if end_timestamp_difference > 0:
-            last_timestamp_index = None
-        else:
-            last_timestamp_index = int((end_timestamp - timestamp_series[0]) * self.sampling_rate) + 1
-
-        # Down-sample if necessary.
-        sampling_rates_ratio = max(int(self.sampling_rate/sampling_rate), 1)
-        graph_series = zip(timestamp_series[first_timestamp_index:last_timestamp_index:sampling_rates_ratio],
-                           data_series[first_timestamp_index:last_timestamp_index:sampling_rates_ratio])
-        returned_graph_series = [item for item in graph_series if item[1] != None]
-        return returned_graph_series
+        # Convert sampling rate (in Hz) to sampling period (in milliseconds)
+        sampling_period_ms = (1 / sampling_rate) * 1000
+        return self.data_frame.query('start_timestamp <= time <= end_timestamp').resample('{}L'.format(sampling_period_ms))
         
 class DataChannelOut(DataChannel):
     '''Data flows from instrumentino to a controller

@@ -54,8 +54,13 @@ class Controller(EventDispatcher):
     This makes sure that we either have an integer number of data points per packet or a single data point arriving every X packets (X being an integer)
     '''
     
-    communication_port = ObjectProperty(None, allownone=True)
+    comm_port = ObjectProperty(None, allownone=True)
     '''The communication port used for interacting with the controller
+    '''
+
+    comm_log = DictProperty({'connect':[], 'disconnect':[]})
+    '''Logs connecttivity events such as 'connect' and 'disconnect' by saving
+    timestamps in lists
     '''
 
     controlino_protocol = ObjectProperty(None)
@@ -94,7 +99,7 @@ class Controller(EventDispatcher):
         data_blocks = data_packet['data_packet_block']
         
         # Convert the relative timestamp from milliseconds to seconds
-        packet_timedelta = timedelta(seconds=data_packet['packet_timedelta'] / 1000)
+        packet_timedelta = timedelta(seconds=data_packet['relative_start_timestamp'] / 1000)
 
         # Parse the received data and add it to the appropriate channels
         # The received id field correlates to the index in the controller's channels list
@@ -109,11 +114,13 @@ class Controller(EventDispatcher):
         '''
         
         # Check if we're connected 
-        if not self.communication_port:
+        if not self.comm_port:
             return
         
-        self.communication_port.disconnect()
-        self.communication_port = None
+        self.comm_log['disconnect'].append(dt.now())
+        
+        self.comm_port.disconnect()
+        self.comm_port = None
         
         # Close the time block
         if self.get_time_block():
@@ -133,7 +140,7 @@ class Controller(EventDispatcher):
             return False
         
         # Adopt this communication port
-        self.communication_port = communication_port
+        self.comm_port = communication_port
         
         # Check controller response
         if not self.controlino_protocol.ping():
@@ -146,7 +153,9 @@ class Controller(EventDispatcher):
             channel.do_first_when_online()
         
         # Now that we've prepared everything, ask the controller to start acquiring data
-        self.t_zero = dt.now()
+        now = dt.now()
+        self.comm_log['connect'].append(now)
+        self.t_zero = now
         self.controlino_protocol.start_acquiring_data()
         
         return True

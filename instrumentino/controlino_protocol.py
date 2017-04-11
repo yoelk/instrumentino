@@ -141,7 +141,7 @@ class ControlinoProtocol(EventDispatcher):
             print 'RX: {} ({})'.format(''.join('{:02X}'.format(x) for x in incoming_bytes),
                                        ''.join(chr(x) if chr(x).isalnum() else '.' for x in incoming_bytes))
 
-        if len(incoming_bytes) > self.controller.communication_port.MAX_BYTES_PER_READ:
+        if len(incoming_bytes) > self.controller.comm_port.MAX_BYTES_PER_READ:
             # Communication port overloaded so disconnect.
             self.controller.disconnect()
             
@@ -194,7 +194,7 @@ class ControlinoProtocol(EventDispatcher):
         self.transmit(packet)
         
         #TODO: remove this when the issue is resolved (the receive scheduled calls only start after the on_config_change is complete)
-        self.controller.communication_port.receive();
+        self.controller.comm_port.receive();
         
         # Wait for the reply
         try:
@@ -239,6 +239,6 @@ class ControlinoProtocol(EventDispatcher):
     def transmit(self, packet):
         '''Transmit a packet through the communication port, if possible
         '''
-        if self.controller.communication_port != None:
-            self.controller.communication_port.transmit(packet)
+        if self.controller.comm_port != None:
+            self.controller.comm_port.transmit(packet)
 

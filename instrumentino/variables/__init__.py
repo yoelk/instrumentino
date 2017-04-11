@@ -79,15 +79,22 @@ class VariablesListView(CompositeListItemMember, CompositeListItem):
 
 class Variable(EventDispatcher):
     '''A variable widget for showing different types of variables on the screen.
-    When given a channel_in argument, their value will be automatically updated by this channel.
-    When given a channel_out argument, the value the user enters will be communicated out by that channel.
+    When given a channel_in argument, their value will be automatically updated
+    by this channel. When given a channel_out argument, the value the user
+    enters will be communicated out by that channel.
     
-    Subclasses are responsible of screen presentation of the variable.
+    Subclasses are responsible of screen presentation of the variable and of
+    setting the type of value they hold.
     '''
 
     view_class = ObjectProperty(VariableView)
     '''The class in charge for displaying this variable.
     Sub-classes should set this according to their needs.
+    '''
+
+    value = ObjectProperty()
+    '''The native value for this variable.
+    Sub-classes should redefine this property to set its type. 
     '''
 
     value_display_widget = ObjectProperty()
@@ -103,11 +110,6 @@ class Variable(EventDispatcher):
     This attribute should be updated by sub-classes.
     '''
     
-    value = ObjectProperty()
-    '''The native value for this variable.
-    Sub-classes should redefine this property to set its type. 
-    '''
-
     channel_in = ObjectProperty(None)
     '''The input channel
     '''
@@ -170,8 +172,7 @@ class Variable(EventDispatcher):
     def new_data_arrived(self, percentage):
         '''Handle incoming data from the input channel (if it exists).
         '''
-        
-        self.value = self.percentage_to_value(percentage)
+        self.value = self.percentage_to_value(float(percentage))
         
         # Don't update the text while the user is editing
         if not self.user_is_editing and self.value_display_widget:
@@ -202,6 +203,8 @@ class AnalogVariable(Variable):
     '''
 
     view_class = ObjectProperty(AnalogVariableView)
+    '''Set the view class for showing the variable on screen
+    '''
 
     value = NumericProperty()
     '''The native value for this variable is a number.
@@ -296,6 +299,8 @@ class AnalogVariableDurationInSeconds(Variable):
     '''
     
     view_class = ObjectProperty(AnalogVariableDurationInSecondsView)
+    '''Set the view class for showing the variable on screen
+    '''
 
     value = NumericProperty()
     '''The native value for this variable is a number (the number of seconds).
@@ -352,7 +357,13 @@ class DigitalVariable(Variable):
     '''
 
     view_class = ObjectProperty(DigitalVariableView)
+    '''Set the view class for showing the variable on screen
+    '''
 
+    value = StringProperty()
+    '''The native value for this variable is a string.
+    '''
+    
     options = ListProperty()
     '''The list of possible values, ordered from lowest to highest.
     '''
@@ -407,6 +418,8 @@ class PathVariable(Variable):
     '''
 
     view_class = ObjectProperty(PathVariableView)
+    '''Set the view class for showing the variable on screen
+    '''
 
     value = StringProperty()
     '''The native value for this variable is a string.
