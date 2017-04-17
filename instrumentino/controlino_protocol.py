@@ -1,15 +1,12 @@
-from __future__ import division
 from kivy.properties import ObjectProperty, ListProperty
 from kivy.event import EventDispatcher
-from construct.core import Struct, Sequence, Anchor
-from construct.macros import ULInt8, ULInt16, ULInt32, ULInt64, PrefixedArray, \
-    CString, Enum, GreedyRange, Array, OptionalGreedyRange
-from construct import Embed, macros
+from construct.core import Struct, Int8ub, Int16ub, Int32ub, Int64ub, PrefixedArray, Enum, Const, Union, GreedyString
 from construct.lib.container import Container
-import Queue
+from multiprocessing import Queue
 import time
 from kivy.app import App
 from instrumentino.cfg import *
+
 
 class ControlinoProtocol(EventDispatcher):
     '''The communication protocol used to interface hardware controllers running controlino.
@@ -24,20 +21,20 @@ class ControlinoProtocol(EventDispatcher):
     '''The controller for which this protocol is used.
     '''
 
-    string_packets_queue = Queue.Queue(maxsize=10)
+    string_packets_queue = Queue(maxsize=10)
     '''String packets arrive as a response to specific commands (such as 'PING').
     This queue lets the command sender be notified on the reply's arrival.
     Items in the queue are strings, that are compared to the incoming string packets' first word.
     '''
-    
+
     '''---Outgoing packets---'''
-    
+
     CMD_ACQUIRE_START = 'ACQUIRE:START'
     '''A command for synchronizing times between Instrumentino and a controller, in order to start an acquisition block.
     Instrumentino sends this packet once to each controller and the time it was sent is considered t_zero from then on,
     and all of the timestamps sent by the controller are relative to this t_zero.  
     '''
-    
+
     CMD_ACQUIRE_STOP = 'ACQUIRE:STOP'
     '''Stop the current acquisition block.  
     '''
@@ -45,13 +42,13 @@ class ControlinoProtocol(EventDispatcher):
     CMD_PING = 'PING'
     '''A command to check if the controller is responsive.
     '''
-    
+
     CMD_CHANNEL_DIRECTION = 'CH:DIR'
     CHANNEL_DIRECTION_IN = 'IN'
     CHANNEL_DIRECTION_OUT = 'OUT'
     '''Set the direction of a channel (IN/OUT). 
     '''
-    
+
     CMD_CHANNEL_REGISTER = 'CH:REGISTER'
     '''Tell the controller that we want to start receiving data from a certain pin in a certain frequency.
     '''
@@ -59,27 +56,26 @@ class ControlinoProtocol(EventDispatcher):
     CMD_CHANNEL_WRITE = 'CH:WRITE'
     '''Write data to a channel. 
     '''
-    
+
     '''---Incoming packets---'''
-    
+
     STRING_PACKET_TYPE_PONG = 'PONG'
     '''The string reply to the 'PING' command
     '''
-    
-    CONST_HEADER = bytearray([0xA5,0xA5,0xA5,0xA5])
+
+    CONST_HEADER = b'\xA5\xA5\xA5\xA5'
     '''Used for synchronization, to know when a packet starts.
     '''
-    
+
     incoming_packet_types = {'DATA_PACKET': 0,
                              'STRING_PACKET': 1}
     '''Data packets are constantly expected to come from the controller.
     String packets are used for replying specific commands (such as 'PING'), and are not expected so often.
     '''
-    
-    packet_header_format = Struct('packet_header',
-                                  Array(len(CONST_HEADER), ULInt8('const_header')), 
-                                  Enum(ULInt8('type'), **incoming_packet_types),
-                                  ULInt16('packet_length')
+
+    packet_header_format = Struct(const_header=Const(CONST_HEADER),
+                                  type=Enum(Int8ub, **incoming_packet_types),
+                                  packet_length=Int16ub
                                   )
     '''A header for all packets sent from controllers to Instrumentino.
     The first 4 bytes of a data packet consist of a pre-defined sequence in order to identify the packet' beginning.
@@ -87,27 +83,20 @@ class ControlinoProtocol(EventDispatcher):
     The rest is packet specific. 
     '''
 
-    data_packet_header_format = Struct('data_packet_header',
-                                       ULInt32('relative_start_timestamp'),
-                                       )
+    data_packet_header_format = Struct(relative_start_timestamp=Int32ub)
     '''A header for a data packet. Contains the timestamp for the first datapoint in the packet, relative to t_zero. 
     '''
-    
-    data_packet_block_id_format = ULInt8('id')
-    data_packet_block_length_format = ULInt16('block_length')
-    data_packet_blocks_num_format = ULInt8('blocks_num')
-    data_packet_block_format = Struct('data_packet_block',
-                                      data_packet_block_id_format,
-                                      PrefixedArray(ULInt8('data_points'), length_field=data_packet_block_length_format)
-                                      )
+
+    data_packet_data_block_format = Struct(block_id=Int8ub, data=Union(Int8=PrefixedArray(Int16ub, Int8ub),
+                                                                       Int16=PrefixedArray(Int16ub, Int16ub),
+                                                                       Int32=PrefixedArray(Int16ub, Int32ub),
+                                                                       Int64=PrefixedArray(Int16ub, Int64ub)))
     '''A data block in a data packet
     '''
-    
-    data_packet_format = Struct('data_packet',
-                                Embed(packet_header_format),
-                                Embed(data_packet_header_format),
-                                PrefixedArray(data_packet_block_format, length_field=data_packet_blocks_num_format),
-                                Anchor('_end')
+
+    data_packet_format = Struct(packet_header=packet_header_format,
+                                data_packet_header=data_packet_header_format,
+                                data_blocks=PrefixedArray(lengthfield=Int8ub, subcon=data_packet_data_block_format)
                                 )
     '''A data packet (Controller->Instrumentino) has the following form (with sizes in bytes):
     [const_header, 4][type, 1][packet_length, 2]    <- general packet header
@@ -118,68 +107,66 @@ class ControlinoProtocol(EventDispatcher):
     
     Timestamps are measured in milliseconds since the last time zeroing.
     '''
-    
-    string_packet_format = Struct('string_packet',
-                                  Embed(packet_header_format),
-                                  GreedyRange(macros.String('string', 1)),
-                                  Anchor('_end')
+
+    string_packet_format = Struct(packet_header=packet_header_format,
+                                  string=GreedyString('utf8')
                                   )
     '''A string packet (Controller->Instrumentino) has the following form (with sizes in bytes):
     [const_header, 4][type, 1][packet_length, 2]    <- general packet header
     [string without termination, ?]
     '''
-    
+
     def __init__(self, **kwargs):
         check_for_necessary_attributes(self, ['controller'], kwargs)
         super(ControlinoProtocol, self).__init__(**kwargs)
-        
+
     def handle_incoming_bytes(self, incoming_bytes):
         '''Parse incoming bytes into packets and act upon them.
         '''
-        
+
         if DEBUG_RX:
-            print 'RX: {} ({})'.format(''.join('{:02X}'.format(x) for x in incoming_bytes),
-                                       ''.join(chr(x) if chr(x).isalnum() else '.' for x in incoming_bytes))
+            print('RX: {} ({})'.format(''.join('{:02X}'.format(x) for x in incoming_bytes),
+                                       ''.join(chr(x) if chr(x).isalnum() else '.' for x in incoming_bytes)))
 
         if len(incoming_bytes) > self.controller.comm_port.MAX_BYTES_PER_READ:
             # Communication port overloaded so disconnect.
+            #TODO: Is this the right thing to do? Better try to recover.
             self.controller.disconnect()
-            
+
         # Parse all of the packets in the incoming buffer
         while True:
-            if len(incoming_bytes) < self.packet_header_format.sizeof():
-                # Not enough bytes for a packet header
-                return
-            
             packet_start = incoming_bytes.find(self.CONST_HEADER)
             if packet_start == -1:
                 # Delete garbage incoming data
-                incoming_bytes[:] = [] 
+                incoming_bytes[:] = []
                 return
             else:
                 # Delete bytes before the current packet
                 incoming_bytes[:packet_start] = []
-            
+
+            if len(incoming_bytes) < self.packet_header_format.sizeof():
+                # Not enough bytes for a packet header
+                return
+
             # Parse packet's header and check if we got the whole packet
-            packet_header = self.packet_header_format.parse(incoming_bytes[packet_start : packet_start+self.packet_header_format.sizeof()])
+            packet_header = self.packet_header_format.parse(incoming_bytes)
             packet_end = packet_start + packet_header.packet_length
             if len(incoming_bytes) < packet_end:
                 return
-            
+
             # Act upon the incoming packet and remove it from the incoming buffer
             packet = incoming_bytes[packet_start:packet_end]
             incoming_bytes[:packet_end] = []
             if packet_header.type == 'DATA_PACKET':
                 # Parse the new data packet
-                self.controller.update_input_channels(packet)
+                self.controller.update_input_channels(self.data_packet_format.parse(packet))
             elif packet_header.type == 'STRING_PACKET':
                 # Add the incoming string packet to the string packets queue
-                self.string_packets_queue.put(packet)
+                self.string_packets_queue.put(self.string_packet_format.parse(packet))
             else:
                 # Delete unrecognized incoming packet
                 incoming_bytes[:packet_end] = []
-                
-                
+
     def build_command_packet(self, command, parameters=[]):
         '''Build a command packet to be sent to a controller
         Command packets have the form: [command] [param1] [param2] ... \r
@@ -192,10 +179,10 @@ class ControlinoProtocol(EventDispatcher):
         # Build and send the ping command
         packet = self.build_command_packet(self.CMD_PING)
         self.transmit(packet)
-        
-        #TODO: remove this when the issue is resolved (the receive scheduled calls only start after the on_config_change is complete)
+
+        # TODO: remove this when the issue is resolved (the receive scheduled calls only start after the on_config_change is complete)
         self.controller.comm_port.receive();
-        
+
         # Wait for the reply
         try:
             reply_packet = self.string_packets_queue.get(timeout=(1 / self.DEFAULT_DATA_PACKET_RATE * 2))
@@ -207,21 +194,23 @@ class ControlinoProtocol(EventDispatcher):
 
         # Parse the reply packet and check if it arrived correctly
         string_packet = self.string_packet_format.parse(reply_packet)
-        reply_string = ''.join(string_packet['string'])
+        reply_string = string_packet.search('string')
         return reply_string == self.STRING_PACKET_TYPE_PONG
 
     def register_input_channel(self, channel):
         '''Ask controller to start sending us data for a channel.
         '''
-        packet = self.build_command_packet(self.CMD_CHANNEL_REGISTER, [channel.get_identifier(), str(channel.sampling_rate)])
+        packet = self.build_command_packet(self.CMD_CHANNEL_REGISTER,
+                                           [channel.get_identifier(), str(channel.sampling_rate)])
         self.transmit(packet)
-        
+
     def set_channel_direction(self, channel, is_output):
         '''Set the channel's direction to be input/output
         '''
-        packet = self.build_command_packet(self.CMD_CHANNEL_DIRECTION, [channel.get_identifier(), self.CHANNEL_DIRECTION_OUT if is_output else self.CHANNEL_DIRECTION_IN])
+        packet = self.build_command_packet(self.CMD_CHANNEL_DIRECTION, [channel.get_identifier(),
+                                                                        self.CHANNEL_DIRECTION_OUT if is_output else self.CHANNEL_DIRECTION_IN])
         self.transmit(packet)
-        
+
     def write_to_channel(self, channel, values):
         '''Write values to an output channel.
         values must be given as an array
@@ -235,10 +224,9 @@ class ControlinoProtocol(EventDispatcher):
         '''
         packet = self.build_command_packet(self.CMD_ACQUIRE_START)
         self.transmit(packet)
-        
+
     def transmit(self, packet):
         '''Transmit a packet through the communication port, if possible
         '''
-        if self.controller.comm_port != None:
+        if self.controller.comm_port is not None:
             self.controller.comm_port.transmit(packet)
-

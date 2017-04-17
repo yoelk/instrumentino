@@ -1,11 +1,12 @@
-from __future__ import division
 import os
 import glob
+
 try:
     import _winreg as winreg
 except ImportError:
     pass
 import itertools
+
 
 def enumerate_serial_ports():
     """ Uses the Win32 registry to return an
@@ -25,12 +26,13 @@ def enumerate_serial_ports():
         except EnvironmentError:
             break
 
+
 def get_serial_ports_list():
-        ports = []
-        if os.name == 'nt':
-            for portname in enumerate_serial_ports():
-                ports.append(portname)
-        elif os.name == 'posix':
-            ports = glob.glob('/dev/tty.*')
-            
-            return ports
+    ports = []
+    if os.name == 'nt':
+        for portname in enumerate_serial_ports():
+            ports.append(portname)
+    elif os.name == 'posix':
+        ports = glob.glob('/dev/tty.*')
+
+        return ports

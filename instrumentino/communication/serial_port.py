@@ -1,9 +1,9 @@
-from __future__ import division
 import os
 import glob
 import time
 from instrumentino.communication import CommunicationPort
 from instrumentino.cfg import *
+
 try:
     import _winreg as winreg
 except ImportError:
@@ -12,13 +12,14 @@ import itertools
 from kivy.properties import NumericProperty, ObjectProperty
 import serial
 
+
 class CommunicationPortSerial(CommunicationPort):
     '''A serial communication port
     '''
 
     type_name = 'Serial'
     '''The name of this communication type
-    '''    
+    '''
 
     DEFAULT_BAUDRATE = 115200
     '''The dafault baudrate
@@ -41,14 +42,15 @@ class CommunicationPortSerial(CommunicationPort):
         '''
         check_for_necessary_attributes(self, ['address'], kwargs)
         super(CommunicationPortSerial, self).__init__(**kwargs)
-        
+
     def _connect(self):
         '''Connect to the chosen serial port.
         '''
-        
+
         try:
             # Set read timeout according to the controller's data packet rate (It shouldn't be larger than that).
-            self.serial_port = serial.Serial(self.address, self.baudrate, writeTimeout=self.SERIAL_WRITE_TIMEOUT_SEC, timeout=(1/self.controller.data_packet_rate) * 0.90)
+            self.serial_port = serial.Serial(self.address, self.baudrate, writeTimeout=self.SERIAL_WRITE_TIMEOUT_SEC,
+                                             timeout=(1 / self.controller.data_packet_rate) * 0.90)
         except:
             return False
 
@@ -56,28 +58,29 @@ class CommunicationPortSerial(CommunicationPort):
         time.sleep(2)
         self.serial_port.flushInput()
         return True if self.serial_port else False
-            
+
     def _disconnect(self):
         '''Close the serial port.
         '''
         self.serial_port.close()
-    
+
     def _transmit(self, packet):
         '''Transmit the packet through the serial port.
         '''
         self.serial_port.write(packet)
-    
+
     def _get_incoming_bytes(self):
         '''Check the rx buffer for incoming bytes 
         '''
         return self.serial_port.read(self.MAX_BYTES_PER_READ)
-        
+
     @staticmethod
     def modify_address_field_options_for_settings_menu(json_dict):
         '''Modify the address item in the settings menu. 
         '''
         json_dict['type'] = 'dynamic_options'
         json_dict['function_string'] = 'instrumentino.communication.util.get_serial_ports_list'
+
 
 def enumerate_serial_ports():
     """ Uses the Win32 registry to return an
@@ -97,12 +100,13 @@ def enumerate_serial_ports():
         except EnvironmentError:
             break
 
+
 def get_serial_ports_list():
-        ports = []
-        if os.name == 'nt':
-            for portname in enumerate_serial_ports():
-                ports.append(portname)
-        elif os.name == 'posix':
-            ports = glob.glob('/dev/tty.*')
-            
-            return ports
+    ports = []
+    if os.name == 'nt':
+        for portname in enumerate_serial_ports():
+            ports.append(portname)
+    elif os.name == 'posix':
+        ports = glob.glob('/dev/tty.*')
+
+        return ports
