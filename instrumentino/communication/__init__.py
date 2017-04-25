@@ -1,4 +1,3 @@
-
 from kivy.properties import ObjectProperty, StringProperty, NumericProperty, BooleanProperty
 from kivy.event import EventDispatcher
 from threading import Semaphore
@@ -11,6 +10,7 @@ import time
 from kivy.app import App
 from instrumentino.cfg import *
 
+DEBUG_TX = False
 
 class CommunicationPort(EventDispatcher):
     '''A communication port for interfacing with a hardware controller.

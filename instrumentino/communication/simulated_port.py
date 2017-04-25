@@ -1,13 +1,14 @@
-from kivy.properties import BoundedNumericProperty, ListProperty, NumericProperty, BooleanProperty
-from numpy import sin, cos, pi, linspace
+import re
 import time
 from construct.lib.container import Container
-import re
-from instrumentino.controlino_protocol import ControlinoProtocol
-from instrumentino.communication import CommunicationPort
+from kivy.properties import BoundedNumericProperty, ListProperty, NumericProperty, BooleanProperty
+from numpy import sin, cos, pi, linspace
+
+from instrumentino import channels
 from instrumentino.cfg import *
 from instrumentino.channels import DataChannelIn
-from instrumentino import channels
+from instrumentino.communication import CommunicationPort
+from instrumentino.communication.controlino_protocol import ControlinoProtocol
 
 
 class CommunicationPortSimulation(CommunicationPort):
@@ -54,22 +55,20 @@ class CommunicationPortSimulation(CommunicationPort):
 
         # Check if we need to reply to a ping command
         if self.reply_to_ping:
+            # Clear the flag
+            self.reply_to_ping = False
+
             # Build the header two times. First without specifying the length, and then a second time,
             # using the anchor to get its length
             sim_packet = self.controller.controlino_protocol.string_packet_format.build(
-                {'packet_header': {'type': 'STRING_PACKET', 'packet_length': 0},
-                 'string': self.controller.controlino_protocol.STRING_PACKET_TYPE_PONG
-                 })
+                dict(packet_header=dict(type='STRING_PACKET', packet_length=0),
+                     string=self.controller.controlino_protocol.STRING_PACKET_TYPE_PONG
+                     ))
             packet_length = len(sim_packet)
             sim_packet = self.controller.controlino_protocol.string_packet_format.build(
-                {'packet_header': {'type': 'STRING_PACKET', 'packet_length': packet_length},
-                 'string': self.controller.controlino_protocol.STRING_PACKET_TYPE_PONG
-                 })
-
-
-            # Return the string packet
-            self.reply_to_ping = False
-
+                dict(packet_header=dict(type='STRING_PACKET', packet_length=packet_length),
+                     string=self.controller.controlino_protocol.STRING_PACKET_TYPE_PONG
+                     ))
         elif self.t_zero_set:
             # Simulate data packets
             sim_data_packet_blocks = []
@@ -87,29 +86,29 @@ class CommunicationPortSimulation(CommunicationPort):
                 pattern = self.__get_sim_data_pattern(channel)
                 start_index = int(self.sim_data_packets_num * rates_ratio) % len(pattern)
                 data_points = pattern[start_index:start_index + data_points_num]
-                block = self.controller.controlino_protocol.data_packet_data_block_format.build({block_id:idx, data:{Int8:data_points}})
+                block = dict(block_id=idx, data={channel.fitting_datapoint_variable_name: data_points})
                 sim_data_packet_blocks.append(block)
 
             # Send the relative timestamp in milliseconds
-            relative_start_timestamp = (time.time() - self.t_zero) * 1000
+            relative_start_timestamp = int((time.time() - self.t_zero) * 1000)
 
             # Build the header two times. First without specifying the length, and then a second time,
             # using the anchor to get its length
             sim_packet = self.controller.controlino_protocol.data_packet_format.build(
-                {'packet_header': {'type': 'DATA_PACKET', 'packet_length': 0},
-                 'data_packet_header': {'relative_start_timestamp': relative_start_timestamp},
-                 'data_blocks': sim_data_packet_blocks
-                 }
-            )
+                dict(packet_header=dict(type='DATA_PACKET', packet_length=0),
+                     data_packet_header=dict(relative_start_timestamp=relative_start_timestamp),
+                     data_blocks=sim_data_packet_blocks
+                     ))
             packet_length = len(sim_packet)
             sim_packet = self.controller.controlino_protocol.data_packet_format.build(
-                {'packet_header': {'type': 'DATA_PACKET', 'packet_length': packet_length},
-                 'data_packet_header': {'relative_start_timestamp': relative_start_timestamp},
-                 'data_blocks': sim_data_packet_blocks
-                 }
-            )
+                dict(packet_header=dict(type='DATA_PACKET', packet_length=packet_length),
+                     data_packet_header=dict(relative_start_timestamp=relative_start_timestamp),
+                     data_blocks=sim_data_packet_blocks
+                     ))
 
             self.sim_data_packets_num += 1
+        else:
+            return []
 
         # Send the packet to the communication port
         return sim_packet
@@ -119,9 +118,11 @@ class CommunicationPortSimulation(CommunicationPort):
         '''
 
         if channel.type_str == 'A':
-            return [channel.max_input_value / 2 + sin(x * (channel.number + 1)) * (channel.max_input_value / 3) for x in
+            # A sinus pattern with a frequency which depends on the channel number
+            return [int(channel.max_input_value / 2 + sin(x * (channel.number + 1)) * (channel.max_input_value / 3)) for x in
                     linspace(0, 2 * pi, channel.sampling_rate * 10, endpoint=False)]
         elif channel.type_str == 'D':
+            # A step pattern
             return [0] * (channel.sampling_rate * (channel.number + 1)) + [channel.max_input_value] * (
                 channel.sampling_rate * (channel.number + 1))
         else:

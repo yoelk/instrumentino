@@ -1,13 +1,14 @@
-from kivy.properties import StringProperty, ListProperty, DictProperty, BoundedNumericProperty, ObjectProperty
-import numpy as np
-from kivy.event import EventDispatcher
-from datetime import datetime as dt, timedelta
-import time
 import gc
-from instrumentino.controlino_protocol import ControlinoProtocol
+import numpy as np
+import time
+from datetime import datetime as dt, timedelta
 from kivy.app import App
-from instrumentino.channels import DataChannelIn
+from kivy.event import EventDispatcher
+from kivy.properties import StringProperty, ListProperty, DictProperty, BoundedNumericProperty, ObjectProperty
+
 from instrumentino.cfg import *
+from instrumentino.channels import DataChannelIn
+from instrumentino.communication.controlino_protocol import ControlinoProtocol
 
 
 class Controller(EventDispatcher):
@@ -96,7 +97,7 @@ class Controller(EventDispatcher):
 
         # Parse the received data and add it to the appropriate channels
         # The received id field correlates to the index in the controller's channels list
-        for block in data_packet.search('data_blocks'):
+        for block in data_packet['data_blocks']:
             channel = self.input_channels[block['block_id']]
             raw_data_points = block['data'][channel.fitting_datapoint_variable_name]
             channel.update_data_series(packet_timedelta, raw_data_points)

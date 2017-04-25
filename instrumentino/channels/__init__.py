@@ -1,16 +1,17 @@
-from kivy.properties import ObjectProperty, ListProperty, StringProperty, BoundedNumericProperty, NumericProperty, \
-    AliasProperty
-import time
-import random
-from kivy.event import EventDispatcher
-from math import ceil
 import numpy as np
 import pandas as pd
+import random
+import time
 from datetime import timedelta
-from instrumentino.libs.abs_ratio import abs_ratio
-from instrumentino.controlino_protocol import ControlinoProtocol
 from kivy.app import App
+from kivy.event import EventDispatcher
+from kivy.properties import ObjectProperty, ListProperty, StringProperty, BoundedNumericProperty, NumericProperty, \
+    AliasProperty
+from math import ceil
+
 from instrumentino.cfg import *
+from instrumentino.communication.controlino_protocol import ControlinoProtocol
+from instrumentino.libs.abs_ratio import abs_ratio
 
 
 class DataChannel(EventDispatcher):

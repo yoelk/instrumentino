@@ -1,9 +1,10 @@
 from kivy.properties import ObjectProperty, ListProperty
 from kivy.event import EventDispatcher
-from construct.core import Struct, Int8ub, Int16ub, Int32ub, Int64ub, PrefixedArray, Enum, Const, Union, GreedyString
+from construct.core import Struct, Int8ub, Int16ub, Int32ub, Int64ub, PrefixedArray, Enum, Const, Union, GreedyString, \
+    Prefixed
 from construct.lib.container import Container
-from multiprocessing import Queue
 import time
+import queue
 from kivy.app import App
 from instrumentino.cfg import *
 
@@ -21,7 +22,7 @@ class ControlinoProtocol(EventDispatcher):
     '''The controller for which this protocol is used.
     '''
 
-    string_packets_queue = Queue(maxsize=10)
+    string_packets_queue = queue.Queue(maxsize=10)
     '''String packets arrive as a response to specific commands (such as 'PING').
     This queue lets the command sender be notified on the reply's arrival.
     Items in the queue are strings, that are compared to the incoming string packets' first word.
@@ -87,10 +88,12 @@ class ControlinoProtocol(EventDispatcher):
     '''A header for a data packet. Contains the timestamp for the first datapoint in the packet, relative to t_zero. 
     '''
 
-    data_packet_data_block_format = Struct(block_id=Int8ub, data=Union(Int8=PrefixedArray(Int16ub, Int8ub),
-                                                                       Int16=PrefixedArray(Int16ub, Int16ub),
-                                                                       Int32=PrefixedArray(Int16ub, Int32ub),
-                                                                       Int64=PrefixedArray(Int16ub, Int64ub)))
+    data_packet_data_block_format = Struct(block_id=Int8ub, data=Union(Int8=Prefixed(Int16ub, Int8ub[:]),
+                                                                       Int16=Prefixed(Int16ub, Int16ub[:]),
+                                                                       Int32=Prefixed(Int16ub, Int32ub[:]),
+                                                                       Int64=Prefixed(Int16ub, Int64ub[:]),
+                                                                       parsefrom='Int8'
+                                                                       ))
     '''A data block in a data packet
     '''
 
@@ -119,6 +122,7 @@ class ControlinoProtocol(EventDispatcher):
     def __init__(self, **kwargs):
         check_for_necessary_attributes(self, ['controller'], kwargs)
         super(ControlinoProtocol, self).__init__(**kwargs)
+
 
     def handle_incoming_bytes(self, incoming_bytes):
         '''Parse incoming bytes into packets and act upon them.
@@ -193,8 +197,7 @@ class ControlinoProtocol(EventDispatcher):
             return False
 
         # Parse the reply packet and check if it arrived correctly
-        string_packet = self.string_packet_format.parse(reply_packet)
-        reply_string = string_packet.search('string')
+        reply_string = reply_packet.search('string')
         return reply_string == self.STRING_PACKET_TYPE_PONG
 
     def register_input_channel(self, channel):
